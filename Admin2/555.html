@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>My Mobile App Layout</title>
+</head>
+
+<body class="min-h-screen bg-gradient-to-b from-fuchsia-400 to-fuchsia-100 bg-fixed font-sans pb-24">
+
+    <header class="p-6 text-center text-[#1D293D]">
+        <h1 id="header-title" class="text-3xl font-black uppercase tracking-widest">หน้าหลัก</h1>
+        <div class="h-1 w-12 bg-[#1D293D] mx-auto mt-2 rounded-full"></div>
+    </header>
+
+    <main class="max-w-md mx-auto px-6">
+
+        <div id="page-home" class="page-content space-y-4">
+            <div class="bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-xl border border-white/50 text-center">
+                <div class="text-5xl mb-4">🏠</div>
+                <h2 class="text-xl font-bold text-[#1D293D]">ยินดีต้อนรับกลับมา!</h2>
+                <p class="text-gray-600 mt-2">วันนี้คุณอยากเรียนรู้อะไรใหม่ๆ บ้างครับ?</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white p-4 rounded-2xl shadow-sm text-center">✨ พลังงาน</div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm text-center">🚀 ความเร็ว</div>
+            </div>
+        </div>
+
+        <div id="page-explore" class="page-content hidden animate-fade-in">
+            <div class="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/50">
+                <h2 class="text-xl font-bold mb-4">สำรวจเนื้อหา</h2>
+                <div class="space-y-3">
+                    <div class="p-4 bg-fuchsia-50 rounded-xl border-l-4 border-fuchsia-500">บทเรียน Tailwind 101</div>
+                    <div class="p-4 bg-blue-50 rounded-xl border-l-4 border-blue-500">เทคนิค JavaScript</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-settings" class="page-content hidden">
+            <div class="bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-xl border border-white/50">
+                <h2 class="text-xl font-bold mb-6">ตั้งค่าการใช้งาน</h2>
+                <div class="flex items-center justify-between p-3 border-b">
+                    <span>เปิดการแจ้งเตือน</span>
+                    <input type="checkbox" class="w-5 h-5 accent-fuchsia-500">
+                </div>
+                <button
+                    class="w-full mt-6 bg-[#1D293D] text-white py-3 rounded-xl hover:bg-black transition">ออกจากระบบ</button>
+            </div>
+        </div>
+
+    </main>
+
+    <nav
+        class="fixed bottom-6 left-6 right-6 bg-white/90 backdrop-blur-lg shadow-2xl rounded-2xl border border-gray-100 p-2 flex justify-around items-center">
+        <button onclick="changePage('home', 'หน้าหลัก')"
+            class="flex flex-col items-center p-2 text-fuchsia-600 hover:scale-110 transition">
+            <span class="text-xl">🏠</span>
+            <span class="text-[10px] font-bold">HOME</span>
+        </button>
+        <button onclick="changePage('explore', 'สำรวจ')"
+            class="flex flex-col items-center p-2 text-gray-400 hover:text-fuchsia-500 hover:scale-110 transition">
+            <span class="text-xl">🔍</span>
+            <span class="text-[10px] font-bold">EXPLORE</span>
+        </button>
+        <button onclick="changePage('settings', 'ตั้งค่า')"
+            class="flex flex-col items-center p-2 text-gray-400 hover:text-fuchsia-500 hover:scale-110 transition">
+            <span class="text-xl">⚙️</span>
+            <span class="text-[10px] font-bold">SETTINGS</span>
+        </button>
+    </nav>
+
+    <script>
+        function changePage(pageId, title) {
+            // 1. ซ่อนทุกหน้า (Loop ผ่านคลาส page-content)
+            const pages = document.querySelectorAll('.page-content');
+            pages.forEach(p => p.classList.add('hidden'));
+
+            // 2. แสดงหน้าที่เลือก
+            document.getElementById('page-' + pageId).classList.remove('hidden');
+
+            // 3. เปลี่ยนหัวข้อ Header
+            document.getElementById('header-title').innerText = title;
+
+            // 4. (แถม) ทำให้หน้าจอสั่นเบาๆ หรือมีอนิเมชั่น (ถ้าต้องการเพิ่ม)
+            console.log('สลับไปหน้า: ' + pageId);
+        }
+    </script>
+
+    <style>
+        /* เพิ่ม Animation เล็กน้อยให้ดูไหลลื่น */
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+</body>
+
+</html>

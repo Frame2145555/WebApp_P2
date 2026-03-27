@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFU Election Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/admin.css">
+</head>
+
+<body class="bg-gray-50">
+
+    <div class="flex h-screen overflow-hidden">
+        <aside class="sidebar w-64 text-white flex-shrink-0">
+            <div class="p-6 text-center">
+                <h1 class="text-2xl font-bold mfu-gold">MFU E-VOTING</h1>
+                <p class="text-xs opacity-80 mt-1">Admin Control Panel</p>
+            </div>
+            <nav class="mt-8">
+                <a href="#" id="menu-dashboard" class="nav-item active">Dashboard</a>
+                <a href="#" id="menu-voter" class="nav-item">Voter Management</a>
+                <a href="#" id="menu-candidate" class="nav-item">Candidate Management</a>
+                <button id="logout-Btn" class="nav-item">logout</button>
+            </nav>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-8 bg-gray-50">
+
+            <div class="card flex justify-between items-center mb-8 p-6">
+                <div>
+                    <h2 class="text-2xl font-semibold text-gray-800">Overview Dashboard</h2>
+                    <p class="text-gray-500" id="statusText">ระบบกำลังเปิดรับการโหวต</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="font-medium text-gray-700">Voting Status:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="votingToggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card border-red-700">
+                    <p class="stat-label">Total Voters</p>
+                    <h3 class="stat-value">1,200</h3>
+                </div>
+                <div class="stat-card border-blue-600">
+                    <p class="stat-label">Voted</p>
+                    <h3 class="stat-value">750</h3>
+                </div>
+                <div class="stat-card border-green-500">
+                    <p class="stat-label">Percentage</p>
+                    <h3 class="stat-value">62.5%</h3>
+                </div>
+                <div class="stat-card border-yellow-500">
+                    <p class="stat-label">Candidates</p>
+                    <h3 class="stat-value">5</h3>
+                </div>
+            </div>
+
+            <div id="section-dashboard" class="active-section">
+                <div class="card p-6 mb-8 border-t-4 border-red-700">
+                    <h2 class="text-2xl font-semibold text-gray-800">Dashboard</h2>
+                    <p class="text-gray-500">Welcome to the admin dashboard.</p>
+                </div>
+            </div>
+
+            <div id="section-voter" class="hidden-section">
+                <div class="card p-6 mb-8 border-t-4 border-blue-600">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800">Voter Management</h2>
+                        <div class="flex space-x-2">
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">Import
+                                CSV</button>
+                            <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300"
+                                onclick="addVoterPrompt()">Add Single Voter</button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-hidden border rounded-lg">
+                        <div class="bg-gray-50 p-4 border-b">
+                            <input type="text" id="searchVoter" placeholder="Search Citizen ID or Name..."
+                                class="input-field max-w-md py-1 text-sm">
+                        </div>
+                        <table class="w-full text-left" id="voterTable">
+                            <thead class="bg-gray-100 text-gray-600 text-sm uppercase">
+                                <tr>
+                                    <th class="px-6 py-3">Citizen ID</th>
+                                    <th class="px-6 py-3">Full Name</th>
+                                    <th class="px-6 py-3 text-center">Voting Status</th>
+                                    <th class="px-6 py-3 text-center">Account Status</th>
+                                    <th class="px-6 py-3 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y" id="voterTableBody">
+                                <tr>
+                                    <td class="px-6 py-4">1-1001-XXXXX-XX-X</td>
+                                    <td class="px-6 py-4">John Doe</td>
+                                    <td class="px-6 py-4 text-center">Enabled</td>
+                                    <td class="px-6 py-4 text-center">Active</td>
+                                    <td class="px-6 py-4 text-center">
+                                        <button class="text-red-600 hover:underline text-sm font-medium">Disable</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-candidate" class="hidden-section">
+                <div class="card p-6 mb-8 border-t-4 border-green-500">
+                    <h2 class="text-2xl font-semibold text-gray-800">Candidate Management</h2>
+                    <p class="text-gray-500">Manage candidates here.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/admin.js"></script>
+</body>
+
+</html>
