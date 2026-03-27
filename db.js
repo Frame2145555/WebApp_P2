@@ -1,3 +1,5 @@
+//ต้นหำเล็ก
+
 const mysql = require("mysql2");
 
 const con = mysql.createConnection({
