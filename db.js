@@ -1,4 +1,4 @@
-//Hello Word
+//Hello
 
 const mysql = require("mysql2/promise");
 
