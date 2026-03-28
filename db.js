@@ -1,12 +1,15 @@
-//ต้นหำเล็ก
+//
 
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise");
 
-const con = mysql.createConnection({
+const pool = mysql.createPool({
     host: 'localhost', // check the port!
     user: 'root', // in reality, never use root!
     password: '', // check the password!
-    database: 'web_test_p2'
+    database: 'vote_system',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-module.exports = con;
+module.exports = pool;
