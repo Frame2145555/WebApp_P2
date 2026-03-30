@@ -89,7 +89,8 @@
         const search = document.getElementById('searchVoter');
         const query = (search?.value || '').trim().toLowerCase();
 
-        const showOnlyVoted = Boolean(toggle?.checked);
+        // toggle on = แสดงเฉพาะคนที่ยัง Not Voted, toggle off = แสดงทั้งหมด
+        const showOnlyNotVoted = Boolean(toggle?.checked);
 
         Array.from(tbody.querySelectorAll('tr')).forEach(row => {
             const votedFromDataset = row.dataset.voted === '1' || row.dataset.voted === '0';
@@ -105,7 +106,7 @@
             const citizenId = ((row.dataset.citizenId || row.cells?.[0]?.textContent || '')).toLowerCase();
             const fullName = ((row.dataset.fullName || row.cells?.[1]?.textContent || '')).toLowerCase();
 
-            const statusMatch = showOnlyVoted ? voted : !voted;
+            const statusMatch = showOnlyNotVoted ? !voted : true;
             const textMatch = query === '' || citizenId.includes(query) || fullName.includes(query);
             row.style.display = statusMatch && textMatch ? '' : 'none';
         });

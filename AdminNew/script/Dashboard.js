@@ -39,14 +39,15 @@
             const isEnabled = this.checked;
 
             Swal.fire({
-                title: isEnabled ? 'เปิดระบบโหวต?' : 'ปิดระบบโหวต?',
+                title: isEnabled ? 'Open Voting System?' : 'Close Voting System?',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#8C1515',
-                confirmButtonText: 'ตกลง'
+                confirmButtonText: 'Okay',
+                cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    statusText.innerText = isEnabled ? 'ระบบกำลังเปิดรับการโหวต' : 'ระบบปิดการรับโหวตแล้ว';
+                    statusText.innerText = isEnabled ? 'now is voting' : 'system is closed for voting';
                     statusText.className = isEnabled ? 'text-green-600' : 'text-red-600';
                 } else {
                     this.checked = !isEnabled;
