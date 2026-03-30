@@ -7,28 +7,28 @@ const createCandidate = async (req, res) => {
     const { candidate_id, name } = req.body;
 
     if (!candidate_id || !name) {
-        return res.status(400).json({ message: "กรุณากรอก Candidate ID และ ชื่อ ให้ครบถ้วน" });
+        return res.status(400).json({ message: "กรุณากรอก Candidate ID และ ชื่อ ให้ด้วยนะ เดี่ยวโดนไม้กวาดฟาด" });
     }
 
     try {
-        // ✨ ดึง term_id ของวาระที่กำลังเปิดโหวตอยู่ (is_active = 1) อัตโนมัติ
+        // ดึง term_id ของวาระที่กำลังเปิดโหวตอยู่ (is_active = 1) อัตโนมัติ
         const [activeTerms] = await pool.query("SELECT term_id FROM terms WHERE is_active = 1 LIMIT 1");
 
         if (activeTerms.length === 0) {
-            return res.status(400).json({ message: "ไม่พบวาระการเลือกตั้งที่เปิดอยู่ กรุณาเปิดระบบก่อน" });
+            return res.status(400).json({ message: "มึงยังไม่ได้เปิดระบบ vote ไป เปิดก่อน" });
         }
         const currentTermId = activeTerms[0].term_id;
 
         // บันทึก ID นี้ลงฐานข้อมูล (ใส่ term_id ลงไปด้วย)
-        // หมายเหตุ: user_id จะเป็น NULL ไปก่อน รอให้ผู้สมัครมา Register ทีหลัง
+        // เตือนก่อนนะจ่ะ: user_id จะเป็น NULL ไปก่อน รอให้ผู้สมัครมา Register ทีหลัง
         await pool.query(
             "INSERT INTO candidates (candidate_id, name, is_registered, term_id) VALUES (?, ?, 0, ?)",
             [candidate_id, name, currentTermId]
         );
 
-        res.json({
+        res.status(200).json({
             status: "success",
-            message: `สร้างรหัสผู้สมัคร ${candidate_id} สำหรับ ${name} สำเร็จ!`
+            message: `สร้างรหัสผู้สมัคร ${candidate_id} สำหรับ ${name} ได้แวว`
         });
 
     } catch (error) {
@@ -36,9 +36,59 @@ const createCandidate = async (req, res) => {
 
         // เช็คกรณี Admin เผลอสร้าง ID ซ้ำ
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ message: "Candidate ID นี้มีในระบบแล้ว!" });
+            return res.status(400).json({ message: "Candidate ID นี้มีในระบบแล้วนาจา" });
         }
-        res.status(500).json({ message: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์" });
+        res.status(500).json({ message: "Server กาก ไปแก้แปป" });
+    }
+};
+
+// API: ดึงรายชื่อผู้สมัคร, นโยบาย, สถานะ และผลโหวต (รองรับ Search)
+const getCandidates = async (req, res) => {
+    const { term_id, search } = req.query;
+
+    if (!term_id) {
+        return res.status(400).json({ message: "กรุณาระบุรอบการเลือกตั้ง (term_id)" });
+    }
+
+    const connection = await pool.getConnection();
+    
+    try {
+        // 🚨 แก้ SQL: เอาเงื่อนไข AND v.term_id = ? ออกจาก Subquery แล้ว
+        let sql = `
+            SELECT 
+                c.candidate_id,
+                c.name,
+                IFNULL(c.policies, 'ยังไม่ลงทะเบียนนโยบาย') AS policies,
+                c.is_registered,
+                IFNULL(u.is_enable, 0) AS status_enable,
+                (SELECT COUNT(*) FROM votes v WHERE v.candidate_id = c.candidate_id) AS score
+            FROM candidates c
+            LEFT JOIN users u ON c.user_id = u.user_id 
+            WHERE c.term_id = ?
+        `;
+        
+        // 🚨 แก้ Params: เหลือ term_id แค่ตัวเดียวสำหรับ WHERE c.term_id = ?
+        let params = [term_id];
+
+        if (search) {
+            sql += ` AND (c.candidate_id LIKE ? OR c.name LIKE ?)`;
+            params.push(`%${search}%`, `%${search}%`);
+        }
+
+        sql += ` ORDER BY score DESC, c.candidate_id ASC`;
+
+        const [candidates] = await connection.query(sql, params);
+
+        res.status(200).json({
+            status: "success",
+            data: candidates
+        });
+
+    } catch (error) {
+        console.error("Get Candidates Error:", error);
+        res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลผู้สมัคร" });
+    } finally {
+        connection.release();
     }
 };
 
@@ -132,12 +182,12 @@ const setActiveTerm = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // 🚨 สเตป 1: สั่ง "ปิด (0)" ทุกเทอมที่มีอยู่ในระบบก่อนเลย (ล้างไพ่)
+        // สเตป 1: สั่ง "ปิด (0)" ทุกเทอมที่มีอยู่ในระบบก่อนเลย (ล้างไพ่)
         await connection.query("UPDATE terms SET is_active = 0");
 
-        // 🟢 สเตป 2: สั่ง "เปิด (1)" เฉพาะเทอมที่แอดมินเลือกมาเท่านั้น!
+        // สเตป 2: สั่ง "เปิด (1)" เฉพาะเทอมที่แอดมินเลือกมาเท่านั้น!
         const [result] = await connection.query(
-            "UPDATE terms SET is_active = 1 WHERE term_id = ?", 
+            "UPDATE terms SET is_active = 1 WHERE term_id = ?",
             [term_id]
         );
 
@@ -147,9 +197,9 @@ const setActiveTerm = async (req, res) => {
         }
 
         await connection.commit();
-        res.status(200).json({ 
-            status: "success", 
-            message: `เปิดระบบการเลือกตั้งสำหรับวาระที่ ${term_id} เรียบร้อยแล้ว (เทอมอื่นๆ ถูกปิดอัตโนมัติ)` 
+        res.status(200).json({
+            status: "success",
+            message: `เปิดระบบการเลือกตั้งสำหรับวาระที่ ${term_id} เรียบร้อยแล้ว (เทอมอื่นๆ ถูกปิดอัตโนมัติ)`
         });
 
     } catch (error) {
@@ -162,8 +212,9 @@ const setActiveTerm = async (req, res) => {
 };
 
 //export ทั้ง 2 ฟังก์ชันออกไปให้ route
-module.exports = { 
-    createCandidate, 
-    createVoter, 
-    setActiveTerm 
+module.exports = {
+    createCandidate,
+    createVoter,
+    setActiveTerm,
+    getCandidates
 };
