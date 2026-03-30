@@ -53,44 +53,69 @@ const login = async (req, res) => {
 };
 
 // Register
+const argon2 = require('argon2');
+
 const registerCandidate = async (req, res) => {
-    // รับค่าจากฟอร์มสมัคร
+    // รับค่าจากหน้าเว็บตอนผู้สมัครกดลงทะเบียน
     const { candidate_id, username, password, policies } = req.body;
 
-    if (!candidate_id || !username || !password) {
-        return res.status(400).json({ message: "กรอกข้อมูลไม่ครบ" });
+    if (!candidate_id || !username || !password || !policies) {
+        return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
     }
 
+    const connection = await pool.getConnection();
+
     try {
-        // เช็คก่อนว่า candidate_id นี้มีจริงไหม และยังไม่เคยถูกสมัครใช่ไหม?
-        const [checkCandidate] = await pool.query(
-            "SELECT * FROM Candidates WHERE candidate_id = ? AND is_registered = 0",
+        await connection.beginTransaction();
+
+        // 1. เช็คก่อนว่า Candidate ID นี้มีอยู่จริงไหม? และโดนคนอื่นแย่งลงทะเบียนไปหรือยัง?
+        const [candidateCheck] = await connection.query(
+            "SELECT is_registered FROM candidates WHERE candidate_id = ?",
             [candidate_id]
         );
 
-        if (checkCandidate.length === 0) {
-            return res.status(401).json({ message: "add failed" });
+        if (candidateCheck.length === 0) {
+            return res.status(404).json({ message: "ไม่พบ Candidate ID นี้ในระบบ (ติดต่อ Admin)" });
+        }
+        if (candidateCheck[0].is_registered === 1) {
+            return res.status(400).json({ message: "รหัสผู้สมัครนี้ ถูกลงทะเบียนไปเรียบร้อยแล้ว!" });
         }
 
-        // ถ้า ID ถูกต้อง -> สร้าง User ใหม่ให้เขาก่อน
-        const [userResult] = await pool.query(
-            "INSERT INTO Users (username, password, role, is_enable) VALUES (?, ?, 'candidate', 1)",
-            [username, password] // หมายเหตุ: อนาคตเราจะเอา bcrypt มาครอบรหัสผ่านตรงนี้นะครับ
+        // 2. เข้ารหัสผ่านด้วย Argon2 สุดโหด
+        const hashedPassword = await argon2.hash(password);
+
+        // 3. นำ Username และ Password ไปบันทึกลงตาราง Users
+        const [userResult] = await connection.query(
+            "INSERT INTO users (username, password, role, is_enable) VALUES (?, ?, 'candidate', 1)",
+            [username, hashedPassword]
+        );
+        const newUserId = userResult.insertId;
+
+        // 4. นำ user_id ที่เพิ่งได้ มาอัปเดตใส่ตาราง Candidates พร้อมกับนโยบาย และเปลี่ยนสถานะเป็น 1
+        await connection.query(
+            "UPDATE candidates SET user_id = ?, policies = ?, is_registered = 1 WHERE candidate_id = ?",
+            [newUserId, policies, candidate_id]
         );
 
-        const newUserId = userResult.insertId; // ดึง ID ของ User ที่เพิ่งสร้างเสร็จ
+        await connection.commit();
 
-        //อัปเดตข้อมูลกลับไปที่ตาราง Candidates ว่า "คนนี้สมัครแล้วนะ" พร้อมใส่ user_id เชื่อมกัน
-        await pool.query(
-            "UPDATE Candidates SET policies = ?, is_registered = 1, user_id = ? WHERE candidate_id = ?",
-            [policies, newUserId, candidate_id]
-        );
-
-        res.json({ status: "success", message: "ลงทะเบียนผู้สมัครสำเร็จ! ไปเข้าสู่ระบบได้เลย" });
+        res.status(200).json({ 
+            status: "success", 
+            message: "ลงทะเบียนผู้สมัครสำเร็จ! คุณสามารถเข้าสู่ระบบได้เลย" 
+        });
 
     } catch (error) {
-        console.error("Register Error:", error);
-        res.status(500).json({ message: "Backend Error" });
+        await connection.rollback();
+        console.error("Candidate Register Error:", error);
+
+        // ดักกรณีผู้สมัครตั้ง Username ซ้ำกับคนอื่น
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ message: "Username นี้มีคนใช้แล้ว กรุณาตั้งใหม่" });
+        }
+        res.status(500).json({ message: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์" });
+        
+    } finally {
+        connection.release();
     }
 };
 

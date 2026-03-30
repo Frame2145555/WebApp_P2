@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const adminController = require('../controllers/admin.controller');
+
+const { createCandidate, createVoter } = require('../controllers/admin.controller');
 
 // URL จะเป็น /api/admin/create-candidate
-router.post('/create-candidate', adminController.createCandidate);
+router.post('/create-candidate', createCandidate);
 router.post('/create-voter', createVoter);
 router.post('/create-voter', adminController.createVoter);
 
