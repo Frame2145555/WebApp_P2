@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/public/css/daisyui@5.css">
+    <script src="/public/js/tailwind.js"></script>
+    <title>Candidate Dashboard</title>
+    <style>
+        .main-bg {
+            background-color: whitesmoke;
+        }
+
+        .card-bg {
+            background-color: #D9B521;
+            border: 2px solid  black;
+        }
+
+        .content-box {
+            background: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+            color: #333;
+        }
+
+        .nav {
+            background-color: #BD0112;
+        }
+    </style>
+</head>
+
+<body class="main-bg min-h-screen">
+    <div class = "nav p-6 flex justify-between items-center  shadow-sm mb-6 border-b border-gray-200">
+        <img src="/public/img/MFU_LOGO.png" alt="" width="70" >
+        <p class="text-4xl font-bold text-black">Candidate: Nuu</p>
+    </div>
+
+    <div class="container mx-auto px-4 pb-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+            <div class="flex flex-col items-center">
+                <div id="candidate" class="w-full flex justify-center mb-6">
+                </div>
+
+                <div class="w-full max-w-xs bg-white p-6 rounded-xl border-2 border-gray-300 text-center shadow-md">
+                    <p class="text-xl font-semibold mb-2">Total Votes</p>
+                    <p class="text-5xl font-black text-orange-600">1,000</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col">
+                <div class="content-box shadow-sm">
+                    <label for="info">Information</label>
+                    <textarea id="info" rows="4" placeholder="Candidate information..."></textarea>
+                </div>
+
+                <div class="content-box shadow-sm">
+                    <label for="policy">Policy</label>
+                    <textarea id="policy" rows="6" placeholder="Policies..."></textarea>
+                </div>
+                        <button class="btn btn-outline btn-warning">Edit</button>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+
+    <script>
+        let candidates = [
+        { "name": "Nuu" },
+    ];
+
+    const candidateEl = document.getElementById("candidate"); 
+
+    function candidateCardHTML(item) {
+        return `
+            <div class="card w-full max-w-sm card-bg shadow-xl">
+                <figure class="px-6 pt-6">
+                    <img src="/public/img/${item.name}.png" alt="${item.name}" 
+                         class="h-64 w-full object-contain bg-white rounded-lg border-2 border-yellow-600">
+                </figure>
+                <div class="card-body items-center text-center">
+                    <h2 class="card-title text-2xl font-black text-black uppercase">${item.name}</h2>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderAll() {
+        candidateEl.innerHTML = candidates.map(candidateCardHTML).join("");
+    }
+
+    renderAll();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/public/css/daisyui@5.css">
+    <script src="/public/js/tailwind.js"></script>
+    <title>Voter Dashboard</title>
+    <style>
+        .main-bg { background-color: whitesmoke; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            margin-bottom: 2rem;
+        }
+
+        table, th, td {
+            border: 1px solid #333;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .candidate-card {
+            background-color: #D9B521;
+            border: 1px solid #9A6B00;
+            width: 200px;
+            height: 250px;
+            transition: transform 0.2s;
+        }
+
+        .candidate-card:hover {
+            transform: scale(1.05);
+        }
+
+        .vote-btn {
+            background-color: #9A6B00;
+            color: white;
+            border: none;
+        }
+        .vote-btn:hover {
+        background-color: #6B4105;
+        }
+
+        .nav {
+            background-color: #BD0112;
+        }
+    </style>
+</head>
+
+<body class="main-bg min-h-screen">
+    <div class="nav p-6 flex justify-between items-center bg-white shadow-sm mb-6">
+        <img src="/public/img/MFU_LOGO.png" alt="" width="70" >
+        <p class="text-4xl font-bold text-black">Voter</p>
+        <button class="btn btn-soft btn-error">Log Out</button>
+    </div>
+
+    <div class="container mx-auto px-4 pb-10">
+        <div class="mb-10">
+            <p class="text-4xl font-bold mb-4">Candidates</p>
+            <div id="candidate" class="flex flex-wrap gap-4">
+                </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-1 gap-6">
+            <div>
+                <p class="text-3xl font-bold mb-2">Vote History</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vote</th>
+                            <th>Date / Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>9/2/2026 11:31:25</td>
+                        </tr>
+                        </tbody>
+                </table>
+            </div>
+
+            <div>
+                <p class="text-3xl font-bold mb-2">Dashboard</p>
+                <table>
+                    <tr>
+                        <td class="font-bold text-warning w-1/3">Voters</td>
+                        <td>10,000,000</td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold text-secondary">Candidates</td>
+                        <td id="countCandidate">0</td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold text-accent">Total Voting</td>
+                        <td>1,223</td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold text-primary">Percentage of Voting</td>
+                        <td>0.01233 %</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let candidates = [
+            { "name": "Nuu" },
+            { "name": "Tank" },
+            { "name": "Takky" },
+            { "name": "Mark" },
+            { "name": "ChuckChard" }
+        ];
+
+        const candidateEl = document.getElementById("candidate"); 
+
+        function candidateCardHTML(item) {
+            return `
+                <div class="card candidate-card shadow-sm">
+                    <figure class="px-2 pt-4">
+                        <img src="/public/img/${item.name}.png" alt="${item.name}" 
+                             class="h-25 w-25 object-contain bg-white rounded-full border">
+                    </figure>
+                    <div class="card-body p-3 items-center text-center">
+                        <h2 class="text-2xl font-bold text-black">${item.name}</h2>
+                        <br>
+                        <button class="btn vote-btn w-full mt-1 text-xl">Vote</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAll() {
+        candidateEl.innerHTML = candidates.map(candidateCardHTML).join("");
+    }
+
+        renderAll();
+    </script>
+</body>
+
+</html>
