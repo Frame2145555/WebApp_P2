@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+
+:root {
+    --mfu-red: #8C1515;
+    --mfu-gold: #D4AF37;
+}
+
+body { font-family: 'Kanit', sans-serif; }
+
+.sidebar { background-color: var(--mfu-red); }
+.mfu-gold { color: var(--mfu-gold); }
+
+.nav-item {
+    display: block;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s;
+}
+.nav-item:hover { background-color: rgba(255,255,255,0.05); }
+.nav-item.active {
+    background-color: rgba(255,255,255,0.1);
+    border-left: 4px solid var(--mfu-gold);
+}
+
+.card {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border-top-width: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.stat-label { font-size: 0.875rem; color: #6b7280; font-weight: 600; text-transform: uppercase; }
+.stat-value { font-size: 1.875rem; font-weight: 700; margin-top: 0.5rem; }
+
+/* Toggle switch สำหรับเปิด/ปิดโหวต */
+.switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc; transition: .4s; border-radius: 34px;
+}
+.slider:before {
+    position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+    background-color: white; transition: .4s; border-radius: 50%;
+}
+input:checked + .slider { background-color: #10b981; }
+input:checked + .slider:before { transform: translateX(26px); }
+
+.chart-container { position: relative; height: 300px; width: 100%; }
