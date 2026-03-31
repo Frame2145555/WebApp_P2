@@ -42,7 +42,7 @@ const createCandidate = async (req, res) => {
     }
 };
 
-// API: ดึงรายชื่อผู้สมัคร, นโยบาย, สถานะ และผลโหวต (รองรับ Search)
+// API: ดึงรายชื่อผู้สมัคร, นโยบาย, สถานะ และผลโหวต และ Search
 const getCandidates = async (req, res) => {
     const { term_id, search } = req.query;
 
@@ -53,7 +53,7 @@ const getCandidates = async (req, res) => {
     const connection = await pool.getConnection();
     
     try {
-        // 🚨 แก้ SQL: เอาเงื่อนไข AND v.term_id = ? ออกจาก Subquery แล้ว
+        // แก้ SQL: เอาเงื่อนไข AND v.term_id = ? ออกจาก Subquery แล้ว
         let sql = `
             SELECT 
                 c.candidate_id,
@@ -67,9 +67,10 @@ const getCandidates = async (req, res) => {
             WHERE c.term_id = ?
         `;
         
-        // 🚨 แก้ Params: เหลือ term_id แค่ตัวเดียวสำหรับ WHERE c.term_id = ?
+        // แก้ Params: เหลือ term_id แค่ตัวเดียวสำหรับ WHERE c.term_id = ?
         let params = [term_id];
 
+        // ระบบ scarch
         if (search) {
             sql += ` AND (c.candidate_id LIKE ? OR c.name LIKE ?)`;
             params.push(`%${search}%`, `%${search}%`);
@@ -87,6 +88,83 @@ const getCandidates = async (req, res) => {
     } catch (error) {
         console.error("Get Candidates Error:", error);
         res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลผู้สมัคร" });
+    } finally {
+        connection.release();
+    }
+};
+
+// API: เปิด/ปิด สถานะของ candiate (Enable/Disable)
+const toggleCandidateStatus = async (req, res) => {
+    // รับรหัสผู้สมัคร และสถานะใหม่ (1 = เปิด, 0 = ปิด)
+    const { candidate_id, status } = req.body;
+
+    if (!candidate_id || status === undefined) {
+        return res.status(400).json({ message: "ส่งข้อมูลมาให้ครบดิ" });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        // 1. หา user_id ของผู้สมัครคนนี้ก่อน
+        const [candidate] = await connection.query("SELECT user_id FROM candidates WHERE candidate_id = ?", [candidate_id]);
+
+        if (candidate.length === 0) {
+            return res.status(404).json({ message: "ไม่พบข้อมูลผู้สมัครในระบบ" });
+        }
+
+        const userId = candidate[0].user_id;
+
+        // ถ้า user_id เป็น null แปลว่าแอดมินเพิ่งสร้างรหัสให้ แต่เค้ายังไม่เคยเข้าระบบมาลงทะเบียนเลย
+        if (!userId) {
+            return res.status(400).json({ message: "ผู้สมัครคนนี้ยังไม่ได้ลงทะเบียนเข้าระบบ ไม่สามารถเปลี่ยนสถานะได้" });
+        }
+
+        // 2. อัปเดตสถานะในตาราง users
+        await connection.query("UPDATE users SET is_enable = ? WHERE user_id = ?", [status, userId]);
+
+        res.status(200).json({ 
+            status: "success", 
+            message: `อัปเดตสถานะของ ${candidate_id} เป็น ${status === 1 ? 'Enabled' : 'Disabled'} ได้แวว` 
+        });
+
+    } catch (error) {
+        console.error("Toggle Status Error:", error);
+        res.status(500).json({ message: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์" });
+    } finally {
+        connection.release();
+    }
+};
+
+// API: ลบผู้ candidate (Delete Candidate)
+const deleteCandidate = async (req, res) => {
+    const { id } = req.params; // รับรหัสผู้สมัครจาก URL (เช่น /api/admin/candidate/8)
+
+    if (!id) {
+        return res.status(400).json({ message: "กรุณาระบุรหัสผู้สมัครที่ต้องการลบ" });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        // สั่งลบข้อมูลจากตาราง candidates
+        const [result] = await connection.query("DELETE FROM candidates WHERE candidate_id = ?", [id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "ไม่พบข้อมูลผู้สมัครนี้ในระบบ" });
+        }
+
+        res.status(200).json({ 
+            status: "success", 
+            message: `ลบผู้สมัครรหัส ${id} ออกจากระบบเรียบร้อยแล้ว` 
+        });
+
+    } catch (error) {
+        console.error("Delete Candidate Error:", error);
+        
+        // 🚨 ดัก Error กรณีที่ผู้สมัครคนนี้มี "คะแนนโหวต" ไปแล้ว (ฐานข้อมูลจะไม่ยอมให้ลบ เพื่อป้องกันข้อมูลพัง)
+        if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+            return res.status(400).json({ message: "ไม่สามารถลบได้ เนื่องจากผู้สมัครคนนี้มีคะแนนโหวตในระบบแล้ว (แนะนำให้ใช้การ Disable แทน)" });
+        }
+
+        res.status(500).json({ message: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์" });
     } finally {
         connection.release();
     }
@@ -216,5 +294,7 @@ module.exports = {
     createCandidate,
     createVoter,
     setActiveTerm,
-    getCandidates
+    getCandidates,
+    toggleCandidateStatus,
+    deleteCandidate
 };
