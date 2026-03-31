@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/dashbordVoter/WebAppProject/public/css/daisyui@5.css">
+    <script src="/dashbordVoter/WebAppProject/public/js/tailwind.js"></script>
+    <title>Voter Dashboard</title>
+    <style>
+        .main-bg {
+            background-color: whitesmoke;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            margin-bottom: 2rem;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #333;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .nav {
+            background-color: #BD0112;
+        }
+
+        .bg-mfu-dark-red {
+            background-color: #8C1515;
+        }
+
+        .text-mfu-yellow {
+            color: #D4AF37;
+        }
+    </style>
+</head>
+
+<body class="main-bg min-h-screen flex">
+
+    <aside class="w-64 bg-mfu-red text-white flex flex-col h-screen z-20 shadow-xl fixed left-0 top-0">
+        <div class="nav p-6 flex flex-col items-center">
+            <img src="/dashbordVoter/WebAppProject/public/img/MFU_LOGO.png" alt="" width="70">
+            <h1 class="text-2xl font-black text-mfu-yellow mb-1">MFU E-VOTING</h1></div>
+            <div class="nav p-6 flex flex-col items-left bg-white shadow-sm h-full">
+            <li><a href="/dashbordVoter/WebAppProject/views/VoterDash.html" id="menu-dashboards"
+                    class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Dashboard</a></li>
+            <li><a href="/dashbordVoter/WebAppProject/views/VoterCandi.html" id="menu-candidates"
+                    class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Candidates</a></li>
+            <li><a href="/dashbordVoter/WebAppProject/views/VoterVote.html" id="menu-vote"
+                    class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Vote</a></li>
+            <li><a href="/dashbordVoter/WebAppProject/views/VoterHis.html" id="menu-history"
+                    class="block px-4 py-3 bg-red-900/60 border-l-4 border-mfu-yellow text-mfu-yellow font-bold rounded">Vote History</a></li>
+            <button class="btn btn-soft btn-error mt-auto">Log Out</button>
+        </div>
+    </aside>
+
+    <div class="flex-1 ml-64">
+        <br>
+        <div class="container mx-auto px-4 pb-10">
+
+            <div class="grid grid-cols-1 lg:grid-cols-1 gap-6">
+                <div>
+                    <p class="text-3xl font-bold mb-2">Vote History</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Vote</th>
+                                <th>Date / Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>N**</td>
+                                <td>9/2/2026 11:31:25</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
