@@ -1,3 +1,21 @@
+// ==========================================
+// ฟังก์ชัน: ก๊อปปี้ term_id ปัจจุบัน แล้วส่งไปหน้าใหม่
+// ==========================================
+function goToPage(pageName) {
+    // 1. ก๊อปปี้ term_id จาก URL ด้านบนของหน้าปัจจุบัน
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentTermId = urlParams.get('term_id');
+
+    // 2. เช็คว่าก๊อปปี้มาได้ไหม
+    if (currentTermId) {
+        // ถ้ามี: สั่งวาร์ปไปหน้าใหม่ พร้อมแปะ ?term_id=... ห้อยท้ายไปด้วย!
+        window.location.href = `/AdminNew/views/${pageName}?term_id=${currentTermId}`;
+    } else {
+        // ถ้าไม่มี (แอดมินหลงทาง): เตะกลับหน้า Term
+        window.location.href = '/AdminNew/views/Term.html';
+    }
+}
+
 (() => {
     const API = {
         listVoters: '/api/admin/voters',

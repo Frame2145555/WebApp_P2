@@ -7,7 +7,6 @@
     <title>Terms Management - MFU E-VOTING</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.1/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
@@ -24,64 +23,47 @@
     </script>
 </head>
 
-<body class="bg-gray-50 font-sans overflow-hidden">
+<body class="bg-slate-50 font-sans min-h-screen flex flex-col">
 
-    <div class="flex h-screen w-full">
+    <nav class="bg-mfu-red text-white p-4 shadow-md flex justify-between items-center px-6 lg:px-12">
+        <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-black text-mfu-yellow">MFU E-VOTING</h1>
+            <div class="hidden md:block h-6 w-px bg-white/30"></div>
+            <p class="hidden md:block text-sm font-light">Admin Control Panel</p>
+        </div>
+        
+        <button class="btn btn-sm btn-outline text-white hover:bg-white hover:text-mfu-red hover:border-white border-white">
+            Logout
+        </button>
+    </nav>
 
-        <aside class="w-64 bg-mfu-red text-white flex flex-col justify-between h-full z-20 shadow-xl">
+    <main class="flex-1 w-full max-w-7xl mx-auto p-6 lg:p-8 mt-4">
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-                <div class="p-6 text-center mb-4">
-                    <h1 class="text-2xl font-black text-mfu-yellow mb-1">MFU E-VOTING</h1>
-                    <p class="text-xs font-light">Admin Control Panel</p>
+                <h2 class="text-3xl font-bold text-gray-800">Terms Management</h2>
+                <p class="text-gray-500 text-sm mt-2">เลือกรอบการเลือกตั้งเพื่อเข้าสู่ระบบจัดการและดูสถิติ</p>
+            </div>
+            <button class="btn bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm px-6" onclick="add_term_modal.showModal()">
+                + Add New Term
+            </button>
+        </div>
+
+        <div>
+            <h3 class="text-xl font-bold text-gray-700 mb-6 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-mfu-red">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                </svg>
+                Voting Rounds
+            </h3>
+
+            <div id="terms-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 </div>
+        </div>
 
-                <ul class="flex flex-col gap-1 px-4 text-sm font-medium">
-                    <li><a href="#" class="block px-4 py-3 bg-red-900/60 border-l-4 border-mfu-yellow text-mfu-yellow font-bold rounded">Terms</a></li>
-                    <li><a href="/AdminNew/views/Dashboard.html" class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Dashboard</a></li>
-                    <li><a href="/AdminNew/views/Voting.html" class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Voter Management</a></li>
-                    <li><a href="/AdminNew/views/Candidates.html" class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Candidate Management</a></li>
-                </ul>
-            </div>
-
-            <div class="p-6">
-                <button class="w-full text-left font-bold px-4 py-2 hover:bg-red-900 rounded transition-colors">logout</button>
-            </div>
-        </aside>
-
-        <main class="flex-1 flex flex-col h-full overflow-hidden">
-
-            <div class="p-8 pb-4">
-                <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-800">Terms Management</h2>
-                        <p class="text-gray-500 text-sm mt-1">เลือกรอบการเลือกตั้งเพื่อดูสถิติและจัดการระบบ</p>
-                    </div>
-                    <button class="btn btn-outline border-blue-600 text-blue-600 hover:bg-blue-600 hover:border-blue-600 hover:text-white" onclick="add_term_modal.showModal()">
-                        + Add New Term
-                    </button>
-                </div>
-            </div>
-
-            <div class="flex-1 p-8 pt-4 overflow-y-auto">
-                <h3 class="text-lg font-bold text-gray-700 mb-6">Voting Rounds</h3>
-
-                <div id="terms-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    
-                    <a href="Dashboard.html?term_id=1" class="card bg-white shadow-sm border border-gray-100 border-t-4 border-t-green-500 rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer block">
-                        <div class="card-body items-center text-center p-8">
-                            <h2 class="card-title text-4xl font-bold text-gray-800">1 / 2569</h2>
-                            <p class="text-gray-400 text-sm mt-2">คลิกเพื่อดูสถิติและจัดการ</p>
-                            <div class="mt-4">
-                                <span class="text-green-600 font-bold bg-green-50 px-4 py-1 rounded-full text-sm">OPEN</span>
-                            </div>
-                        </div>
-                    </a>
-
-                </div>
-            </div>
-        </main>
+    </main>
     
-    </div> <dialog id="add_term_modal" class="modal">
+    <dialog id="add_term_modal" class="modal">
         <div class="modal-box bg-white">
             <h3 class="font-bold text-xl mb-4 text-gray-800">Add New Term</h3>
 
@@ -107,7 +89,7 @@
         <form method="dialog" class="modal-backdrop"><button>close</button></form>
     </dialog>
 
-    <script src="/AdminNew/script/Terms.js"></script>
+    <script src="/AdminNew/script/Term.js"></script>
 </body>
 
 </html>

@@ -19,17 +19,21 @@
                 <h1 class="text-2xl font-bold mfu-gold">MFU E-VOTING</h1>
                 <p class="text-xs opacity-80 mt-1">Admin Control Panel</p>
             </div>
-            <nav class="mt-8 flex flex-col flex-1">
-                <a href="/AdminNew/views/Term.html" id="menu-index" class="nav-item">Term</a>
-                <a href="/AdminNew/views/Dashboard.html" id="menu-dashboards" class="nav-item active">Dashboard</a>
-                <a href="/AdminNew/views/Voting.html" id="menu-voters" class="nav-item">Voter Management</a>
-                <a href="/AdminNew/views/Candidates.html" id="menu-candidates" class="nav-item">Candidate Management</a>
-                <button id="logout-Btn" class="nav-item mt-auto">logout</button>
-            </nav>
+            <ul class="flex flex-col gap-1 px-4 text-sm font-medium">
+                <li><a href="/AdminNew/views/Term.html"
+                        class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Terms</a></li>
+
+                <li><a href="#" onclick="goToPage('Dashboard.html')"
+                        class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Dashboard</a></li>
+                <li><a href="#" onclick="goToPage('Voting.html')"
+                        class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Voter Management</a></li>
+                <li><a href="#" onclick="goToPage('Candidates.html')"
+                        class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Candidate Management</a></li>
+            </ul>
         </aside>
 
         <main class="flex-1 overflow-y-auto p-8 bg-gray-50">
-<!-- Overview Section -->
+            <!-- Overview Section -->
             <div class="card flex justify-between items-center mb-8 p-6">
                 <div>
                     <h2 class="text-2xl font-semibold text-gray-800">Overview Dashboard</h2>
@@ -37,13 +41,10 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="font-medium text-gray-700">Voting Status:</span>
-                    <label class="switch">
-                        <input type="checkbox" id="votingToggle" checked>
-                        <span class="slider round"></span>
-                    </label>
+                    <input type="checkbox" id="toggle-voting-status" class="toggle toggle-success" />
                 </div>
             </div>
-<!-- Statistics Cards -->
+            <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="stat-card border-red-700">
                     <p class="stat-label">Total Voters</p>
@@ -63,7 +64,7 @@
                 </div>
             </div>
 
-             <!-- Live Results and Add Candidate -->
+            <!-- Live Results and Add Candidate -->
             <section>
                 <div class="lg:col-span-2 card p-6">
                     <h3 class="text-lg font-semibold mb-4 text-gray-700">Live Results</h3>

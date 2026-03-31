@@ -55,7 +55,7 @@ const submitVote = async (req, res) => {
         // บันทึกประวัติลงตาราง Votes
         await conn.query("INSERT INTO Votes (voter_id, candidate_id) VALUES (?, ?)", [voter_id, candidate_id]);
 
-        await conn.commit(); // ✅ ทำครบ 4 ขั้นตอนอย่างปลอดภัย กดยืนยันการเซฟได้!
+        await conn.commit(); // ทำครบ 4 ขั้นตอนอย่างปลอดภัย กดยืนยันการเซฟได้!
         res.json({ status: "success", message: "ลงคะแนนโหวตสำเร็จ!" });
 
     } catch (error) {
