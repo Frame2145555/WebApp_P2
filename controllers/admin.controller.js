@@ -157,8 +157,8 @@ const createVoter = async (req, res) => {
         return res.status(400).json({ message: "รหัสบัตรประชาชนต้องเป็นตัวเลข 13 หลักเท่านั้น!" });
     }
 
-    // 3. อุดช่องโหว่: ดักรูปแบบของ Laser ID (อักษร 2 ตัว + เลข 10 ตัว)
-    const laserRegex = /^[A-Za-z]{2}\d{10}$/;
+    // 3. อุดช่องโหว่: ดักรูปแบบของ Laser ID (12 หลัก ตัวเลข/อังกฤษ)
+    const laserRegex = /^[A-Za-z0-9]{12}$/;
     if (!laserRegex.test(laser_id)) {
         return res.status(400).json({ message: "รหัสหลังบัตร (Laser ID) ไม่ถูกต้อง (ต้องเป็นภาษาอังกฤษ 2 ตัว ตามด้วยตัวเลข 10 ตัว)" });
     }
@@ -266,7 +266,6 @@ const createTerm = async (req, res) => {
 
 // API: ดึงข้อมูลสถิติหน้า Dashboard (กรองตาม Term)
 const getDashboardStats = async (req, res) => {
-    // รับค่า term_id จาก Query String (เช่น /api/admin/dashboard?term_id=1)
     const { term_id } = req.query; 
 
     if (!term_id) {
@@ -275,7 +274,7 @@ const getDashboardStats = async (req, res) => {
 
     const connection = await pool.getConnection();
     try {
-        // 1. ดึงข้อมูลผู้สมัครและคะแนนโหวต เฉพาะของเทอมนี้ (เรียงจากคะแนนมากไปน้อย)
+        // ผู้สมัครเรียงคะแนน
         const [candidates] = await connection.query(
             `SELECT candidate_id, name, score 
              FROM candidates 
@@ -284,14 +283,33 @@ const getDashboardStats = async (req, res) => {
             [term_id]
         );
 
-        // 2. (ถ้ามี) ดึงสถิติคนโหวตว่าใช้สิทธิ์ไปกี่คนแล้วในเทอมนี้
-        // const [voterStats] = await connection.query("SELECT COUNT(*) as total_voted FROM votes WHERE term_id = ?", [term_id]);
+        // สถิติผู้มีสิทธิ์ / ใช้สิทธิ์
+        const [[voterCounts]] = await connection.query(
+            `SELECT 
+                COUNT(*) AS total_voters,
+                SUM(is_voted = 1) AS total_voted
+             FROM voters
+             WHERE term_id = ?`,
+            [term_id]
+        );
+
+        const totalVoters = Number(voterCounts.total_voters || 0);
+        const totalVoted = Number(voterCounts.total_voted || 0);
+        const votedPercent = totalVoters > 0 ? (totalVoted / totalVoters) * 100 : 0;
+
+        const [[candidateCount]] = await connection.query(
+            `SELECT COUNT(*) AS total_candidates FROM candidates WHERE term_id = ?`,
+            [term_id]
+        );
 
         res.status(200).json({
             status: "success",
             data: {
-                candidates: candidates,
-                // total_voted: voterStats[0].total_voted
+                candidates,
+                total_voters: totalVoters,
+                total_voted: totalVoted,
+                voted_percent: Number(votedPercent.toFixed(2)),
+                total_candidates: Number(candidateCount.total_candidates || 0)
             }
         });
 
@@ -300,6 +318,106 @@ const getDashboardStats = async (req, res) => {
         res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลสถิติ" });
     } finally {
         connection.release();
+    }
+};
+
+// API: ผลคะแนนเรียงลำดับมากไปน้อย (ใช้หน้า results/dashboard)
+const getResults = async (req, res) => {
+    const { term_id } = req.query;
+    if (!term_id) {
+        return res.status(400).json({ message: "กรุณาระบุ term_id" });
+    }
+
+    try {
+        const [rows] = await pool.query(
+            `SELECT candidate_id, name, score
+             FROM candidates
+             WHERE term_id = ?
+             ORDER BY score DESC, candidate_id ASC`,
+            [term_id]
+        );
+        res.status(200).json({ status: "success", data: rows });
+    } catch (error) {
+        console.error("Get Results Error:", error);
+        res.status(500).json({ message: "Backend Error" });
+    }
+};
+
+// API: toggle เปิด/ปิดเทอม (is_active)
+const toggleVoting = async (req, res) => {
+    const { term_id, status } = req.body;
+    if (!term_id || (status !== 0 && status !== 1)) {
+        return res.status(400).json({ message: "กรุณาส่ง term_id และ status (0/1)" });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+        if (status === 1) {
+            await connection.query("UPDATE terms SET is_active = 0");
+        }
+        const [result] = await connection.query(
+            "UPDATE terms SET is_active = ? WHERE term_id = ?",
+            [status, term_id]
+        );
+        if (result.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: "ไม่พบ term นี้" });
+        }
+        await connection.commit();
+        res.status(200).json({ status: "success", message: status === 1 ? "เปิดโหวตแล้ว" : "ปิดโหวตแล้ว" });
+    } catch (error) {
+        await connection.rollback();
+        console.error("Toggle Voting Error:", error);
+        res.status(500).json({ message: "Backend Error" });
+    } finally {
+        connection.release();
+    }
+};
+
+// API: เปิด/ปิดสิทธิ์ผู้ใช้ (is_enable)
+const toggleUser = async (req, res) => {
+    const { user_id, status } = req.body;
+    if (!user_id || (status !== 0 && status !== 1)) {
+        return res.status(400).json({ message: "กรุณาส่ง user_id และ status (0/1)" });
+    }
+    try {
+        const [result] = await pool.query(
+            "UPDATE users SET is_enable = ? WHERE user_id = ?",
+            [status, user_id]
+        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "ไม่พบผู้ใช้งาน" });
+        }
+        res.status(200).json({ status: "success", message: "อัปเดตสถานะผู้ใช้เรียบร้อย" });
+    } catch (error) {
+        console.error("Toggle User Error:", error);
+        res.status(500).json({ message: "Backend Error" });
+    }
+};
+
+// API: ดึงรายชื่อ voter (สำหรับ Voting.js)
+const listVoters = async (req, res) => {
+    const { term_id } = req.query;
+    const params = [];
+    let where = "";
+    if (term_id) {
+        where = "WHERE v.term_id = ?";
+        params.push(term_id);
+    }
+    try {
+        const [rows] = await pool.query(
+            `SELECT v.voter_id, v.term_id, v.is_voted, u.user_id, u.username AS citizen_id, u.is_enable
+             FROM voters v
+             JOIN users u ON v.user_id = u.user_id
+             ${where}
+             ORDER BY v.voter_id ASC`,
+            params
+        );
+        res.status(200).json({ status: "success", data: rows });
+    } catch (error) {
+        console.error("List Voters Error:", error);
+        res.status(500).json({ message: "Backend Error" });
     }
 };
 
@@ -413,5 +531,9 @@ module.exports = {
     createTerm,
     getDashboardStats,
     toggleTermStatus,
-    getTermById
+    getTermById,
+    getResults,
+    toggleVoting,
+    toggleUser,
+    listVoters
 };
