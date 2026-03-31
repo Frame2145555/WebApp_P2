@@ -8,7 +8,7 @@ const { createCandidate,
     toggleCandidateStatus,
     deleteCandidate,
     getTerms,
-    createTerm
+    createTerm,
  } = require('../controllers/admin.controller');
 
 // URL จะเป็น /api/admin/create-candidate
@@ -19,5 +19,7 @@ router.post('/toggle-candidate', toggleCandidateStatus);
 router.delete('/candidate/:id', deleteCandidate);
 router.get('/terms', getTerms);
 router.post('/create-term', createTerm); 
+// router.put('/term/:id/status', adminController.toggleTermStatus);
+// router.get('/term/:id', adminController.getTermById);
 
 module.exports = router;

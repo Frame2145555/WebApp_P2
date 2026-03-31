@@ -344,7 +344,64 @@ const setActiveTerm = async (req, res) => {
     }
 };
 
-//export ทั้ง 2 ฟังก์ชันออกไปให้ route
+// API: เปิด/ปิด ระบบโหวต (Toggle Term Status)
+const toggleTermStatus = async (req, res) => {
+    const { id } = req.params; // รับค่า term_id จาก URL
+    const { status } = req.body; // รับค่า 1 (เปิด) หรือ 0 (ปิด) จากหน้าบ้าน
+
+    const connection = await pool.getConnection();
+    try {
+        // เริ่ม Transaction (ถ้ามีอะไรพัง ให้ยกเลิกคำสั่ง SQL ทั้งหมดที่ทำค้างไว้)
+        await connection.beginTransaction();
+
+        // 💡 กฎเหล็ก: ถ้าแอดมินสั่ง "เปิดโหวต" (status = 1) 
+        // เราต้องไปสั่ง "ปิด" เทอมอื่นๆ ทั้งหมดก่อน เพื่อไม่ให้มีการโหวตซ้อนกันหลายปี!
+        if (status === 1) {
+            await connection.query("UPDATE terms SET is_active = 0"); 
+        }
+
+        // จากนั้นค่อยมา "เปิด" หรือ "ปิด" เฉพาะเทอมที่เราเลือกจริงๆ
+        await connection.query("UPDATE terms SET is_active = ? WHERE term_id = ?", [status, id]);
+
+        // ยืนยันการบันทึกข้อมูลลง Database
+        await connection.commit();
+
+        res.status(200).json({ 
+            status: "success", 
+            message: status === 1 ? "เปิดระบบโหวตเรียบร้อยแล้ว!" : "ปิดระบบโหวตเรียบร้อยแล้ว!" 
+        });
+
+    } catch (error) {
+        // ถ้าพังกลางคัน ให้ย้อนกลับ (Rollback) ข้อมูลจะได้ไม่เน่า
+        await connection.rollback(); 
+        console.error("Toggle Term Status Error:", error);
+        res.status(500).json({ message: "Server Error: ไม่สามารถเปลี่ยนสถานะได้" });
+    } finally {
+        connection.release();
+    }
+};
+
+const getTermById = async (req, res) => {
+    const { id } = req.params; // ดูดเลข ID มาจาก URL (เช่น /api/admin/term/3)
+
+    try {
+        // ยิง SQL ไปถาม Database ว่าขอข้อมูลของ ID นี้หน่อย
+        const [terms] = await pool.query("SELECT * FROM terms WHERE term_id = ?", [id]);
+        
+        // ถ้าหาไม่เจอ (พิมพ์ ID มั่วมา)
+        if (terms.length === 0) {
+            return res.status(404).json({ message: "ไม่พบข้อมูลปีการศึกษานี้" });
+        }
+
+        // ถ้าเจอ: ส่งก้อนข้อมูลกลับไปให้หน้าเว็บ (Frontend)
+        res.status(200).json({ status: "success", data: terms[0] });
+
+    } catch (error) {
+        console.error("Get Term Error:", error);
+        res.status(500).json({ message: "Server พังจ้า ดึงข้อมูลไม่ได้" });
+    }
+};
+
 module.exports = {
     createCandidate,
     createVoter,
@@ -354,5 +411,7 @@ module.exports = {
     deleteCandidate,
     getTerms,
     createTerm,
-    getDashboardStats
+    getDashboardStats,
+    toggleTermStatus,
+    getTermById
 };
