@@ -159,7 +159,7 @@ const deleteCandidate = async (req, res) => {
     } catch (error) {
         console.error("Delete Candidate Error:", error);
         
-        // 🚨 ดัก Error กรณีที่ผู้สมัครคนนี้มี "คะแนนโหวต" ไปแล้ว (ฐานข้อมูลจะไม่ยอมให้ลบ เพื่อป้องกันข้อมูลพัง)
+        // ดัก Error กรณีที่ผู้สมัครคนนี้มี "คะแนนโหวต" ไปแล้ว (ฐานข้อมูลจะไม่ยอมให้ลบ เพื่อป้องกันข้อมูลพัง)
         if (error.code === 'ER_ROW_IS_REFERENCED_2') {
             return res.status(400).json({ message: "ไม่สามารถลบได้ เนื่องจากผู้สมัครคนนี้มีคะแนนโหวตในระบบแล้ว (แนะนำให้ใช้การ Disable แทน)" });
         }
@@ -183,13 +183,13 @@ const createVoter = async (req, res) => {
         return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบ (citizen_id, laser_id, term_id)" });
     }
 
-    // 🚨 2. อุดช่องโหว่: ดักความยาวและรูปแบบของ Citizen ID (เลข 13 หลัก)
+    // 2. อุดช่องโหว่: ดักความยาวและรูปแบบของ Citizen ID (เลข 13 หลัก)
     const citizenRegex = /^\d{13}$/;
     if (!citizenRegex.test(citizen_id)) {
         return res.status(400).json({ message: "รหัสบัตรประชาชนต้องเป็นตัวเลข 13 หลักเท่านั้น!" });
     }
 
-    // 🚨 3. อุดช่องโหว่: ดักรูปแบบของ Laser ID (อักษร 2 ตัว + เลข 10 ตัว)
+    // 3. อุดช่องโหว่: ดักรูปแบบของ Laser ID (อักษร 2 ตัว + เลข 10 ตัว)
     const laserRegex = /^[A-Za-z]{2}\d{10}$/;
     if (!laserRegex.test(laser_id)) {
         return res.status(400).json({ message: "รหัสหลังบัตร (Laser ID) ไม่ถูกต้อง (ต้องเป็นภาษาอังกฤษ 2 ตัว ตามด้วยตัวเลข 10 ตัว)" });
@@ -248,6 +248,54 @@ const createVoter = async (req, res) => {
     }
 };
 
+// API: ดึงข้อมูลรอบการเลือกตั้งทั้งหมด (Get All Terms)
+const getTerms = async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        // ดึงข้อมูลทั้งหมดจากตาราง terms เรียงจาก term_id ล่าสุดขึ้นก่อน
+        const [terms] = await connection.query("SELECT * FROM terms ORDER BY term_id DESC");
+        
+        res.status(200).json({ 
+            status: "success", 
+            data: terms 
+        });
+    } catch (error) {
+        console.error("Get Terms Error:", error);
+        res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลรอบการเลือกตั้ง" });
+    } finally {
+        connection.release();
+    }
+};
+
+// API: สร้างรอบการเลือกตั้งใหม่ (Create Term)
+const createTerm = async (req, res) => {
+    // รับค่าจากหน้าต่าง Modal (ชื่อเทอม และ คำอธิบาย)
+    const { name, description } = req.body;
+
+    if (!name) {
+        return res.status(400).json({ message: "ตั้งชื่อก่อนดิ เดี่ยวโดนฟาด" });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        // แอดมินสร้างเทอมใหม่ ให้ตั้งค่าเริ่มต้น is_active = 0 (ยังไม่เปิดโหวต) ไปก่อน
+        await connection.query(
+            "INSERT INTO terms (name, description, is_active) VALUES (?, ?, 0)",
+            [name, description || ""]
+        );
+
+        res.status(200).json({ 
+            status: "success", 
+            message: `สร้างรอบการเลือกตั้ง ${name} สำเร็จ!` 
+        });
+    } catch (error) {
+        console.error("Create Term Error:", error);
+        res.status(500).json({ message: "เกิดข้อผิดพลาดในการสร้างรอบการเลือกตั้ง" });
+    } finally {
+        connection.release();
+    }
+};
+
 // API: เปิดวาระการเลือกตั้ง (เปิดได้แค่ทีละ 1 เทอม)
 const setActiveTerm = async (req, res) => {
     const { term_id } = req.body;
@@ -296,5 +344,7 @@ module.exports = {
     setActiveTerm,
     getCandidates,
     toggleCandidateStatus,
-    deleteCandidate
+    deleteCandidate,
+    getTerms,
+    createTerm
 };
