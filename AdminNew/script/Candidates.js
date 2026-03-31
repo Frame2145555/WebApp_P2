@@ -1,12 +1,37 @@
-// ดึง term_id จาก URL (ถ้าไม่มีให้ค่าเริ่มต้นเป็น 3 ตามที่คุณกำลังเทสอยู่)
-const urlParams = new URLSearchParams(window.location.search);
-const currentTermId = urlParams.get('term_id') || 3; 
+let currentTermId = null; // สร้างตัวแปรไว้ให้ฟังก์ชันอื่นดึงไปใช้ได้
+
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    currentTermId = urlParams.get('term_id');
+
+    // ถ้าไม่มี term_id ให้เตะกลับหน้า Term
+    if (!currentTermId) {
+        window.location.href = '/AdminNew/views/Term.html';
+        return; // หยุดการทำงานทันที
+    }
+
+    // 🚨 อัปเดตลิงก์ใน Sidebar ให้ห้อย term_id ไปด้วย (รอจน HTML โหลดเสร็จแล้วถึงทำ)
+    const sidebarLinks = document.querySelectorAll('aside ul li a');
+    sidebarLinks.forEach(link => {
+        const originalHref = link.getAttribute('href');
+        
+        // กรองลิงก์ที่ไม่ต้องใส่ term_id ออก (เช่น # หรือหน้า Term)
+        if (originalHref && originalHref !== '#' && !originalHref.includes('Term.html')) {
+            // ดักไว้เผื่อลิงก์มันมี ?term_id อยู่แล้ว จะได้ไม่เบิ้ลซ้ำ
+            if (!originalHref.includes('?term_id=')) {
+                link.href = `${originalHref}?term_id=${currentTermId}`;
+            }
+        }
+    });
+    loadCandidates(); 
+});
+
 
 // ฟังก์ชันหลักสำหรับดึงข้อมูลจาก API
 async function loadCandidates(searchQuery = '') {
     try {
         // ยิงไปที่ API หลังบ้านของเรา พร้อมส่ง term_id และ search keyword ไปด้วย
-        const response = await fetch(`http://localhost:3000/api/admin/candidates?term_id=${currentTermId}&search=${searchQuery}`);
+        const response = await fetch(`http://localhost:3000/api/admin/candidates?term_id=${currentTermId}`);
         const result = await response.json();
 
         if (result.status === 'success') {
@@ -183,7 +208,8 @@ if (addCandidateBtn) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     candidate_id: candidate_id, 
-                    name: name 
+                    name: name,
+                    term_id: currentTermId // 🚨 เพิ่มบรรทัดนี้! ส่ง term_id รอดพ้นไม้กวาดฟาดแน่นอน!
                 })
             });
 
@@ -291,8 +317,4 @@ async function deleteCandidate(candidateId) {
     }
 }
 
-// โหลดข้อมูลทันทีที่เปิดหน้าเว็บ
-document.addEventListener('DOMContentLoaded', () => {
-    loadCandidates();
-});
 

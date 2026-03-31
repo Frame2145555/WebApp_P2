@@ -3,32 +3,26 @@ const pool = require('../db');
 // Add Candidate
 
 const createCandidate = async (req, res) => {
-    // รับค่าที่ Admin ส่งมา (หน้าเว็บ)
-    const { candidate_id, name } = req.body;
+    // 1. รับค่าที่ Admin ส่งมา (หน้าเว็บต้องส่ง term_id มาด้วยนะ!)
+    const { candidate_id, name, term_id } = req.body;
 
-    if (!candidate_id || !name) {
-        return res.status(400).json({ message: "กรุณากรอก Candidate ID และ ชื่อ ให้ด้วยนะ เดี่ยวโดนไม้กวาดฟาด" });
+    // 2. ดักไว้ก่อน เผื่อส่งมาไม่ครบ
+    if (!candidate_id || !name || !term_id) {
+        return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบ (ID, ชื่อ และ Term ID) เดี่ยวโดนไม้กวาดฟาด!" });
     }
 
     try {
-        // ดึง term_id ของวาระที่กำลังเปิดโหวตอยู่ (is_active = 1) อัตโนมัติ
-        const [activeTerms] = await pool.query("SELECT term_id FROM terms WHERE is_active = 1 LIMIT 1");
-
-        if (activeTerms.length === 0) {
-            return res.status(400).json({ message: "มึงยังไม่ได้เปิดระบบ vote ไป เปิดก่อน" });
-        }
-        const currentTermId = activeTerms[0].term_id;
-
-        // บันทึก ID นี้ลงฐานข้อมูล (ใส่ term_id ลงไปด้วย)
-        // เตือนก่อนนะจ่ะ: user_id จะเป็น NULL ไปก่อน รอให้ผู้สมัครมา Register ทีหลัง
+        // 🚨 สังเกตว่าเราไม่ต้องไป SELECT หา is_active แล้ว! 
+        // จับยัดลง Database ตาม term_id ที่ส่งมาเลย 
+        // (เตือนก่อนนะจ่ะ: user_id จะเป็น NULL ไปก่อน รอให้ผู้สมัครมา Register ทีหลัง)
         await pool.query(
             "INSERT INTO candidates (candidate_id, name, is_registered, term_id) VALUES (?, ?, 0, ?)",
-            [candidate_id, name, currentTermId]
+            [candidate_id, name, term_id]
         );
 
         res.status(200).json({
             status: "success",
-            message: `สร้างรหัสผู้สมัคร ${candidate_id} สำหรับ ${name} ได้แวว`
+            message: `สร้างรหัสผู้สมัคร ${candidate_id} สำหรับ ${name} ลงในเทอม ${term_id} ได้แวว`
         });
 
     } catch (error) {
@@ -44,47 +38,21 @@ const createCandidate = async (req, res) => {
 
 // API: ดึงรายชื่อผู้สมัคร, นโยบาย, สถานะ และผลโหวต และ Search
 const getCandidates = async (req, res) => {
-    const { term_id, search } = req.query;
-
-    if (!term_id) {
-        return res.status(400).json({ message: "กรุณาระบุรอบการเลือกตั้ง (term_id)" });
-    }
+    const { term_id } = req.query;
 
     const connection = await pool.getConnection();
-    
     try {
-        // แก้ SQL: เอาเงื่อนไข AND v.term_id = ? ออกจาก Subquery แล้ว
-        let sql = `
-            SELECT 
-                c.candidate_id,
-                c.name,
-                IFNULL(c.policies, 'ยังไม่ลงทะเบียนนโยบาย') AS policies,
-                c.is_registered,
-                IFNULL(u.is_enable, 0) AS status_enable,
-                (SELECT COUNT(*) FROM votes v WHERE v.candidate_id = c.candidate_id) AS score
-            FROM candidates c
-            LEFT JOIN users u ON c.user_id = u.user_id 
-            WHERE c.term_id = ?
-        `;
-        
-        // แก้ Params: เหลือ term_id แค่ตัวเดียวสำหรับ WHERE c.term_id = ?
-        let params = [term_id];
+        let query = "SELECT * FROM candidates";
+        let params = [];
 
-        // ระบบ scarch
-        if (search) {
-            sql += ` AND (c.candidate_id LIKE ? OR c.name LIKE ?)`;
-            params.push(`%${search}%`, `%${search}%`);
+        // ถ้ามีการส่ง term_id มา ให้กรองข้อมูลด้วย
+        if (term_id) {
+            query += " WHERE term_id = ?";
+            params.push(term_id);
         }
 
-        sql += ` ORDER BY score DESC, c.candidate_id ASC`;
-
-        const [candidates] = await connection.query(sql, params);
-
-        res.status(200).json({
-            status: "success",
-            data: candidates
-        });
-
+        const [candidates] = await connection.query(query, params);
+        res.status(200).json({ status: "success", data: candidates });
     } catch (error) {
         console.error("Get Candidates Error:", error);
         res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลผู้สมัคร" });
@@ -296,6 +264,45 @@ const createTerm = async (req, res) => {
     }
 };
 
+// API: ดึงข้อมูลสถิติหน้า Dashboard (กรองตาม Term)
+const getDashboardStats = async (req, res) => {
+    // รับค่า term_id จาก Query String (เช่น /api/admin/dashboard?term_id=1)
+    const { term_id } = req.query; 
+
+    if (!term_id) {
+        return res.status(400).json({ message: "กรุณาระบุ term_id ที่ต้องการดูข้อมูล" });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        // 1. ดึงข้อมูลผู้สมัครและคะแนนโหวต เฉพาะของเทอมนี้ (เรียงจากคะแนนมากไปน้อย)
+        const [candidates] = await connection.query(
+            `SELECT candidate_id, name, score 
+             FROM candidates 
+             WHERE term_id = ? 
+             ORDER BY score DESC`, 
+            [term_id]
+        );
+
+        // 2. (ถ้ามี) ดึงสถิติคนโหวตว่าใช้สิทธิ์ไปกี่คนแล้วในเทอมนี้
+        // const [voterStats] = await connection.query("SELECT COUNT(*) as total_voted FROM votes WHERE term_id = ?", [term_id]);
+
+        res.status(200).json({
+            status: "success",
+            data: {
+                candidates: candidates,
+                // total_voted: voterStats[0].total_voted
+            }
+        });
+
+    } catch (error) {
+        console.error("Get Dashboard Stats Error:", error);
+        res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลสถิติ" });
+    } finally {
+        connection.release();
+    }
+};
+
 // API: เปิดวาระการเลือกตั้ง (เปิดได้แค่ทีละ 1 เทอม)
 const setActiveTerm = async (req, res) => {
     const { term_id } = req.body;
@@ -346,5 +353,6 @@ module.exports = {
     toggleCandidateStatus,
     deleteCandidate,
     getTerms,
-    createTerm
+    createTerm,
+    getDashboardStats
 };

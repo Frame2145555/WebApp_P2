@@ -1,3 +1,25 @@
+// ==========================================
+// 1. ดึงค่า term_id จาก URL 
+// ==========================================
+const urlParams = new URLSearchParams(window.location.search);
+const currentTermId = urlParams.get('term_id');
+
+// ถ้าเกิดไม่มี term_id ให้เตะกลับไปหน้า Term
+if (!currentTermId) {
+    window.location.href = '/AdminNew/views/Term.html'; 
+} else {
+    // 🚨 อัปเดตลิงก์ใน Sidebar ให้ห้อย term_id ไปด้วยอัตโนมัติ!
+    const sidebarLinks = document.querySelectorAll('aside ul li a');
+    sidebarLinks.forEach(link => {
+        const originalHref = link.getAttribute('href');
+        // ยกเว้นหน้า Term ที่ไม่ต้องพก term_id กลับไป
+        if (originalHref && originalHref !== '#' && !originalHref.includes('Term.html')) {
+            // เอาลิงก์เดิม มาต่อท้ายด้วย ?term_id=...
+            link.href = `${originalHref}?term_id=${currentTermId}`;
+        }
+    });
+}
+
 (() => {
     document.addEventListener('DOMContentLoaded', () => {
         initDashboardChart();

@@ -1,403 +1,121 @@
-(() => {
-    // จุดรวม API endpoint ฝั่ง admin
-    const API = {
-        listVoters: '/api/admin/voters',
-        createVoter: '/api/admin/create-voter'
-    };
+// เมื่อโหลดหน้าเว็บเสร็จ ให้ดึงข้อมูลมาแสดงทันที
+document.addEventListener('DOMContentLoaded', () => {
+    loadTerms();
+});
 
-    // key สำหรับเก็บชื่อเต็มของ voter ใน localStorage
-    const VOTER_NAMES_STORAGE_KEY = 'mfu_voter_names_v1';
+// ฟังก์ชัน: ดึงข้อมูล Term จาก API และวาดการ์ด
+async function loadTerms() {
+    try {
+        const response = await fetch('http://localhost:3000/api/admin/terms');
+        const result = await response.json();
 
-    document.addEventListener('DOMContentLoaded', () => {
-        initTabNavigationIfPresent();
-        initDashboardChartIfPresent();
-        initDashboardVotingStatusToggleIfPresent();
-        initCandidateManagementIfPresent();
-        initVoterManagementIfPresent();
-    });
-
-    // ------------------------------
-    // Dashboard (กราฟ + toggle เปิด/ปิดโหวต)
-    // ------------------------------
-    let scoreChart;
-    function initDashboardChartIfPresent() {
-        const canvas = document.getElementById('scoreChart');
-        if (!canvas || typeof Chart === 'undefined') return; // ไม่มีกราฟก็ข้าม
-
-        const ctx = canvas.getContext('2d');
-        scoreChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['CAND-001', 'CAND-002', 'CAND-003'],
-                datasets: [{
-                    label: 'Votes',
-                    data: [450, 320, 150],
-                    backgroundColor: '#8C1515',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y'
-            }
-        });
-    }
-
-    function initDashboardVotingStatusToggleIfPresent() {
-        const votingToggle = document.getElementById('votingToggle');
-        const statusText = document.getElementById('statusText');
-        if (!votingToggle || !statusText) return; // หน้าอื่นไม่มี element นี้
-
-        votingToggle.addEventListener('change', function () {
-            const isEnabled = this.checked;
-
-            Swal.fire({
-                title: isEnabled ? 'เปิดระบบโหวต?' : 'ปิดระบบโหวต?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#8C1515',
-                confirmButtonText: 'ตกลง'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    statusText.innerText = isEnabled ? 'ระบบกำลังเปิดรับการโหวต' : 'ระบบปิดการรับโหวตแล้ว';
-                    statusText.className = isEnabled ? 'text-green-600' : 'text-red-600';
-                } else {
-                    this.checked = !isEnabled;
-                }
-            });
-        });
-    }
-
-    // ------------------------------
-    // Admin2 tab navigation (admin.html) สลับ section ด้วยปุ่มซ้าย
-    // ------------------------------
-    function initTabNavigationIfPresent() {
-        const dashboardBtn = document.getElementById('menu-dashboard');
-        const voterBtn = document.getElementById('menu-voter');
-        const candidateBtn = document.getElementById('menu-candidate');
-        if (!dashboardBtn && !voterBtn && !candidateBtn) return;
-
-        const menus = [
-            { btn: 'menu-dashboard', sec: 'section-dashboard' },
-            { btn: 'menu-voter', sec: 'section-voter' },
-            { btn: 'menu-candidate', sec: 'section-candidate' }
-        ];
-
-        menus.forEach(item => {
-            const btnElement = document.getElementById(item.btn);
-            if (!btnElement) return;
-            btnElement.addEventListener('click', (e) => {
-                e.preventDefault();
-                updateActiveTab(item, menus);
-            });
-        });
-    }
-
-    function updateActiveTab(activeItem, allItems) {
-        allItems.forEach(item => {
-            const btn = document.getElementById(item.btn);
-            const sec = document.getElementById(item.sec);
-            if (!btn || !sec) return;
-
-            if (item.btn === activeItem.btn) {
-                btn.classList.add('active');
-                sec.classList.remove('hidden-section');
-                sec.classList.add('active-section');
-            } else {
-                btn.classList.remove('active');
-                sec.classList.remove('active-section');
-                sec.classList.add('hidden-section');
-            }
-        });
-    }
-
-    // ------------------------------
-    // Candidate management (ถ้าอยู่หน้า Candidates.html)
-    // ------------------------------
-    function initCandidateManagementIfPresent() {
-        const table = document.getElementById('candidateTable');
-        if (!table) return;
-
-        const addBtn = document.getElementById('addCandBtn');
-        const idInput = document.getElementById('candIdInput');
-        const searchBox = document.getElementById('searchBox');
-
-        if (addBtn && idInput) {
-            addBtn.addEventListener('click', () => {
-                if (idInput.value.trim() === '') {
-                    return Swal.fire('Error', 'กรุณากรอก ID', 'error');
-                }
-                addCandidateToTable(idInput.value.trim(), 'Enabled');
-                idInput.value = '';
-                Swal.fire('Success', 'เพิ่มข้อมูลเรียบร้อยแล้ว', 'success');
-            });
+        if (result.status === 'success') {
+            renderTermCards(result.data);
         }
+    } catch (error) {
+        console.error('Error loading terms:', error);
+        Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลรอบการเลือกตั้งได้', 'error');
+    }
+}
 
-        if (searchBox) {
-            searchBox.addEventListener('keyup', function () {
-                const filter = this.value.toUpperCase();
-                const rows = table.querySelector('tbody')?.rows || [];
-                Array.from(rows).forEach(row => {
-                    const id = row.cells?.[0]?.textContent || '';
-                    row.style.display = id.toUpperCase().includes(filter) ? '' : 'none';
-                });
-            });
-        }
+// ฟังก์ชัน: นำข้อมูล Array มาสร้างเป็นการ์ด HTML
+function renderTermCards(terms) {
+    const container = document.getElementById('terms-container');
+    container.innerHTML = ''; // เคลียร์ของเก่าทิ้งก่อน (ถ้ามี)
+
+    // ถ้ายังไม่มีข้อมูลเลย
+    if (terms.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">ยังไม่มีข้อมูลรอบการเลือกตั้ง กรุณาเพิ่มข้อมูลใหม่</p>';
+        return;
     }
 
-    function addCandidateToTable(id, status) {
-        const tbody = document.querySelector('#candidateTable tbody');
-        if (!tbody) return;
-        const row = tbody.insertRow();
-        row.innerHTML = `
-            <td class="px-6 py-4 font-medium text-gray-800">${escapeHtml(id)}</td>
-            <td class="px-6 py-4">
-                <span class="status-badge px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">${escapeHtml(status)}</span>
-            </td>
-            <td class="px-6 py-4 text-center">
-                <button onclick="toggleStatus(this)" class="text-red-600 hover:underline text-sm font-medium">Disable</button>
-            </td>
+    // วนลูปวาดการ์ดทีละใบ
+    terms.forEach(term => {
+        // เช็คว่าเปิดโหวตอยู่หรือปิดไปแล้ว (1 = OPEN, 0 = CLOSE)
+        const isOpen = term.is_active === 1;
+        
+        // กำหนดสีของการ์ดตามสถานะ
+        const statusClass = isOpen ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50';
+        const statusText = isOpen ? 'OPEN' : 'CLOSE';
+        const borderClass = isOpen ? 'border-t-green-500' : 'border-t-red-500 opacity-75 hover:opacity-100';
+
+        const cardHtml = `
+            <a href="/AdminNew/views/Dashboard.html?term_id=${term.term_id}"
+                class="card bg-white shadow-sm border border-gray-100 border-t-4 ${borderClass} rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer block">
+                <div class="card-body items-center text-center p-8">
+                    <h2 class="card-title text-4xl font-bold text-gray-800">${term.name}</h2>
+                    <p class="text-gray-400 text-sm mt-2">${term.description || 'คลิกเพื่อดูสถิติและจัดการ'}</p>
+                    <div class="mt-4">
+                        <span class="font-bold px-4 py-1 rounded-full text-sm ${statusClass}">${statusText}</span>
+                    </div>
+                </div>
+            </a>
         `;
-    }
+        container.innerHTML += cardHtml;
+    });
+}
 
-    window.toggleStatus = function toggleStatus(btn) {
-        const row = btn.closest('tr');
-        const badge = row?.querySelector('.status-badge');
-        if (!badge) return;
+// ระบบ: กดปุ่มเพิ่มรอบการเลือกตั้งใหม่ (Add Term)
+const btnSubmitTerm = document.getElementById('btn-submit-term');
 
-        const isEnabled = badge.innerText.trim() === 'Enabled';
-        if (isEnabled) {
-            badge.innerText = 'Disabled';
-            badge.className = 'status-badge px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500';
-            btn.innerText = 'Enable';
-            btn.className = 'text-green-600 hover:underline text-sm font-medium';
-        } else {
-            badge.innerText = 'Enabled';
-            badge.className = 'status-badge px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700';
-            btn.innerText = 'Disable';
-            btn.className = 'text-red-600 hover:underline text-sm font-medium';
-        }
-    };
+if (btnSubmitTerm) {
+    btnSubmitTerm.addEventListener('click', async () => {
+        const nameInput = document.getElementById('input-term-name');
+        const descInput = document.getElementById('input-term-desc');
 
-    // ------------------------------
-    // Voter management (หน้า Voting.html)
-    // ------------------------------
-    let voterRefreshTimer = null;
+        const name = nameInput.value.trim();
+        const description = descInput.value.trim();
 
-    function initVoterManagementIfPresent() {
-        const tbody = document.getElementById('voterTableBody');
-        if (!tbody) return; // ไม่ใช่หน้า Voting
-
-        const toggle = document.getElementById('seeVotingToggle');
-        const search = document.getElementById('searchVoter');
-
-        if (toggle) toggle.addEventListener('change', applyVoterFilters);
-        if (search) search.addEventListener('input', applyVoterFilters);
-
-        refreshVoterTableFromServer();
-        voterRefreshTimer = window.setInterval(refreshVoterTableFromServer, 10000); // auto refresh ทุก 10 วิ
-    }
-
-    async function refreshVoterTableFromServer() {
-        const tbody = document.getElementById('voterTableBody');
-        if (!tbody) return;
-
-        try {
-            const res = await fetch(API.listVoters, { headers: { 'Accept': 'application/json' } });
-            if (!res.ok) return;
-            const json = await res.json(); // รูปแบบ { data: [...] }
-            const voters = Array.isArray(json?.data) ? json.data : [];
-            renderVoterRows(tbody, voters);
-            applyVoterFilters();
-        } catch (error) {
-            console.warn('Failed to refresh voters:', error);
-        }
-    }
-
-    function renderVoterRows(tbody, voters) {
-        const nameMap = loadVoterNameMap();
-        tbody.innerHTML = '';
-
-        voters.forEach(voter => {
-            const citizenId = String(voter.citizen_id ?? '').trim();
-            const isVoted = Number(voter.is_voted) === 1;
-            const isEnabled = Number(voter.is_enable) === 1;
-            const fullName = (nameMap[citizenId] || '').trim();
-
-            const tr = document.createElement('tr');
-            tr.dataset.citizenId = citizenId;
-            tr.dataset.voted = isVoted ? '1' : '0';
-            tr.dataset.enabled = isEnabled ? '1' : '0';
-            tr.dataset.fullName = fullName;
-
-            tr.innerHTML = `
-                <td class="px-6 py-4">${escapeHtml(citizenId)}</td>
-                <td class="px-6 py-4">${escapeHtml(fullName || '-')}</td>
-                <td class="px-6 py-4 text-center">
-                    ${isVoted
-                        ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Voted</span>'
-                        : '<span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">Not Voted</span>'}
-                </td>
-                <td class="px-6 py-4 text-center">
-                    ${isEnabled
-                        ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Enabled</span>'
-                        : '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Disabled</span>'}
-                </td>
-                <td class="px-6 py-4 text-center">
-                    <button onclick="toggleVoterStatus(this)" class="${isEnabled
-                        ? 'text-red-600'
-                        : 'text-green-600'} text-sm font-medium hover:underline">${isEnabled ? 'Disable' : 'Enable'}</button>
-                </td>
-            `;
-
-            tbody.appendChild(tr);
-        });
-    }
-
-    function applyVoterFilters() {
-        const tbody = document.getElementById('voterTableBody');
-        if (!tbody) return;
-
-        const toggle = document.getElementById('seeVotingToggle');
-        const search = document.getElementById('searchVoter');
-        const query = (search?.value || '').trim().toLowerCase();
-
-        const showOnlyVoted = Boolean(toggle?.checked);
-
-        Array.from(tbody.querySelectorAll('tr')).forEach(row => {
-            const votedFromDataset = row.dataset.voted === '1' || row.dataset.voted === '0';
-            const voted = votedFromDataset
-                ? row.dataset.voted === '1'
-                : (() => {
-                    const statusText = String(row.cells?.[2]?.textContent || '').toLowerCase();
-                    if (statusText.includes('not voted')) return false;
-                    if (statusText.includes('voted')) return true;
-                    return false;
-                })();
-
-            const citizenId = ((row.dataset.citizenId || row.cells?.[0]?.textContent || '')).toLowerCase();
-            const fullName = ((row.dataset.fullName || row.cells?.[1]?.textContent || '')).toLowerCase();
-
-            const statusMatch = showOnlyVoted ? voted : !voted;
-            const textMatch = query === '' || citizenId.includes(query) || fullName.includes(query);
-            row.style.display = statusMatch && textMatch ? '' : 'none';
-        });
-    }
-
-    window.toggleVoterStatus = function toggleVoterStatus(btn) {
-        const row = btn.closest('tr');
-        if (!row) return;
-
-        const isEnabled = row.dataset.enabled === '1';
-        row.dataset.enabled = isEnabled ? '0' : '1';
-
-        const accountCell = row.cells?.[3];
-        if (accountCell) {
-            accountCell.innerHTML = isEnabled
-                ? '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Disabled</span>'
-                : '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Enabled</span>';
-        }
-
-        btn.innerText = isEnabled ? 'Enable' : 'Disable';
-        btn.className = `${isEnabled ? 'text-green-600' : 'text-red-600'} text-sm font-medium hover:underline`;
-    };
-
-    // Add Voter prompt + validation + save
-    // Modal สำหรับเพิ่ม voter ใหม่ + validation
-    window.addVoterPrompt = async function addVoterPrompt() {
-        const result = await Swal.fire({
-            title: 'Add Voter',
-            html: `
-                <input id="swal-id" class="swal2-input" placeholder="Citizen ID">
-                <input id="swal-laserid" class="swal2-input" placeholder="Laser ID">
-                <input id="swal-name" class="swal2-input" placeholder="Full Name">
-            `,
-            showCancelButton: true,
-            confirmButtonText: 'Add',
-            focusConfirm: false,
-            preConfirm: () => {
-                return {
-                    citizenId: document.getElementById('swal-id')?.value || '',
-                    laserId: document.getElementById('swal-laserid')?.value || '',
-                    fullName: document.getElementById('swal-name')?.value || ''
-                };
-            }
-        });
-
-        if (!result.isConfirmed) return;
-
-        const citizenIdRaw = String(result.value?.citizenId || '').trim();
-        const laserId = String(result.value?.laserId || '').trim();
-        const fullName = String(result.value?.fullName || '').trim();
-
-        const citizenId = normalizeCitizenId(citizenIdRaw);
-        const validationError = validateVoterInput({ citizenId, laserId, fullName }); // ตรวจความถูกต้องก่อนยิง API
-        if (validationError) {
-            await Swal.fire('กรอกข้อมูลไม่ถูกต้อง', validationError, 'error');
+        // 1. เช็คว่ากรอกชื่อเทอมหรือยัง
+        if (!name) {
+            Swal.fire({
+                title: 'แจ้งเตือน',
+                text: 'กรุณากรอกชื่อรอบการเลือกตั้ง (เช่น 1/2569)',
+                icon: 'warning',
+                scrollbarPadding: false,
+                customClass: { confirmButton: 'btn btn-warning text-white' }
+            });
             return;
         }
 
+        // 2. ถ้ายิง API สำเร็จ
         try {
-            const res = await fetch(API.createVoter, {
+            const response = await fetch('http://localhost:3000/api/admin/create-term', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ citizen_id: citizenId, laser_id: laserId })
+                body: JSON.stringify({ name: name, description: description })
             });
 
-            const json = await res.json().catch(() => ({}));
+            const result = await response.json();
 
-            if (!res.ok) {
-                await Swal.fire('Error', json?.message || 'เพิ่มรายชื่อ Voter ไม่สำเร็จ', 'error');
-                return;
+            if (result.status === 'success') {
+                // ปิด Modal
+                const modal = document.getElementById('add_term_modal');
+                if (modal) modal.close();
+
+                // ล้างช่องกรอกข้อมูล
+                document.getElementById('addTermForm').reset();
+
+                // สั่งให้โหลดการ์ดใหม่
+                loadTerms();
+
+                // โชว์แจ้งเตือนสำเร็จ (หน่วงเวลาหลบ Modal เหมือนเดิม)
+                setTimeout(() => {
+                    Swal.fire({
+                        title: 'สำเร็จ!',
+                        text: result.message,
+                        icon: 'success',
+                        scrollbarPadding: false,
+                        confirmButtonText: 'ตกลง',
+                        customClass: { confirmButton: 'btn bg-mfu-red text-white hover:bg-red-900 border-none' }
+                    });
+                }, 150);
+            } else {
+                Swal.fire('ไม่สามารถเพิ่มได้', result.message, 'error');
             }
-
-            saveVoterName(citizenId, fullName);
-            await Swal.fire('Success', json?.message || 'เพิ่มข้อมูลเรียบร้อยแล้ว', 'success');
-            await refreshVoterTableFromServer();
         } catch (error) {
-            await Swal.fire('Error', 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ', 'error');
+            console.error('Create Term Error:', error);
+            Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
         }
-    };
-
-    // ตรวจรูปแบบข้อมูล voter
-    function validateVoterInput({ citizenId, laserId, fullName }) {
-        if (!fullName) return 'กรุณากรอก Full Name';
-        if (!/^[0-9]{13}$/.test(citizenId)) return 'Citizen ID ต้องเป็นตัวเลข 13 หลักเท่านั้น';
-        if (!/^[A-Za-z0-9]{12}$/.test(laserId)) return 'Laser ID ต้องยาว 12 ตัว และเป็นตัวเลข/อักษรอังกฤษเท่านั้น';
-        return null;
-    }
-
-    // ล้างตัวอักษรที่ไม่ใช่ตัวเลขออก
-    function normalizeCitizenId(value) {
-        return String(value || '').replace(/\D/g, '');
-    }
-
-    // โหลดชื่อเต็มที่ cache ไว้ใน localStorage
-    function loadVoterNameMap() {
-        try {
-            const raw = localStorage.getItem(VOTER_NAMES_STORAGE_KEY);
-            const parsed = raw ? JSON.parse(raw) : {};
-            return (parsed && typeof parsed === 'object') ? parsed : {};
-        } catch {
-            return {};
-        }
-    }
-
-    // บันทึกชื่อเต็มของ voter ลง localStorage
-    function saveVoterName(citizenId, fullName) {
-        const map = loadVoterNameMap();
-        map[citizenId] = fullName;
-        localStorage.setItem(VOTER_NAMES_STORAGE_KEY, JSON.stringify(map));
-    }
-
-    // ป้องกัน XSS เวลาฝังค่าใน HTML
-    function escapeHtml(value) {
-        return String(value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
-})();
+    });
+}
