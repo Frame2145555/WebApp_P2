@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const pool = require('./db'); // ดึงตัวเชื่อมต่อฐานข้อมูลที่เราเขียนไว้มาใช้
 const app = express();
@@ -18,6 +19,9 @@ app.use('/api/admin', adminRoutes);
 
 const votingRoutes = require('./routes/voting.routes');
 app.use('/api/voting', votingRoutes);
+
+// สำหรับเปิด .htnl ที่อยู่ใน folder AdminNew
+app.use('/AdminNew', express.static(path.join(__dirname, 'AdminNew')));
 
 //API สำหรับทดสอบดึงข้อมูลจาก Database
 app.get('/api/test-db', async (req, res) => {
