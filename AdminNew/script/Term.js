@@ -18,7 +18,7 @@ async function loadTerms() {
     }
 }
 
-// ฟังก์ชัน: นำข้อมูล Array มาสร้างเป็นการ์ด HTML
+// นำข้อมูล Array มาสร้างเป็นการ์ด HTML
 function renderTermCards(terms) {
     const container = document.getElementById('terms-container');
     container.innerHTML = ''; // เคลียร์ของเก่าทิ้งก่อน (ถ้ามี)

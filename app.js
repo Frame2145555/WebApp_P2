@@ -23,6 +23,8 @@ app.use('/api/voting', votingRoutes);
 // สำหรับเปิด .htnl ที่อยู่ใน folder AdminNew
 app.use('/AdminNew', express.static(path.join(__dirname, 'AdminNew')));
 
+app.use('/dashbordVoter/WebAppProject', express.static(path.join(__dirname, 'WebAppProject')));
+
 //API สำหรับทดสอบดึงข้อมูลจาก Database
 app.get('/api/test-db', async (req, res) => {
     try {
