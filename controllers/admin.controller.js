@@ -266,8 +266,7 @@ const createTerm = async (req, res) => {
 
 // API: ดึงข้อมูลสถิติหน้า Dashboard (กรองตาม Term)
 const getDashboardStats = async (req, res) => {
-    // รับค่า term_id จาก Query String (เช่น /api/admin/dashboard?term_id=1)
-    const { term_id } = req.query; 
+    const { term_id } = req.query; // /api/admin/dashboard?term_id=3
 
     if (!term_id) {
         return res.status(400).json({ message: "กรุณาระบุ term_id ที่ต้องการดูข้อมูล" });
@@ -275,26 +274,40 @@ const getDashboardStats = async (req, res) => {
 
     const connection = await pool.getConnection();
     try {
-        // 1. ดึงข้อมูลผู้สมัครและคะแนนโหวต เฉพาะของเทอมนี้ (เรียงจากคะแนนมากไปน้อย)
+        // ผู้สมัครและคะแนน (เรียงคะแนนมากไปน้อย)
         const [candidates] = await connection.query(
             `SELECT candidate_id, name, score 
              FROM candidates 
              WHERE term_id = ? 
-             ORDER BY score DESC`, 
+             ORDER BY score DESC`,
             [term_id]
         );
 
-        // 2. (ถ้ามี) ดึงสถิติคนโหวตว่าใช้สิทธิ์ไปกี่คนแล้วในเทอมนี้
-        // const [voterStats] = await connection.query("SELECT COUNT(*) as total_voted FROM votes WHERE term_id = ?", [term_id]);
+        // สถิติผู้มีสิทธิ์และผู้ใช้สิทธิ์
+        const [[voterTotal]] = await connection.query(
+            `SELECT COUNT(*) AS total_voters,
+                    SUM(CASE WHEN v.is_voted = 1 THEN 1 ELSE 0 END) AS total_voted
+             FROM voters v
+             WHERE v.term_id = ?`,
+            [term_id]
+        );
+
+        const totalVoters = Number(voterTotal.total_voters || 0);
+        const totalVoted = Number(voterTotal.total_voted || 0);
+        const votedPercent = totalVoters === 0 ? 0 : Math.round((totalVoted / totalVoters) * 100);
+
+        const totalCandidates = candidates.length;
 
         res.status(200).json({
             status: "success",
             data: {
-                candidates: candidates,
-                // total_voted: voterStats[0].total_voted
+                candidates,
+                total_voters: totalVoters,
+                total_voted: totalVoted,
+                voted_percent: votedPercent,
+                total_candidates: totalCandidates
             }
         });
-
     } catch (error) {
         console.error("Get Dashboard Stats Error:", error);
         res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลสถิติ" });
@@ -344,63 +357,160 @@ const setActiveTerm = async (req, res) => {
     }
 };
 
-// // API: เปิด/ปิด ระบบโหวต (Toggle Term Status)
-// const toggleTermStatus = async (req, res) => {
-//     const { id } = req.params; // รับค่า term_id จาก URL
-//     const { status } = req.body; // รับค่า 1 (เปิด) หรือ 0 (ปิด) จากหน้าบ้าน
+// API: เปิด/ปิด ระบบโหวต (Toggle Term Status)
+const toggleTermStatus = async (req, res) => {
+    const { id } = req.params; // รับค่า term_id จาก URL
+    const { status } = req.body; // รับค่า 1 (เปิด) หรือ 0 (ปิด) จากหน้าบ้าน
 
-//     const connection = await pool.getConnection();
-//     try {
-//         // เริ่ม Transaction (ถ้ามีอะไรพัง ให้ยกเลิกคำสั่ง SQL ทั้งหมดที่ทำค้างไว้)
-//         await connection.beginTransaction();
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
 
-//         // กฎเหล็ก: ถ้าแอดมินสั่ง "เปิดโหวต" (status = 1) 
-//         // เราต้องไปสั่ง "ปิด" เทอมอื่นๆ ทั้งหมดก่อน เพื่อไม่ให้มีการโหวตซ้อนกันหลายปี!
-//         if (status === 1) {
-//             await connection.query("UPDATE terms SET is_active = 0"); 
-//         }
+        // ถ้าจะเปิดเทอมนี้ ให้ปิดเทอมอื่นทั้งหมดก่อน
+        if (status === 1) {
+            await connection.query("UPDATE terms SET is_active = 0");
+        }
 
-//         // จากนั้นค่อยมา "เปิด" หรือ "ปิด" เฉพาะเทอมที่เราเลือกจริงๆ
-//         await connection.query("UPDATE terms SET is_active = ? WHERE term_id = ?", [status, id]);
+        await connection.query("UPDATE terms SET is_active = ? WHERE term_id = ?", [status, id]);
 
-//         // ยืนยันการบันทึกข้อมูลลง Database
-//         await connection.commit();
+        await connection.commit();
 
-//         res.status(200).json({ 
-//             status: "success", 
-//             message: status === 1 ? "เปิดระบบโหวตเรียบร้อยแล้ว!" : "ปิดระบบโหวตเรียบร้อยแล้ว!" 
-//         });
+        res.status(200).json({
+            status: "success",
+            message: status === 1 ? "เปิดระบบโหวตเรียบร้อยแล้ว!" : "ปิดระบบโหวตเรียบร้อยแล้ว!"
+        });
 
-//     } catch (error) {
-//         // ถ้าพังกลางคัน ให้ย้อนกลับ (Rollback) ข้อมูลจะได้ไม่เน่า
-//         await connection.rollback(); 
-//         console.error("Toggle Term Status Error:", error);
-//         res.status(500).json({ message: "Server Error: ไม่สามารถเปลี่ยนสถานะได้" });
-//     } finally {
-//         connection.release();
-//     }
-// };
+    } catch (error) {
+        await connection.rollback();
+        console.error("Toggle Term Status Error:", error);
+        res.status(500).json({ message: "Server Error: ไม่สามารถเปลี่ยนสถานะได้" });
+    } finally {
+        connection.release();
+    }
+};
 
-// const getTermById = async (req, res) => {
-//     const { id } = req.params; // ดูดเลข ID มาจาก URL (เช่น /api/admin/term/3)
+// API: ดึงผลคะแนนเรียงลำดับจากมากไปน้อย (ใช้หน้า Dashboard/Results)
+const getResults = async (req, res) => {
+    const { term_id } = req.query;
+    if (!term_id) {
+        return res.status(400).json({ message: "กรุณาระบุ term_id" });
+    }
 
-//     try {
-//         // ยิง SQL ไปถาม Database ว่าขอข้อมูลของ ID นี้หน่อย
-//         const [terms] = await pool.query("SELECT * FROM terms WHERE term_id = ?", [id]);
-        
-//         // ถ้าหาไม่เจอ (พิมพ์ ID มั่วมา)
-//         if (terms.length === 0) {
-//             return res.status(404).json({ message: "ไม่พบข้อมูลปีการศึกษานี้" });
-//         }
+    try {
+        const [rows] = await pool.query(
+            `SELECT candidate_id, name, score
+             FROM candidates
+             WHERE term_id = ?
+             ORDER BY score DESC, candidate_id ASC`,
+            [term_id]
+        );
+        res.status(200).json({ status: "success", data: rows });
+    } catch (error) {
+        console.error("Get Results Error:", error);
+        res.status(500).json({ message: "Backend Error" });
+    }
+};
 
-//         // ถ้าเจอ: ส่งก้อนข้อมูลกลับไปให้หน้าเว็บ (Frontend)
-//         res.status(200).json({ status: "success", data: terms[0] });
+// API: Toggle เปิด/ปิดสิทธิ์โหวตของรอบ (is_active)
+const toggleVoting = async (req, res) => {
+    const { term_id, status } = req.body; // status 1/0
 
-//     } catch (error) {
-//         console.error("Get Term Error:", error);
-//         res.status(500).json({ message: "Server พังจ้า ดึงข้อมูลไม่ได้" });
-//     }
-// };
+    if (!term_id || (status !== 0 && status !== 1)) {
+        return res.status(400).json({ message: "กรุณาระบุ term_id และ status (0/1)" });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        if (status === 1) {
+            await connection.query("UPDATE terms SET is_active = 0");
+        }
+
+        const [result] = await connection.query(
+            "UPDATE terms SET is_active = ? WHERE term_id = ?",
+            [status, term_id]
+        );
+
+        if (result.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: "ไม่พบ term นี้" });
+        }
+
+        await connection.commit();
+        res.status(200).json({ status: "success", message: status === 1 ? "เปิดโหวตแล้ว" : "ปิดโหวตแล้ว" });
+    } catch (error) {
+        await connection.rollback();
+        console.error("Toggle Voting Error:", error);
+        res.status(500).json({ message: "Backend Error" });
+    } finally {
+        connection.release();
+    }
+};
+
+// API: Toggle เปิด/ปิดบัญชีผู้ใช้ (is_enable)
+const toggleUser = async (req, res) => {
+    const { user_id, status } = req.body; // status 1/0
+
+    if (!user_id || (status !== 0 && status !== 1)) {
+        return res.status(400).json({ message: "กรุณาระบุ user_id และ status (0/1)" });
+    }
+
+    try {
+        const [result] = await pool.query(
+            "UPDATE users SET is_enable = ? WHERE user_id = ?",
+            [status, user_id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "ไม่พบผู้ใช้นี้" });
+        }
+
+        res.status(200).json({ status: "success", message: "อัปเดตสถานะผู้ใช้เรียบร้อย" });
+    } catch (error) {
+        console.error("Toggle User Error:", error);
+        res.status(500).json({ message: "Backend Error" });
+    }
+};
+
+// API: รายชื่อ voter (ใช้ใน Voting.html)
+const listVoters = async (req, res) => {
+    const { term_id } = req.query;
+    try {
+        let sql = `
+            SELECT v.voter_id, v.term_id, v.is_voted, v.user_id,
+                   u.username AS citizen_id, u.is_enable
+            FROM voters v
+            JOIN users u ON v.user_id = u.user_id`;
+
+        const params = [];
+        if (term_id) {
+            sql += " WHERE v.term_id = ?";
+            params.push(term_id);
+        }
+
+        const [rows] = await pool.query(sql, params);
+        res.status(200).json({ status: "success", data: rows });
+    } catch (error) {
+        console.error("List Voters Error:", error);
+        res.status(500).json({ message: "Backend Error" });
+    }
+};
+
+const getTermById = async (req, res) => {
+    const { id } = req.params; // /api/admin/term/:id
+
+    try {
+        const [terms] = await pool.query("SELECT * FROM terms WHERE term_id = ?", [id]);
+        if (terms.length === 0) {
+            return res.status(404).json({ message: "ไม่พบข้อมูลปีการศึกษานี้" });
+        }
+        res.status(200).json({ status: "success", data: terms[0] });
+    } catch (error) {
+        console.error("Get Term Error:", error);
+        res.status(500).json({ message: "Server พังจ้า ดึงข้อมูลไม่ได้" });
+    }
+};
 
 module.exports = {
     createCandidate,
@@ -412,6 +522,10 @@ module.exports = {
     getTerms,
     createTerm,
     getDashboardStats,
-    // toggleTermStatus,
-    // getTermById
+    getResults,
+    toggleVoting,
+    toggleUser,
+    listVoters,
+    toggleTermStatus,
+    getTermById
 };
