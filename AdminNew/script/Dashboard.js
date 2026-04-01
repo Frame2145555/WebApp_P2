@@ -114,24 +114,55 @@ if (toggleVotingStatus) {
 
 (() => {
     document.addEventListener('DOMContentLoaded', () => {
-        initDashboardChart();
+        loadDashboardSummary();
         initVotingToggle();
         loadTermStatus();
     });
 
-    // กราฟสรุปคะแนนบน Dashboard
-    function initDashboardChart() {
-        const canvas = document.getElementById('scoreChart');
-        if (!canvas || typeof Chart === 'undefined') return;
+    let scoreChartInstance = null;
 
+    async function loadDashboardSummary() {
+        const canvas = document.getElementById('scoreChart');
+        if (!canvas) return;
+        try {
+            const res = await fetch(`/api/admin/dashboard?term_id=${currentTermId}`);
+            const json = await res.json();
+            if (!res.ok || json.status !== 'success') throw new Error(json.message || 'fetch fail');
+
+            const data = json.data || {};
+            updateStatsCards(data);
+            renderChart(canvas, data.candidates || []);
+        } catch (err) {
+            console.error('dashboard summary error', err);
+        }
+    }
+
+    function updateStatsCards(data) {
+        const totalVotersEl = document.getElementById('stat-total-voters');
+        const votedEl = document.getElementById('stat-voted');
+        const percentEl = document.getElementById('stat-percent');
+        const candEl = document.getElementById('stat-candidates');
+
+        if (totalVotersEl) totalVotersEl.textContent = data.total_voters ?? '-';
+        if (votedEl) votedEl.textContent = data.total_voted ?? '-';
+        if (percentEl) percentEl.textContent = data.voted_percent != null ? `${data.voted_percent}%` : '-';
+        if (candEl) candEl.textContent = data.total_candidates ?? '-';
+    }
+
+    function renderChart(canvas, candidates) {
+        const labels = candidates.map(c => c.name || c.candidate_id);
+        const votes = candidates.map(c => Number(c.score || 0));
         const ctx = canvas.getContext('2d');
-        new Chart(ctx, {
+
+        if (scoreChartInstance) scoreChartInstance.destroy();
+
+        scoreChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['CAND-001', 'CAND-002', 'CAND-003'],
+                labels,
                 datasets: [{
                     label: 'Votes',
-                    data: [450, 320, 150],
+                    data: votes,
                     backgroundColor: '#8C1515',
                     borderRadius: 4
                 }]
@@ -164,6 +195,12 @@ if (toggleVotingStatus) {
                 if (result.isConfirmed) {
                     statusText.innerText = isEnabled ? 'now is voting' : 'system is closed for voting';
                     statusText.className = isEnabled ? 'text-green-600' : 'text-red-600';
+                    // ซิงก์สถานะกับ API term
+                    fetch(`/api/admin/toggle-voting`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ term_id: Number(currentTermId), status: isEnabled ? 1 : 0 })
+                    }).catch(err => console.error('toggle voting api error', err));
                 } else {
                     this.checked = !isEnabled;
                 }

@@ -82,7 +82,7 @@
             <li><a href="/dashbordVoter/WebAppProject/views/VoterDash.html" id="menu-dashboards"
                     class="block px-4 py-3 bg-red-900/60 border-l-4 border-mfu-yellow text-mfu-yellow font-bold rounded">Dashboard</a></li>
             <li><a href="/dashbordVoter/WebAppProject/views/VoterCandi.html" id="menu-candidates"
-                    class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Candidates</a></li>
+                    class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Candidates Policy</a></li>
             <li><a href="/dashbordVoter/WebAppProject/views/VoterVote.html" id="menu-vote"
                     class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Vote</a></li>
             <li><a href="/dashbordVoter/WebAppProject/views/VoterHis.html" id="menu-history"
@@ -121,6 +121,14 @@
                     </table>
                 </div>
             </div>
+            <section>
+                <div class="lg:col-span-2 card p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-700">Live Results</h3>
+                    <div class="chart-container">
+                        <canvas id="scoreChart" aria-label="Live Results Chart"></canvas>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
 

@@ -48,7 +48,8 @@ function goToPage(pageName) {
         if (!tbody) return;
 
         try {
-            const res = await fetch(API.listVoters, { headers: { 'Accept': 'application/json' } });
+            const termId = new URLSearchParams(window.location.search).get('term_id');
+            const res = await fetch(termId ? `${API.listVoters}?term_id=${termId}` : API.listVoters, { headers: { 'Accept': 'application/json' } });
             if (!res.ok) return;
             const json = await res.json(); // รูปแบบ { data: [...] }
             const voters = Array.isArray(json?.data) ? json.data : [];
@@ -174,6 +175,11 @@ function goToPage(pageName) {
         const citizenIdRaw = String(result.value?.citizenId || '').trim();
         const laserId = String(result.value?.laserId || '').trim();
         const fullName = String(result.value?.fullName || '').trim();
+        const termId = new URLSearchParams(window.location.search).get('term_id');
+        if (!termId) {
+            await Swal.fire('Error', 'ไม่พบ term_id ใน URL', 'error');
+            return;
+        }
 
         const citizenId = normalizeCitizenId(citizenIdRaw);
         const validationError = validateVoterInput({ citizenId, laserId, fullName });
@@ -186,7 +192,7 @@ function goToPage(pageName) {
             const res = await fetch(API.createVoter, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ citizen_id: citizenId, laser_id: laserId })
+                body: JSON.stringify({ citizen_id: citizenId, laser_id: laserId, confirm_laser_id: laserId, term_id: Number(termId) })
             });
 
             const json = await res.json().catch(() => ({}));
