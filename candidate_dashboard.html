@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Dashboard | MFU</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="assets/js/theme.js"></script>
+</head>
+<body class="bg-bgLight min-h-screen text-gray-900">
+    <div class="lg:flex">
+        <aside class="w-full bg-mfuRed text-white shadow-2xl lg:w-72 lg:min-h-screen">
+            <div class="p-8 text-center border-b border-white/10">
+                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <img src="assets/images/mfu-logo.png" alt="MFU Logo" class="w-12">
+                </div>
+                <h2 class="font-black text-2xl">MFU</h2>
+                <p class="text-sm text-white/70 mt-2">Candidate workspace</p>
+            </div>
+            <nav class="flex-grow">
+                <a href="#overview" class="flex items-center px-8 py-4 bg-white/10 border-r-4 border-mfuGold font-bold">Dashboard</a>
+                <a href="#results" class="flex items-center px-8 py-4 opacity-80 hover:opacity-100 transition">Results Board</a>
+                <a href="#manifesto" class="flex items-center px-8 py-4 opacity-80 hover:opacity-100 transition">Manifesto</a>
+            </nav>
+            <div class="p-8">
+                <button id="logoutButton" class="w-full py-3 bg-mfuGold text-white rounded-xl font-bold shadow-lg">Logout</button>
+            </div>
+        </aside>
+
+        <main class="flex-grow p-6 md:p-10">
+            <header id="overview" class="mb-8">
+                <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.3em] text-mfuRed/70">Candidate Dashboard</p>
+                        <h1 class="text-3xl md:text-4xl font-black mt-2">Welcome back, <span id="display-name" class="text-mfuRed">Candidate</span></h1>
+                        <p class="text-gray-600 mt-2">A simpler candidate view: your manifesto, your rank, and the live results in one place.</p>
+                    </div>
+                    <button id="shareProfileButton" class="px-6 py-3 bg-white text-mfuRed font-black rounded-full shadow-lg border border-mfuRed/10 hover:-translate-y-0.5 transition">
+                        Share Profile
+                    </button>
+                </div>
+            </header>
+
+            <section class="bg-mfuRed text-white p-8 rounded-[2rem] shadow-xl mb-8 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div>
+                    <h2 class="text-3xl font-black uppercase">Voting Live</h2>
+                    <p class="opacity-90 mt-2">Track your ranking, update your manifesto, and search the latest candidate standings.</p>
+                </div>
+                <div class="flex flex-wrap gap-4">
+                    <div class="bg-white/10 rounded-2xl px-5 py-4 min-w-40">
+                        <p class="text-xs uppercase tracking-[0.3em] text-white/70">Total Votes</p>
+                        <p id="voteCount" class="text-4xl font-black mt-2">0</p>
+                    </div>
+                    <div class="bg-white/10 rounded-2xl px-5 py-4 min-w-40">
+                        <p class="text-xs uppercase tracking-[0.3em] text-white/70">Current Rank</p>
+                        <p id="rankValue" class="text-4xl font-black mt-2">--</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                <div class="xl:col-span-3 space-y-6">
+                    <div id="manifesto" class="bg-white p-8 md:p-10 rounded-[2rem] shadow-sm border border-gray-100">
+                        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold mb-2">Current Manifesto</h3>
+                                <p class="text-sm text-gray-500">Edit the current manifesto saved for your active election term.</p>
+                            </div>
+                            <button id="openBioModalButton" class="px-5 py-3 bg-mfuRed/5 text-mfuRed rounded-2xl font-bold hover:bg-mfuRed hover:text-white transition">
+                                Update Manifesto
+                            </button>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-2xl italic text-gray-600 border-l-4 border-mfuGold mt-6">
+                            <p id="display-bio">No bio found. Click "Update Manifesto" to add one.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                        <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-6">
+                            <div>
+                                <h3 class="text-xl font-bold">Leaderboard Snapshot</h3>
+                                <p class="text-sm text-gray-500">Top candidates by votes, with your result highlighted.</p>
+                            </div>
+                            <p id="resultsStatus" class="text-sm font-semibold text-mfuRed">Loading results...</p>
+                        </div>
+                        <canvas id="leaderboardChart" height="110"></canvas>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 h-fit">
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Profile Photo</h4>
+                        <div class="flex flex-col items-center gap-4 text-center">
+                            <img
+                                id="profilePicturePreview"
+                                src="assets/images/mfu-logo.png"
+                                alt="Candidate profile"
+                                class="h-28 w-28 rounded-[2rem] border border-gray-200 bg-gray-50 object-cover shadow-sm"
+                            >
+                            <input id="profileImageInput" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
+                            <button id="choosePhotoButton" class="w-full rounded-2xl bg-gray-100 px-4 py-3 font-bold text-gray-800 hover:bg-gray-200">
+                                Choose Photo
+                            </button>
+                            <button id="savePhotoButton" class="w-full rounded-2xl bg-mfuRed px-4 py-3 font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:bg-gray-300" disabled>
+                                Save Photo
+                            </button>
+                            <p id="profilePhotoStatus" class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
+                                PNG, JPG or WEBP up to 5 MB
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 h-fit">
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Quick Search</h4>
+                        <label for="searchInput" class="text-sm font-semibold text-gray-700">Search candidate standings</label>
+                        <input id="searchInput" type="text" class="w-full mt-3 px-4 py-3 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-mfuGold" placeholder="Search candidate name">
+                        <p class="text-sm text-gray-500 mt-4">Use this to filter the live results table below, similar to your original local search card.</p>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 h-fit">
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Candidate Summary</h4>
+                        <div class="space-y-4">
+                            <div class="rounded-2xl bg-gray-50 px-4 py-4">
+                                <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Displayed Name</p>
+                                <p id="summaryName" class="mt-2 text-lg font-black text-mfuRed">--</p>
+                            </div>
+                            <div class="rounded-2xl bg-gray-50 px-4 py-4">
+                                <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Results Position</p>
+                                <p id="summaryRank" class="mt-2 text-2xl font-black">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="results" class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 mt-6">
+                <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-mfuRed">Voting Results</h2>
+                        <p class="text-sm text-gray-500">A live table version of the ranking view you built locally.</p>
+                    </div>
+                    <p id="tableStatus" class="text-sm font-semibold text-gray-500">Waiting for results...</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-separate border-spacing-y-3">
+                        <thead>
+                            <tr class="text-xs uppercase tracking-[0.25em] text-gray-400">
+                                <th class="pb-2 pr-4">Rank</th>
+                                <th class="pb-2 pr-4">Candidate</th>
+                                <th class="pb-2 pr-4">Votes</th>
+                                <th class="pb-2">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTable"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="bioModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[100] backdrop-blur-sm p-4">
+        <div class="bg-white p-8 md:p-10 rounded-[2rem] w-full max-w-lg">
+            <h3 class="text-2xl font-black mb-4">Update Manifesto</h3>
+            <textarea id="bioInput" class="w-full h-48 p-5 bg-gray-50 rounded-3xl outline-none focus:ring-2 focus:ring-mfuGold" placeholder="Enter your manifesto..."></textarea>
+            <div class="flex gap-4 mt-8">
+                <button id="closeBioModalButton" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">Cancel</button>
+                <button id="saveBioButton" class="flex-1 py-4 bg-mfuRed text-white rounded-2xl font-bold shadow-lg">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/candidate-dashboard.js"></script>
+</body>
+</html>

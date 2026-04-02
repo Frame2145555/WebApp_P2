@@ -1,5 +1,25 @@
-//Login
+const argon2 = require('argon2');
 const pool = require('../db'); // ดึงไฟล์เชื่อมฐานข้อมูลมาใช้ (ถอยกลับไป 1 โฟลเดอร์ด้วย ../)
+const {
+    getActiveTermId,
+    getCandidateProfileByUserId
+} = require('./candidate.controller');
+
+async function verifyPassword(storedPassword, candidatePassword) {
+    if (!storedPassword) {
+        return false;
+    }
+
+    if (storedPassword.startsWith('$argon2')) {
+        try {
+            return await argon2.verify(storedPassword, candidatePassword);
+        } catch (error) {
+            return false;
+        }
+    }
+
+    return storedPassword === candidatePassword;
+}
 
 const login = async (req, res) => {
     const { username, password } = req.body;
@@ -9,51 +29,61 @@ const login = async (req, res) => {
     }
 
     try {
-        //แก้ SQL ให้ใช้ LEFT JOIN ไปที่ตาราง Candidates
-        // เราเอา user_id มาเป็นตัวเชื่อม (Link) เพื่อไปเอา score มา
         const [users] = await pool.query(
-            `SELECT u.*, c.score 
-             FROM Users u 
-             LEFT JOIN Candidates c ON u.user_id = c.user_id 
-             WHERE u.username = ? AND u.password = ?`, 
-            [username, password]
+            `SELECT u.*
+             FROM users u
+             WHERE u.username = ?
+             LIMIT 1`,
+            [username]
         );
 
-        if (users.length > 0) {
-            const user = users[0];
-            
-            if (user.is_enable === 0) {
-                return res.status(403).json({ message: "บัญชีนี้ถูกปิดใช้งานชั่วคราว" });
-            }
-
-            // เตรียมข้อมูลที่จะส่งกลับ
-            // สร้าง Object พื้นฐานที่ทุกคนต้องได้ก่อน
-            const responseData = { 
-                status: "success", 
-                message: "Login OK", 
-                role: user.role,
-                user_id: user.user_id
-            };
-
-            // เช็ค Role (แนวทางที่ 2 ที่คุณชอบ)
-            // ถ้าเป็น candidate ค่อยเติม score ลงไปในข้อมูลที่จะส่งกลับ
-            if (user.role === 'candidate') {
-                responseData.score = user.score || 0; 
-            }
-
-            res.json(responseData);
-
-        } else {
+        if (!users.length) {
             res.status(401).json({ status: "error", message: "Username หรือ Password ผิด" });
+            return;
         }
+
+        const user = users[0];
+
+        if (user.is_enable === 0) {
+            return res.status(403).json({ message: "บัญชีนี้ถูกปิดใช้งานชั่วคราว" });
+        }
+
+        const isValidPassword = await verifyPassword(user.password, password);
+
+        if (!isValidPassword) {
+            return res.status(401).json({ status: "error", message: "Username หรือ Password ผิด" });
+        }
+
+        const activeTermId = await getActiveTermId();
+        const candidateProfile = user.role === 'candidate'
+            ? await getCandidateProfileByUserId(user.user_id, activeTermId)
+            : null;
+
+        const responseData = {
+            status: "success",
+            message: "Login OK",
+            role: user.role,
+            user_id: user.user_id,
+            score: candidateProfile?.vote_count || 0,
+            redirect: user.role === 'candidate' ? 'candidate_dashboard.html' : null,
+            user: {
+                user_id: user.user_id,
+                username: user.username,
+                role: user.role,
+                candidate_id: candidateProfile?.candidate_id ?? null,
+                bio: candidateProfile?.bio ?? null,
+                profile_picture: candidateProfile?.profile_picture ?? null,
+                display_name: candidateProfile?.display_name ?? user.username,
+                active_term_id: activeTermId
+            }
+        };
+
+        res.json(responseData);
     } catch (error) {
         console.error("Login Error:", error);
         res.status(500).json({ status: "error", message: "Sever Error" });
     }
 };
-
-// Register
-const argon2 = require('argon2');
 
 const registerCandidate = async (req, res) => {
     // รับค่าจากหน้าเว็บตอนผู้สมัครกดลงทะเบียน
