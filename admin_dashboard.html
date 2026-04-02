@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | MFU Voting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="assets/js/theme.js"></script>
+</head>
+<body class="bg-bgGrey min-h-screen flex flex-col">
+
+    <header class="bg-mfuRed px-6 h-16 flex items-center justify-between shadow-md">
+        <div class="flex items-center gap-3">
+            <img src="assets/images/mfu-logo.png" alt="MFU Logo" class="h-10 w-auto brightness-0 invert">
+            <span class="font-bold text-white text-lg uppercase">MFU Voting - Admin Dashboard</span>
+        </div>
+        <button id="logoutButton" class="bg-white text-mfuRed px-6 py-2 rounded-lg font-bold hover:bg-gray-100">Logout</button>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center pt-12 px-6">
+        <div class="w-full max-w-5xl space-y-8">
+            <div class="bg-white p-12 rounded-3xl shadow-lg mb-8">
+                <h2 class="text-3xl font-bold text-mfuRed mb-8">Admin Control Panel</h2>
+                
+                <div class="space-y-4 p-6 bg-red-50 rounded-2xl border border-red-200 mb-8">
+                    <p class="text-lg font-semibold text-gray-800">Your Information:</p>
+                    <p class="text-gray-700"><strong>User ID:</strong> <span id="userId">--</span></p>
+                    <p class="text-gray-700"><strong>Username:</strong> <span id="userUsername">--</span></p>
+                    <p class="text-gray-700"><strong>Role:</strong> <span id="userRole" class="text-red-600 font-bold">ADMIN</span></p>
+                </div>
+                <p id="summaryStatus" class="text-sm font-semibold text-gray-500">Loading live system summary...</p>
+            </div>
+
+            <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <div class="rounded-3xl bg-white p-8 shadow-lg border-l-4 border-mfuRed">
+                    <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Active Term</p>
+                    <p id="activeTermValue" class="mt-4 text-4xl font-black text-mfuRed">--</p>
+                </div>
+                <div class="rounded-3xl bg-white p-8 shadow-lg border-l-4 border-blue-500">
+                    <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Database</p>
+                    <p id="databaseValue" class="mt-4 text-4xl font-black text-blue-600">--</p>
+                </div>
+                <div class="rounded-3xl bg-white p-8 shadow-lg border-l-4 border-green-500">
+                    <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Voting</p>
+                    <p id="votingStatusValue" class="mt-4 text-4xl font-black text-green-600">--</p>
+                </div>
+                <div class="rounded-3xl bg-white p-8 shadow-lg border-l-4 border-yellow-500">
+                    <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Registration</p>
+                    <p id="registrationStatusValue" class="mt-4 text-4xl font-black text-yellow-600">--</p>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="rounded-3xl bg-white p-8 shadow-lg">
+                    <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Users</p>
+                    <p id="totalUsersValue" class="mt-4 text-4xl font-black text-gray-900">--</p>
+                </div>
+                <div class="rounded-3xl bg-white p-8 shadow-lg">
+                    <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Registered Candidates</p>
+                    <p id="totalCandidatesValue" class="mt-4 text-4xl font-black text-gray-900">--</p>
+                </div>
+                <div class="rounded-3xl bg-white p-8 shadow-lg">
+                    <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Recorded Votes</p>
+                    <p id="totalVotesValue" class="mt-4 text-4xl font-black text-gray-900">--</p>
+                </div>
+            </section>
+
+            <section class="rounded-3xl bg-white p-8 shadow-lg">
+                <div class="mb-6">
+                    <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Results Preview</p>
+                    <h3 class="mt-2 text-2xl font-bold text-mfuRed">Current Leaderboard</h3>
+                </div>
+                <div id="resultsPreview" class="space-y-4"></div>
+            </section>
+        </div>
+    </main>
+
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/admin-dashboard.js"></script>
+</body>
+</html>
