@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFU Election Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/AdminNew/style/Dashboard.css">
+</head>
+
+<body class="bg-gray-50">
+
+    <div class="flex h-screen overflow-hidden">
+        <aside class="sidebar w-64 text-white flex-shrink-0 flex flex-col h-full">
+            <div class="p-6 text-center">
+                <h1 class="text-2xl font-bold mfu-gold">MFU E-VOTING</h1>
+                <p class="text-xs opacity-80 mt-1">Admin Control Panel</p>
+            </div>
+            <ul class="flex flex-col gap-1 px-4 text-sm font-medium">
+                <li><a href="/AdminNew/views/Term.html"
+                        class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Terms</a></li>
+
+                <li><a href="#" onclick="goToPage('Dashboard.html')"
+                        class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Dashboard</a></li>
+                <li><a href="#" onclick="goToPage('Voting.html')"
+                        class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Voter Management</a></li>
+                <li><a href="#" onclick="goToPage('Candidates.html')"
+                        class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Candidate Management</a></li>
+            </ul>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-8 bg-gray-50">
+            <!-- Overview Section -->
+            <div class="card flex justify-between items-center mb-8 p-6">
+                <div>
+                    <h2 class="text-2xl font-semibold text-gray-800">Overview Dashboard</h2>
+                    <p class="text-gray-500" id="statusText">now is voting</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="font-medium text-gray-700">Voting Status:</span>
+                    <input type="checkbox" id="toggle-voting-status" class="toggle toggle-success" />
+                </div>
+            </div>
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card border-red-700">
+                    <p class="stat-label">Total Voters</p>
+                    <h3 class="stat-value" id="stat-total-voters">-</h3>
+                </div>
+                <div class="stat-card border-blue-600">
+                    <p class="stat-label">Voted</p>
+                    <h3 class="stat-value" id="stat-voted">-</h3>
+                </div>
+                <div class="stat-card border-green-500">
+                    <p class="stat-label">Percentage</p>
+                    <h3 class="stat-value" id="stat-percent">-</h3>
+                </div>
+                <div class="stat-card border-yellow-500">
+                    <p class="stat-label">Candidates</p>
+                    <h3 class="stat-value" id="stat-candidates">-</h3>
+                </div>
+            </div>
+
+            <!-- Live Results and Add Candidate -->
+            <section>
+                <div class="lg:col-span-2 card p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-700">Live Results</h3>
+                    <div class="chart-container">
+                        <canvas id="scoreChart" aria-label="Live Results Chart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="/AdminNew/script/Dashboard.js"></script>
+</body>
+
+</html>

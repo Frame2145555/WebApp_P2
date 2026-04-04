@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Register — MFU Voting</title>
+    <link rel="stylesheet" href="/css/Candidate-register.css">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <a class="nav-logo-icon" href="/public/index.html">
+                    <img src="/img/csm_logo_mfu_3d_colour_630b77d675.png" alt="MFU Logo">
+                </a>
+                <a class="nav-logo-text" href="/public/index.html">MFU-Voting</a>
+            </div>
+            <div class="nav-actions">
+                <a class="nav-link" href="/public/index.html">
+                    <i class="bx bx-home"></i>
+                    <span>Home</span>
+                </a>
+            </div>
+        </nav>
+
+        <main class="main-register">
+            <div class="register-card">
+
+                <div class="card-header">
+                    <h1>Candidate Register</h1>
+                    <p class="subtitle">Create your candidate account</p>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="card-body">
+
+                    <div class="input-group">
+                        <label for="citizenID">Citizen ID</label>
+                        <div class="input-wrapper">
+                            <i class="bx bx-id-card input-icon"></i>
+                            <input type="text" id="citizenID" name="username" placeholder="Enter your citizen ID" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <div class="input-wrapper">
+                            <i class="bx bx-lock-alt input-icon"></i>
+                            <input type="password" id="password" name="password" placeholder="Create a password" required>
+                            <button class="toggle-pw" type="button" tabindex="-1" onclick="togglePassword('password','eyeIcon1')">
+                                <i class="bx bx-hide" id="eyeIcon1"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="button-register-con">
+                        <a href="/public/index.html" class="btn-register">
+                            <span>Register</span>
+                            <i class="bx bx-right-arrow-alt"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <p>Already have an account? <a href="/public/Candidate-Login.html">Sign In as Candidate</a></p>
+                    <p>Are you a Voter? <a href="/public/Voter-Login.html">Sign In as Voter</a></p>
+                </div>
+
+            </div>
+        </main>
+
+        <footer>
+            <span>&copy; 2567 Mae Fah Luang University. All rights reserved.</span>
+        </footer>
+    </div>
+
+    <script>
+        const formLogin = document.querySelector('#formLogin');
+        formLogin.onsubmit = async function(e) {
+            e.preventDefault();
+            const username = formLogin['username'].value.trim();
+            const password = formLogin['password'].value.trim();
+            // console.log(username, password);
+            const options = {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({"username": username, "password": password})
+            }
+            try {
+                const response = await fetch('/Candidate-Register', options);
+                if(response.ok) {
+                    const route = await response.text();
+                    location.replace(route);
+                } else {
+                    const message = await response.text();
+                    throw Error(message);
+                }
+            } catch (error) {
+                alert(error);
+            }
+        }
+    </script>
+</body>
+
+</html>

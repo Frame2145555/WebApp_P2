@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms Management - MFU E-VOTING</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.1/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'mfu-red': '#8C1515',   
+                        'mfu-yellow': '#D4AF37' 
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-slate-50 font-sans min-h-screen flex flex-col">
+
+    <nav class="bg-mfu-red text-white p-4 shadow-md flex justify-between items-center px-6 lg:px-12">
+        <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-black text-mfu-yellow">MFU E-VOTING</h1>
+            <div class="hidden md:block h-6 w-px bg-white/30"></div>
+            <p class="hidden md:block text-sm font-light">Admin Control Panel</p>
+        </div>
+        
+        <button class="btn btn-sm btn-outline text-white hover:bg-white hover:text-mfu-red hover:border-white border-white">
+            Logout
+        </button>
+    </nav>
+
+    <main class="flex-1 w-full max-w-7xl mx-auto p-6 lg:p-8 mt-4">
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-800">Terms Management</h2>
+                <p class="text-gray-500 text-sm mt-2">เลือกรอบการเลือกตั้งเพื่อเข้าสู่ระบบจัดการและดูสถิติ</p>
+            </div>
+            <button class="btn bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm px-6" onclick="add_term_modal.showModal()">
+                + Add New Term
+            </button>
+        </div>
+
+        <div>
+            <h3 class="text-xl font-bold text-gray-700 mb-6 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-mfu-red">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                </svg>
+                Voting Rounds
+            </h3>
+
+            <div id="terms-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                </div>
+        </div>
+
+    </main>
+    
+    <dialog id="add_term_modal" class="modal">
+        <div class="modal-box bg-white">
+            <h3 class="font-bold text-xl mb-4 text-gray-800">Add New Term</h3>
+
+            <form id="addTermForm">
+                <div class="form-control mb-4">
+                    <label class="label"><span class="label-text font-bold text-gray-600">Year / Term</span></label>
+                    <input type="text" id="input-term-name" placeholder="เช่น 2/2569" class="input input-bordered w-full bg-gray-50 focus:bg-white" />
+                </div>
+
+                <div class="form-control mb-6">
+                    <label class="label"><span class="label-text font-bold text-gray-600">Description</span></label>
+                    <textarea id="input-term-desc" class="textarea textarea-bordered h-24 bg-gray-50 focus:bg-white" placeholder="รายละเอียดของวาระการเลือกตั้ง..."></textarea>
+                </div>
+
+                <div class="modal-action">
+                    <form method="dialog">
+                        <button class="btn btn-ghost text-gray-500">Cancel</button>
+                    </form>
+                    <button type="button" id="btn-submit-term" class="btn btn-primary bg-blue-600 hover:bg-blue-700 border-none text-white px-8">Add</button>
+                </div>
+            </form>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <script src="/AdminNew/script/Term.js"></script>
+</body>
+
+</html>
