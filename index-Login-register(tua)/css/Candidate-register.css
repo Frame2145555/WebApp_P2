@@ -32,49 +32,6 @@ body {
     overflow-x: hidden;
 }
 
-.bg-orbs {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-}
-
-.orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.22;
-    animation: drift 20s ease-in-out infinite alternate;
-}
-
-.orb-1 {
-    width: 560px; height: 560px;
-    background: radial-gradient(circle, #8a1717, transparent 70%);
-    top: -200px; left: -120px;
-    animation-delay: 0s;
-}
-
-.orb-2 {
-    width: 380px; height: 380px;
-    background: radial-gradient(circle, #c9972b, transparent 70%);
-    bottom: -100px; right: -100px;
-    animation-delay: -7s;
-}
-
-.orb-3 {
-    width: 280px; height: 280px;
-    background: radial-gradient(circle, #5c0f0f, transparent 70%);
-    top: 55%; left: 65%;
-    animation-delay: -14s;
-}
-
-@keyframes drift {
-    0%   { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(28px, 18px) scale(1.07); }
-}
-
-
 .container {
     display: flex;
     flex-direction: column;

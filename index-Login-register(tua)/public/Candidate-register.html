@@ -7,15 +7,13 @@
     <title>Candidate Register — MFU Voting</title>
     <link rel="stylesheet" href="/css/Candidate-register.css">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Sarabun:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
-    <div class="bg-orbs">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-    </div>
+
 
     <div class="container">
         <nav class="navbar">
@@ -43,39 +41,41 @@
 
                 <div class="divider"></div>
 
-                <div class="card-body">
+                <form class="card-body" id="formRegister">
 
                     <div class="input-group">
                         <label for="citizenID">Citizen ID</label>
                         <div class="input-wrapper">
                             <i class="bx bx-id-card input-icon"></i>
-                            <input type="text" id="citizenID" name="username" placeholder="Enter your citizen ID" required>
+                            <input type="text" id="citizenID" name="username" placeholder="Enter your citizen ID"
+                                required>
                         </div>
                     </div>
+
                     <div class="input-group">
                         <label for="password">Password</label>
                         <div class="input-wrapper">
                             <i class="bx bx-lock-alt input-icon"></i>
-                            <input type="password" id="password" name="password" placeholder="Create a password" required>
-                            <button class="toggle-pw" type="button" tabindex="-1" onclick="togglePassword('password','eyeIcon1')">
+                            <input type="password" id="password" name="password" placeholder="Create a password"
+                                required>
+                            <button class="toggle-pw" type="button" tabindex="-1"
+                                onclick="togglePassword('password','eyeIcon1')">
                                 <i class="bx bx-hide" id="eyeIcon1"></i>
                             </button>
                         </div>
                     </div>
+
                     <div class="button-register-con">
-                        <a href="/public/index.html" class="btn-register">
+                        <button type="submit" class="btn-register" style="border: none; cursor: pointer; width: 100%;">
                             <span>Register</span>
                             <i class="bx bx-right-arrow-alt"></i>
-                        </a>
+                        </button>
                     </div>
-                </div>
+                </form>
 
                 <div class="card-footer">
-                    <p>Already have an account? <a href="/public/Candidate-Login.html">Sign In as Candidate</a></p>
-                    <p>Are you a Voter? <a href="/public/Voter-Login.html">Sign In as Voter</a></p>
+                    <p>Already have an account? <a href="/public/Login.html">Sign In</a></p>
                 </div>
-
-            </div>
         </main>
 
         <footer>
@@ -84,28 +84,77 @@
     </div>
 
     <script>
-        const formLogin = document.querySelector('#formLogin');
-        formLogin.onsubmit = async function(e) {
+        const params = new URLSearchParams(window.location.search);
+        const prefilledId = params.get('id');
+        if (prefilledId) {
+            document.getElementById('citizenID').value = prefilledId;
+        }
+
+        // ── Toggle show / hide password ──
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            icon.className = isHidden ? 'bx bx-show' : 'bx bx-hide';
+        }
+
+        // ── Submit form ──
+        const formRegister = document.getElementById('formRegister');
+
+        formRegister.onsubmit = async function (e) {
             e.preventDefault();
-            const username = formLogin['username'].value.trim();
-            const password = formLogin['password'].value.trim();
-            // console.log(username, password);
-            const options = {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({"username": username, "password": password})
+
+            const candidate_id = document.getElementById('citizenID').value.trim();
+            const password = document.getElementById('password').value;
+
+            // validate ฝั่ง client
+            if (!candidate_id) {
+                alert('กรุณากรอก Candidate ID');
+                return;
             }
+            if (!password) {
+                alert('กรุณากรอก Password');
+                return;
+            }
+            if (password.length < 8) {
+                alert('Password must be at least 8 characters');
+                return;
+            }
+
             try {
-                const response = await fetch('/Candidate-Register', options);
-                if(response.ok) {
-                    const route = await response.text();
-                    location.replace(route);
-                } else {
-                    const message = await response.text();
-                    throw Error(message);
+                // Step 1: verify ก่อนว่า ID ถูกและยังไม่ register
+                const verifyRes = await fetch(`/api/register/verify/${encodeURIComponent(candidate_id)}`);
+                const verifyData = await verifyRes.json();
+
+                if (!verifyRes.ok) {
+                    alert(verifyData.error || 'Invalid Candidate ID');
+                    return;
                 }
-            } catch (error) {
-                alert(error);
+
+                // Step 2: register
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        candidate_id,
+                        password,
+                        confirm_password: password
+                    }),
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert(data.error || 'Registration failed');
+                    return;
+                }
+
+                alert('Registration successful! Please sign in.');
+                location.replace('/Login');
+
+            } catch (err) {
+                alert('Cannot connect to server');
+                console.error(err);
             }
         }
     </script>
