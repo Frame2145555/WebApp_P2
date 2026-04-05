@@ -144,7 +144,7 @@ const argon2 = require('argon2');
 
 const createVoter = async (req, res) => {
     // รับค่าที่ Admin ส่งมาจากหน้าเว็บ (ตาม API Spec)
-    const { citizen_id, laser_id, confirm_laser_id, term_id } = req.body;
+    const { citizen_id, laser_id, term_id } = req.body;
 
     // 1. เช็คว่าส่งค่ามาครบไหม
     if (!citizen_id || !laser_id || !term_id) {
@@ -163,9 +163,6 @@ const createVoter = async (req, res) => {
         return res.status(400).json({ message: "รหัสหลังบัตร (Laser ID) ไม่ถูกต้อง (ต้องเป็นภาษาอังกฤษ 2 ตัว ตามด้วยตัวเลข 10 ตัว)" });
     }
 
-    if (laser_id !== confirm_laser_id) {
-        return res.status(400).json({ message: "รหัส Laser ID ทั้ง 2 ช่องไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง" });
-    }
 
     // ดึง connection ออกมาเพื่อทำ Transaction ... (โค้ดด้านล่างใช้ของเดิมได้เลยครับ)
     const connection = await pool.getConnection();
