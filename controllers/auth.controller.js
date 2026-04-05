@@ -1,126 +1,148 @@
-//Login
-const pool = require('../db'); // ดึงไฟล์เชื่อมฐานข้อมูลมาใช้ (ถอยกลับไป 1 โฟลเดอร์ด้วย ../)
+const argon2 = require('@node-rs/argon2');
+const pool = require('../db');
 
+// ==========================================
+// 1. ฟังก์ชัน Login
+// ==========================================
 const login = async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-        return res.status(400).json({ message: "กรุณากรอก Username และ Password ให้ครบ" });
+        return res.status(400).send('Please enter username and password');
     }
 
     try {
-        //แก้ SQL ให้ใช้ LEFT JOIN ไปที่ตาราง Candidates
-        // เราเอา user_id มาเป็นตัวเชื่อม (Link) เพื่อไปเอา score มา
-        const [users] = await pool.query(
-            `SELECT u.*, c.score 
-             FROM Users u 
-             LEFT JOIN Candidates c ON u.user_id = c.user_id 
-             WHERE u.username = ? AND u.password = ?`, 
-            [username, password]
-        );
+        const [results] = await pool.query("SELECT user_id, password, role FROM users WHERE username=?", [username]);
 
-        if (users.length > 0) {
-            const user = users[0];
-            
-            if (user.is_enable === 0) {
-                return res.status(403).json({ message: "บัญชีนี้ถูกปิดใช้งานชั่วคราว" });
-            }
-
-            // เตรียมข้อมูลที่จะส่งกลับ
-            // สร้าง Object พื้นฐานที่ทุกคนต้องได้ก่อน
-            const responseData = { 
-                status: "success", 
-                message: "Login OK", 
-                role: user.role,
-                user_id: user.user_id
-            };
-
-            // เช็ค Role (แนวทางที่ 2 ที่คุณชอบ)
-            // ถ้าเป็น candidate ค่อยเติม score ลงไปในข้อมูลที่จะส่งกลับ
-            if (user.role === 'candidate') {
-                responseData.score = user.score || 0; 
-            }
-
-            res.json(responseData);
-
-        } else {
-            res.status(401).json({ status: "error", message: "Username หรือ Password ผิด" });
+        if (results.length !== 1) {
+            return res.status(401).send('Wrong username');
         }
-    } catch (error) {
-        console.error("Login Error:", error);
-        res.status(500).json({ status: "error", message: "Sever Error" });
+
+        const role = results[0].role;
+
+        if (results[0].password === 'NOT_REGISTERED') {
+            return res.status(403).send('Candidate has not registered yet');
+        }
+
+        let same = false;
+        try {
+            // 1. พยายามตรวจแบบ Hash ก้อนยาวๆ (ตามมาตรฐานความปลอดภัย)
+            same = await argon2.verify(results[0].password, password);
+        } catch (hashError) {
+            // 2. ถ้า Error แปลว่ารหัสใน DB เป็นข้อความธรรมดา (เช่น password123)
+            // ให้เอามาเทียบตรงๆ แบบเป๊ะๆ แทน (ใช้สำหรับช่วงพัฒนาระบบเท่านั้น!)
+            if (results[0].password === password) {
+                same = true;
+                console.warn(`⚠️ คำเตือน: รหัสผ่านของ '${username}' ใน Database ยังไม่ได้ถูกเข้ารหัส (Hash)!`);
+            }
+        }
+
+        if (!same) {
+            return res.status(401).send('Wrong password');
+        }
+
+        const { user_id } = results[0];
+
+        // Redirect ตาม Role
+        const redirectMap = {
+            admin: '/AdminNew/views/Term.html',
+            candidate: '/Candidate-Dashboard',
+            voter: '/Voter-Dashboard',
+        };
+
+        const redirect = redirectMap[role];
+        if (!redirect) {
+            return res.status(403).send('Unknown role');
+        }
+
+        return res.status(200).json({ redirect, user_id, role });
+    } catch (err) {
+        console.error("Login Error:", err);
+        return res.status(500).send('Server or Database error');
     }
 };
 
-// Register
-const argon2 = require('argon2');
-
-const registerCandidate = async (req, res) => {
-    // รับค่าจากหน้าเว็บตอนผู้สมัครกดลงทะเบียน
-    const { candidate_id, username, password, policies } = req.body;
-
-    if (!candidate_id || !username || !password || !policies) {
-        return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
-    }
-
-    const connection = await pool.getConnection();
+// ==========================================
+// 2. ฟังก์ชันตรวจสอบสิทธิ์ก่อนตั้งรหัส (Verify Candidate)
+// ==========================================
+const verifyCandidate = async (req, res) => {
+    const { candidate_id } = req.params;
 
     try {
-        await connection.beginTransaction();
-
-        // 1. เช็คก่อนว่า Candidate ID นี้มีอยู่จริงไหม? และโดนคนอื่นแย่งลงทะเบียนไปหรือยัง?
-        const [candidateCheck] = await connection.query(
-            "SELECT is_registered FROM candidates WHERE candidate_id = ?",
+        const [rows] = await pool.query(
+            `SELECT u.user_id, c.name, u.password
+             FROM users u
+             JOIN candidates c ON u.user_id = c.user_id
+             WHERE u.username = ? AND u.role = 'candidate'`,
             [candidate_id]
         );
 
-        if (candidateCheck.length === 0) {
-            return res.status(404).json({ message: "ไม่พบ Candidate ID นี้ในระบบ (ติดต่อ Admin)" });
-        }
-        if (candidateCheck[0].is_registered === 1) {
-            return res.status(400).json({ message: "รหัสผู้สมัครนี้ ถูกลงทะเบียนไปเรียบร้อยแล้ว!" });
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Invalid Candidate ID' });
         }
 
-        // 2. เข้ารหัสผ่านด้วย Argon2 สุดโหด
-        const hashedPassword = await argon2.hash(password);
-
-        // 3. นำ Username และ Password ไปบันทึกลงตาราง Users
-        const [userResult] = await connection.query(
-            "INSERT INTO users (username, password, role, is_enable) VALUES (?, ?, 'candidate', 1)",
-            [username, hashedPassword]
-        );
-        const newUserId = userResult.insertId;
-
-        // 4. นำ user_id ที่เพิ่งได้ มาอัปเดตใส่ตาราง Candidates พร้อมกับนโยบาย และเปลี่ยนสถานะเป็น 1
-        await connection.query(
-            "UPDATE candidates SET user_id = ?, policies = ?, is_registered = 1 WHERE candidate_id = ?",
-            [newUserId, policies, candidate_id]
-        );
-
-        await connection.commit();
-
-        res.status(200).json({ 
-            status: "success", 
-            message: "ลงทะเบียนผู้สมัครสำเร็จ! คุณสามารถเข้าสู่ระบบได้เลย" 
-        });
-
-    } catch (error) {
-        await connection.rollback();
-        console.error("Candidate Register Error:", error);
-
-        // ดักกรณีผู้สมัครตั้ง Username ซ้ำกับคนอื่น
-        if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ message: "Username นี้มีคนใช้แล้ว กรุณาตั้งใหม่" });
+        if (rows[0].password !== 'NOT_REGISTERED') {
+            return res.status(409).json({ error: 'This Candidate ID has already been registered' });
         }
-        res.status(500).json({ message: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์" });
-        
-    } finally {
-        connection.release();
+
+        return res.json({ valid: true, name: rows[0].name });
+
+    } catch (err) {
+        console.error("Verify Error:", err);
+        return res.status(500).send('Server or Database error');
     }
 };
 
-// ส่งออกฟังก์ชันไปให้ไฟล์อื่นใช้
-module.exports = {
-    login,
-    registerCandidate
+// ==========================================
+// 3. ฟังก์ชันตั้งรหัสผ่านใหม่ (Register)
+// ==========================================
+const register = async (req, res) => {
+    const { candidate_id, password, confirm_password } = req.body;
+
+    if (!candidate_id || !password || !confirm_password) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+    if (password !== confirm_password) {
+        return res.status(400).json({ error: 'Passwords do not match' });
+    }
+    if (password.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    try {
+        const [rows] = await pool.query(
+            `SELECT user_id, password FROM users WHERE username = ? AND role = 'candidate'`,
+            [candidate_id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Invalid Candidate ID' });
+        }
+
+        if (rows[0].password !== 'NOT_REGISTERED') {
+            return res.status(409).json({ error: 'Already registered' });
+        }
+
+        const hashed = await argon2.hash(password);
+        await pool.query(
+            `UPDATE users SET password = ? WHERE username = ? AND role = 'candidate'`,
+            [hashed, candidate_id]
+        );
+        await pool.query(
+            `UPDATE candidates SET is_registered = 1 WHERE user_id = ?`,
+            [rows[0].user_id]
+        );
+
+        return res.status(200).json({ message: 'Registration successful. You can now log in.' });
+    } catch (err) {
+        console.error("Register Error:", err);
+        return res.status(500).send('Server or Database error');
+    }
+};
+
+// ส่งออกไปให้ Router ใช้
+module.exports = { 
+    login, 
+    verifyCandidate, 
+    register 
 };
