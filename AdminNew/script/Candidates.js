@@ -134,7 +134,18 @@ if (searchInput) {
 }
 
 // ฟังก์ชัน เปิด/ปิด สถานะ candidate
+// ฟังก์ชัน เปิด/ปิด สถานะ candidate
 async function toggleStatus(candidateId, newStatus) {
+    // 🛡️ 1. FRONTEND VALIDATION (ดักจับก่อนทำงานจริง)
+    if (!candidateId) {
+        Swal.fire('ข้อผิดพลาด', 'ไม่พบรหัสผู้สมัคร ไม่สามารถเปลี่ยนสถานะได้', 'error');
+        return; 
+    }
+    if (newStatus !== 0 && newStatus !== 1) {
+        Swal.fire('ข้อผิดพลาด', 'ค่าสถานะไม่ถูกต้อง (ต้องเป็น 0 หรือ 1)', 'error');
+        return; 
+    }
+
     const actionText = newStatus === 1 ? 'เปิดใช้งาน (Enable)' : 'ระงับการใช้งาน (Disable)';
 
     const confirm = await Swal.fire({
@@ -145,10 +156,7 @@ async function toggleStatus(candidateId, newStatus) {
         confirmButtonText: 'ใช่, ดำเนินการเลย!',
         cancelButtonText: 'ยกเลิก',
         buttonsStyling: false, 
-        
-        // เพิ่มบรรทัดนี้เข้าไปครับ! สั่งไม่ให้มันหดจอ
         scrollbarPadding: false, 
-
         customClass: {
             confirmButton: `btn ${newStatus === 1 ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} text-white mx-2 border-none`,
             cancelButton: 'btn btn-outline mx-2'
@@ -280,6 +288,11 @@ if (addCandidateBtn) {
 // ฟังก์ชัน ลบผู้สมัคร (Delete Candidate)
 // ==========================================
 async function deleteCandidate(candidateId) {
+    if (!candidateId) {
+        Swal.fire('ข้อผิดพลาด', 'ไม่พบรหัสผู้สมัครที่ต้องการลบ', 'error');
+        return;
+    }
+    
     // 1. เด้งถามให้ชัวร์ก่อนลบ (ปุ่มสีแดงขู่ไว้ก่อน)
     const confirm = await Swal.fire({
         title: 'ยืนยันการลบ?',

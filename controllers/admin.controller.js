@@ -240,8 +240,8 @@ const createTerm = async (req, res) => {
     // รับค่าจากหน้าต่าง Modal (ชื่อเทอม และ คำอธิบาย)
     const { name, description } = req.body;
 
-    if (!name) {
-        return res.status(400).json({ message: "ตั้งชื่อก่อนดิ เดี่ยวโดนฟาด" });
+    if (!name || name.trim().length === 0) {
+        return res.status(400).json({ message: "ตั้งชื่อก่อนดิ (ห้ามพิมพ์แค่ช่องว่างด้วย!) เดี่ยวโดนฟาด" });
     }
 
     const connection = await pool.getConnection();
