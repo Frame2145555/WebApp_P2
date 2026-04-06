@@ -116,6 +116,15 @@
                 const response = await fetch('/api/login', options); 
                 if (response.ok) {
                     const data = await response.json(); //  รับ JSON
+
+                    // เก็บข้อมูลผู้ใช้ไว้ใน localStorage เพื่อให้หน้า dashboard ตรวจสิทธิ์ผ่าน
+                    const sessionUser = {
+                        user_id: data.user_id,
+                        role: data.role,
+                        username
+                    };
+                    localStorage.setItem('user', JSON.stringify(sessionUser));
+
                     location.replace(data.redirect);    //  ดึง redirect จาก JSON
                 } else {
                     const message = await response.text();

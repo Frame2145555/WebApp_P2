@@ -1,6 +1,7 @@
 tailwind.config = {
   theme: {
     extend: {
+      // โทนสีหลักของหน้า candidate dashboard
       colors: {
         mfuRed: '#8C1D1D',
         mfuGold: '#B38E50',

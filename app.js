@@ -6,12 +6,14 @@ const app = express();
 // 1. ตั้งค่าพื้นฐาน & Static Files
 app.use(express.json());
 
+// ไฟล์ JS กลางของระบบ (ไม่ทับกับ /public เดิมของหน้า login)
+app.use('/public/js', express.static(path.join(__dirname, 'public/js')));
 app.use('/public', express.static(path.join(__dirname, 'index-Login-register(tua)/public')));
 app.use('/css', express.static(path.join(__dirname, 'index-Login-register(tua)/css')));
 app.use('/img', express.static(path.join(__dirname, 'index-Login-register(tua)/img')));
 app.use('/AdminNew', express.static(path.join(__dirname, 'AdminNew')));
-app.use('/dashbordVoter/WebAppProject', express.static(path.join(__dirname, 'WebAppProject')));
-app.use('/File_of_Luu', express.static(path.join(__dirname, 'File_of_Luu')));
+app.use('/candidate_system', express.static(path.join(__dirname, 'candidate_system')));
+app.use('/dashbordVoter/WebAppProject', express.static(path.join(__dirname, 'dashbordVoter/WebAppProject')));
 
 // 2. Routes สำหรับเปิดหน้า HTML (tua)
 app.get('/index', (req, res) => {
@@ -29,6 +31,41 @@ app.get('/Candidate-Register', (req, res) => {
 // 3. API สำหรับทดสอบระบบ (Test APIs)
 app.get('/api/status', (req, res) => {
     res.json({ message: "Server is running" });
+});
+
+// API สำหรับหน้า Candidate Dashboard (ผลคะแนนตามเทอมที่ active)
+app.get('/api/results', async (req, res) => {
+    try {
+        const [activeTermRows] = await pool.query(
+            'SELECT term_id FROM terms WHERE is_active = 1 ORDER BY term_id DESC LIMIT 1'
+        );
+
+        const activeTermId = activeTermRows[0]?.term_id;
+
+        if (!activeTermId) {
+            return res.json([]);
+        }
+
+        const [rows] = await pool.query(
+            `SELECT
+                c.candidate_id,
+                c.user_id,
+                u.username,
+                COALESCE(NULLIF(c.name, ''), u.username, CONCAT('Candidate #', c.candidate_id)) AS display_name,
+                c.policies AS bio,
+                c.score AS vote_count
+             FROM candidates c
+             LEFT JOIN users u ON u.user_id = c.user_id
+             WHERE c.term_id = ?
+             ORDER BY c.score DESC, c.candidate_id ASC`,
+            [activeTermId]
+        );
+
+        return res.json(rows);
+    } catch (error) {
+        console.error('Results API Error:', error);
+        return res.status(500).json({ message: 'โหลดผลคะแนนไม่สำเร็จ' });
+    }
 });
 
 app.get('/api/test-db', async (req, res) => {

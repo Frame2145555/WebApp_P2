@@ -1,7 +1,0 @@
-.DS_Store
-.env
-legacy/
-node_modules/
-uploads/
-npm-debug.log*
-.vscode/

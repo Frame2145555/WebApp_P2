@@ -1,10 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // ตรวจสิทธิ์ผู้ใช้งานก่อนแสดงหน้า candidate dashboard
   const user = VotingApp.requireRole('candidate');
 
   if (!user) {
     return;
   }
 
+  // เก็บ state กลางของหน้า เพื่อให้ render ใหม่ได้ง่าย
   const state = {
     results: [],
     filteredResults: [],
@@ -12,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pendingProfileImage: null
   };
 
+  // รวม element ที่ต้องใช้บ่อยไว้ที่เดียว จะได้อ่านและดูแลง่าย
   const elements = {
     displayName: document.getElementById('display-name'),
     summaryName: document.getElementById('summaryName'),
@@ -39,13 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const currentDisplayName = user.display_name || user.username || 'Candidate';
-  const defaultProfilePicture = 'assets/images/mfu-logo.png';
+  const defaultProfilePicture = '../image/mfu-logo.png';
 
+  // แสดงข้อมูลผู้ใช้เบื้องต้นตอนโหลดหน้า
   elements.displayName.textContent = currentDisplayName;
   elements.summaryName.textContent = currentDisplayName;
   syncBioFromUser();
   renderProfilePicture(user.profile_picture);
 
+  // ผูก event ของปุ่มและช่องกรอกข้อมูล
   elements.logoutButton.addEventListener('click', VotingApp.logout);
   elements.shareButton.addEventListener('click', copyProfileLink);
   elements.openBioModalButton.addEventListener('click', openBioModal);
@@ -58,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadDashboard();
 
+  // ดึง manifesto จากข้อมูลผู้ใช้ที่เก็บไว้ในเครื่อง
   function syncBioFromUser() {
     if (!user.bio) {
       return;
@@ -67,32 +73,39 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.bioInput.value = user.bio;
   }
 
+  // แสดงรูปโปรไฟล์ ถ้าไม่มีให้ใช้โลโก้แทน
   function renderProfilePicture(profilePicture) {
     elements.profilePicturePreview.src = profilePicture
       ? VotingApp.resolveAssetUrl(profilePicture)
       : defaultProfilePicture;
   }
 
+  // แปลงคะแนนเป็นตัวเลขที่ปลอดภัย
   function normalizeVoteCount(value) {
     return Number(value) || 0;
   }
 
+  // เรียงผลคะแนนจากมากไปน้อย
   function sortResults(results) {
     return [...results].sort((left, right) => normalizeVoteCount(right.vote_count) - normalizeVoteCount(left.vote_count));
   }
 
+  // ตรวจว่าข้อมูลแถวนั้นเป็นของ candidate คนปัจจุบันหรือไม่
   function isCurrentCandidate(candidate) {
     return String(candidate.user_id) === String(user.user_id) || candidate.username === user.username;
   }
 
+  // เลือกชื่อที่จะแสดงในตารางและกราฟ
   function getCandidateLabel(candidate) {
     return candidate.display_name || candidate.username || 'Unknown Candidate';
   }
 
+  // ดึงผลของ candidate ปัจจุบันจากชุดข้อมูลทั้งหมด
   function getCurrentCandidateResult() {
     return sortResults(state.results).find(isCurrentCandidate);
   }
 
+  // โหลดข้อมูลคะแนนล่าสุดจาก backend
   async function loadDashboard() {
     try {
       state.results = sortResults(await VotingApp.api('/api/results'));
@@ -107,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderChart();
   }
 
+  // กรองรายการตามคำค้นหา
   function applySearch() {
     const query = elements.searchInput.value.trim().toLowerCase();
     const sortedResults = sortResults(state.results);
@@ -121,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderResultsTable();
   }
 
+  // อัปเดตสรุปคะแนนและอันดับของ candidate ปัจจุบัน
   function updateSummary() {
     const currentCandidate = getCurrentCandidateResult();
     const rank = currentCandidate ? sortResults(state.results).findIndex(isCurrentCandidate) + 1 : '--';
@@ -130,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.summaryRank.textContent = rank;
   }
 
+  // วาดตารางผลคะแนนแบบ live
   function renderResultsTable() {
     if (!state.filteredResults.length) {
       elements.resultsTable.innerHTML = `
@@ -166,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
   }
 
+  // วาดกราฟอันดับ top 5 ด้วย Chart.js
   function renderChart() {
     const chartResults = sortResults(state.results).slice(0, 5);
     const labels = chartResults.length ? chartResults.map((candidate) => getCandidateLabel(candidate)) : ['No Data'];
@@ -206,14 +223,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // เปิด modal สำหรับแก้ manifesto
   function openBioModal() {
     elements.bioModal.classList.remove('hidden');
   }
 
+  // ปิด modal แก้ manifesto
   function closeBioModal() {
     elements.bioModal.classList.add('hidden');
   }
 
+  // คัดลอกลิงก์โปรไฟล์ปัจจุบันไปยัง clipboard
   async function copyProfileLink() {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -223,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // บันทึก manifesto ใหม่ไป backend
   async function saveBio() {
     const bioContent = elements.bioInput.value.trim();
 
@@ -253,6 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // เปลี่ยนข้อความสถานะของรูปโปรไฟล์ตามระดับความสำคัญ
   function setProfilePhotoStatus(text, tone = 'default') {
     elements.profilePhotoStatus.textContent = text;
     elements.profilePhotoStatus.className = `text-xs font-semibold uppercase tracking-[0.2em] ${
@@ -264,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }`;
   }
 
+  // ตรวจสอบไฟล์ที่ผู้ใช้เลือกและเตรียมรูปก่อนอัปโหลด
   function handleProfileImageSelection(event) {
     const file = event.target.files?.[0];
 
@@ -299,6 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsDataURL(file);
   }
 
+  // ส่งรูปโปรไฟล์ไป backend
   async function saveProfilePicture() {
     if (!state.pendingProfileImage) {
       setProfilePhotoStatus('Choose a photo first', 'error');

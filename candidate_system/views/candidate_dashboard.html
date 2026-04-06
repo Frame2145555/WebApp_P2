@@ -4,16 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Candidate Dashboard | MFU</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="assets/js/theme.js"></script>
+    <script src="../script/theme.js"></script>
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+        }
+    </style>
 </head>
 <body class="bg-bgLight min-h-screen text-gray-900">
+    <!-- โครงหน้าหลักแบบสองคอลัมน์ คล้ายแนว AdminNew -->
     <div class="lg:flex">
+        <!-- Sidebar ฝั่งผู้สมัคร -->
         <aside class="w-full bg-mfuRed text-white shadow-2xl lg:w-72 lg:min-h-screen">
             <div class="p-8 text-center border-b border-white/10">
                 <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <img src="assets/images/mfu-logo.png" alt="MFU Logo" class="w-12">
+                    <img src="../image/mfu-logo.png" alt="MFU Logo" class="w-12">
                 </div>
                 <h2 class="font-black text-2xl">MFU</h2>
                 <p class="text-sm text-white/70 mt-2">Candidate workspace</p>
@@ -28,6 +38,7 @@
             </div>
         </aside>
 
+        <!-- เนื้อหาหลักของหน้า -->
         <main class="flex-grow p-6 md:p-10">
             <header id="overview" class="mb-8">
                 <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -94,7 +105,7 @@
                         <div class="flex flex-col items-center gap-4 text-center">
                             <img
                                 id="profilePicturePreview"
-                                src="assets/images/mfu-logo.png"
+                                src="../image/mfu-logo.png"
                                 alt="Candidate profile"
                                 class="h-28 w-28 rounded-[2rem] border border-gray-200 bg-gray-50 object-cover shadow-sm"
                             >
@@ -160,6 +171,7 @@
         </main>
     </div>
 
+    <!-- Modal สำหรับอัปเดต manifesto -->
     <div id="bioModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[100] backdrop-blur-sm p-4">
         <div class="bg-white p-8 md:p-10 rounded-[2rem] w-full max-w-lg">
             <h3 class="text-2xl font-black mb-4">Update Manifesto</h3>
@@ -171,7 +183,7 @@
         </div>
     </div>
 
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/candidate-dashboard.js"></script>
+    <script src="/public/js/voting-app.js"></script>
+    <script src="../script/candidate-dashboard.js"></script>
 </body>
 </html>

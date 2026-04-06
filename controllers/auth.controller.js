@@ -44,7 +44,7 @@ const login = async (req, res) => {
         // Redirect ตาม Role
         const redirectMap = {
             admin: '/AdminNew/views/Term.html',
-            candidate: '/File_of_Luu/candidate_dashboard.html',
+            candidate: '/candidate_system/views/candidate_dashboard.html',
             voter: '/Voter-Dashboard',
         };
 
@@ -136,9 +136,65 @@ const register = async (req, res) => {
     }
 };
 
+// ==========================================
+// 4. ฟังก์ชันอัปเดต Bio (Manifesto) ของผู้สมัคร
+// ==========================================
+const updateBio = async (req, res) => {
+    const { user_id, bio } = req.body;
+
+    if (!user_id) {
+        return res.status(400).json({ success: false, message: 'user_id is required' });
+    }
+
+    try {
+        // เช็คว่า user มีอยู่ใน candidates table หรือไม่
+        const [existingCandidate] = await pool.query(
+            `SELECT candidate_id FROM candidates WHERE user_id = ?`,
+            [user_id]
+        );
+
+        if (existingCandidate.length > 0) {
+            // ถ้ามี ให้ update policies
+            await pool.query(
+                `UPDATE candidates SET policies = ? WHERE user_id = ?`,
+                [bio || '', user_id]
+            );
+        } else {
+            // ถ้าไม่มี ให้ insert candidate record ใหม่
+            await pool.query(
+                `INSERT INTO candidates (user_id, policies, is_registered) VALUES (?, ?, 1)`,
+                [user_id, bio || '']
+            );
+        }
+
+        // ดึงข้อมูลที่อัปเดตแล้วมาส่งกลับไป
+        const [updatedCandidate] = await pool.query(
+            `SELECT candidate_id, policies AS bio, name, profile_picture FROM candidates WHERE user_id = ?`,
+            [user_id]
+        );
+
+        const candidateData = updatedCandidate[0] || {};
+
+        return res.status(200).json({
+            success: true,
+            message: 'Manifesto updated successfully',
+            user: {
+                candidate_id: candidateData.candidate_id || null,
+                bio: candidateData.bio || bio || '',
+                profile_picture: candidateData.profile_picture || null,
+                display_name: candidateData.name || null
+            }
+        });
+    } catch (err) {
+        console.error("Update Bio Error:", err);
+        return res.status(500).json({ success: false, message: 'Server or Database error' });
+    }
+};
+
 // ส่งออกไปให้ Router ใช้
 module.exports = { 
     login, 
     verifyCandidate, 
-    register 
+    register,
+    updateBio
 };
