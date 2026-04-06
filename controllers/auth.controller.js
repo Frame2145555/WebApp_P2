@@ -1,9 +1,7 @@
 const argon2 = require('@node-rs/argon2');
 const pool = require('../db');
 
-// ==========================================
 // 1. ฟังก์ชัน Login
-// ==========================================
 const login = async (req, res) => {
     const { username, password } = req.body;
 
@@ -33,7 +31,7 @@ const login = async (req, res) => {
             // ให้เอามาเทียบตรงๆ แบบเป๊ะๆ แทน (ใช้สำหรับช่วงพัฒนาระบบเท่านั้น!)
             if (results[0].password === password) {
                 same = true;
-                console.warn(`⚠️ คำเตือน: รหัสผ่านของ '${username}' ใน Database ยังไม่ได้ถูกเข้ารหัส (Hash)!`);
+                console.warn(`คำเตือน: รหัสผ่านของ '${username}' ใน Database ยังไม่ได้ถูกเข้ารหัส (Hash)!`);
             }
         }
 
@@ -46,7 +44,7 @@ const login = async (req, res) => {
         // Redirect ตาม Role
         const redirectMap = {
             admin: '/AdminNew/views/Term.html',
-            candidate: '/Candidate-Dashboard',
+            candidate: '/File_of_Luu/candidate_dashboard.html',
             voter: '/Voter-Dashboard',
         };
 
@@ -62,9 +60,7 @@ const login = async (req, res) => {
     }
 };
 
-// ==========================================
 // 2. ฟังก์ชันตรวจสอบสิทธิ์ก่อนตั้งรหัส (Verify Candidate)
-// ==========================================
 const verifyCandidate = async (req, res) => {
     const { candidate_id } = req.params;
 
