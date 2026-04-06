@@ -13,7 +13,7 @@
 
 <body class="bg-gray-50">
 
-    <div class="flex h-screen overflow-hidden">
+    <div class="flex h-screen w-full">
         <aside class="sidebar w-64 text-white flex-shrink-0 flex flex-col h-full">
             <div class="p-6 text-center">
                 <h1 class="text-2xl font-bold mfu-gold">MFU E-VOTING</h1>
@@ -30,6 +30,10 @@
                 <li><a href="#" onclick="goToPage('Candidates.html')"
                         class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Candidate Management</a></li>
             </ul>
+            <div class="p-6 mt-auto">
+                <button id="logout-Btn"
+                    class="w-full text-left font-bold px-4 py-2 hover:bg-red-900 rounded transition-colors flex justify-center">logout</button>
+            </div>
         </aside>
 
         <main class="flex-1 overflow-y-auto p-8 bg-gray-50">
