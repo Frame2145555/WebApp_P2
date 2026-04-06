@@ -10,7 +10,15 @@ const login = async (req, res) => {
     }
 
     try {
-        const [results] = await pool.query("SELECT user_id, password, role FROM users WHERE username=?", [username]);
+        // ดึงข้อมูลจากตาราง users และ candidates พ่วงมาด้วยเลย
+        const sql = `
+            SELECT u.user_id, u.username, u.password, u.role,
+                   c.candidate_id, c.name AS display_name, c.policies AS bio, c.profile_picture
+            FROM users u
+            LEFT JOIN candidates c ON u.user_id = c.user_id
+            WHERE u.username = ?
+        `;
+        const [results] = await pool.query(sql, [username]);
 
         if (results.length !== 1) {
             return res.status(401).send('Wrong username');
@@ -53,7 +61,19 @@ const login = async (req, res) => {
             return res.status(403).send('Unknown role');
         }
 
-        return res.status(200).json({ redirect, user_id, role });
+        // ห่อข้อมูลผู้ใช้เป็นก้อนเดียวกัน เพื่อให้หน้าเว็บเอาไปเซฟลง LocalStorage ได้ง่ายๆ
+        const userData = {
+            user_id: results[0].user_id,
+            username: results[0].username,
+            role: role,
+            candidate_id: results[0].candidate_id,
+            display_name: results[0].display_name,
+            bio: results[0].bio,
+            profile_picture: results[0].profile_picture
+        };
+
+        // ส่งกลับไปให้หน้าเว็บ 
+        return res.status(200).json({ redirect: redirect, user: userData });
     } catch (err) {
         console.error("Login Error:", err);
         return res.status(500).send('Server or Database error');

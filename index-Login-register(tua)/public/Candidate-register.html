@@ -13,8 +13,6 @@
 </head>
 
 <body>
-
-
     <div class="container">
         <nav class="navbar">
             <div class="nav-brand">
@@ -44,11 +42,10 @@
                 <form class="card-body" id="formRegister">
 
                     <div class="input-group">
-                        <label for="citizenID">Citizen ID</label>
+                        <label for="candidateID">Candidate ID</label>
                         <div class="input-wrapper">
                             <i class="bx bx-id-card input-icon"></i>
-                            <input type="text" id="citizenID" name="username" placeholder="Enter your citizen ID"
-                                required>
+                            <input type="text" id="candidateID" name="username" placeholder="เช่น CAND-001" required>
                         </div>
                     </div>
 
@@ -56,11 +53,20 @@
                         <label for="password">Password</label>
                         <div class="input-wrapper">
                             <i class="bx bx-lock-alt input-icon"></i>
-                            <input type="password" id="password" name="password" placeholder="Create a password"
-                                required>
-                            <button class="toggle-pw" type="button" tabindex="-1"
-                                onclick="togglePassword('password','eyeIcon1')">
+                            <input type="password" id="password" name="password" placeholder="Create a password (ขั้นต่ำ 8 ตัวอักษร)" required>
+                            <button class="toggle-pw" type="button" tabindex="-1" onclick="togglePassword('password','eyeIcon1')">
                                 <i class="bx bx-hide" id="eyeIcon1"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="confirm_password">Confirm Password</label>
+                        <div class="input-wrapper">
+                            <i class="bx bx-lock-alt input-icon"></i>
+                            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
+                            <button class="toggle-pw" type="button" tabindex="-1" onclick="togglePassword('confirm_password','eyeIcon2')">
+                                <i class="bx bx-hide" id="eyeIcon2"></i>
                             </button>
                         </div>
                     </div>
@@ -76,6 +82,7 @@
                 <div class="card-footer">
                     <p>Already have an account? <a href="/public/Login.html">Sign In</a></p>
                 </div>
+            </div>
         </main>
 
         <footer>
@@ -84,12 +91,6 @@
     </div>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const prefilledId = params.get('id');
-        if (prefilledId) {
-            document.getElementById('citizenID').value = prefilledId;
-        }
-
         // ── Toggle show / hide password ──
         function togglePassword(inputId, iconId) {
             const input = document.getElementById(inputId);
@@ -105,20 +106,22 @@
         formRegister.onsubmit = async function (e) {
             e.preventDefault();
 
-            const candidate_id = document.getElementById('citizenID').value.trim();
+            // 🚨 รับค่าจากฟิลด์ใหม่ที่เราเพิ่งแก้ไป
+            const candidate_id = document.getElementById('candidateID').value.trim();
             const password = document.getElementById('password').value;
+            const confirm_password = document.getElementById('confirm_password').value;
 
-            // validate ฝั่ง client
             if (!candidate_id) {
                 alert('กรุณากรอก Candidate ID');
                 return;
             }
-            if (!password) {
-                alert('กรุณากรอก Password');
-                return;
-            }
             if (password.length < 8) {
                 alert('Password must be at least 8 characters');
+                return;
+            }
+            // 🚨 เช็คว่ารหัสผ่าน 2 ช่องตรงกันไหม
+            if (password !== confirm_password) {
+                alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน!');
                 return;
             }
 
@@ -139,7 +142,7 @@
                     body: JSON.stringify({
                         candidate_id,
                         password,
-                        confirm_password: password
+                        confirm_password // 🚨 ส่งตัว confirm จริงๆ ไปให้ Backend ตรวจสอบ
                     }),
                 });
                 const data = await res.json();
@@ -149,7 +152,7 @@
                     return;
                 }
 
-                alert('Registration successful! Please sign in.');
+                alert('ลงทะเบียนสำเร็จ! กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่ของคุณ');
                 location.replace('/Login');
 
             } catch (err) {

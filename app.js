@@ -68,6 +68,33 @@ app.get('/api/results', async (req, res) => {
     }
 });
 
+// 🚨 API เพิ่มเติมสำหรับ Candidate Dashboard
+
+// 1. อัปเดต Manifesto (Bio)
+app.post('/api/update-bio', async (req, res) => {
+    const { user_id, bio } = req.body;
+    try {
+        // ใน Database คุณใช้คอลัมน์ 'policies' เก็บข้อมูล Bio
+        await pool.query("UPDATE candidates SET policies = ? WHERE user_id = ?", [bio, user_id]);
+        res.json({ user: { bio: bio } }); // ตอบกลับรูปแบบที่ Frontend ต้องการ
+    } catch (error) {
+        console.error('Update Bio Error:', error);
+        res.status(500).json({ message: 'ไม่สามารถอัปเดตข้อมูลได้' });
+    }
+});
+
+// 2. อัปเดตรูปโปรไฟล์ (Profile Picture)
+app.post('/api/update-profile-picture', async (req, res) => {
+    const { user_id, imageDataUrl } = req.body;
+    try {
+        await pool.query("UPDATE candidates SET profile_picture = ? WHERE user_id = ?", [imageDataUrl, user_id]);
+        res.json({ user: { profile_picture: imageDataUrl } });
+    } catch (error) {
+        console.error('Update Profile Pic Error:', error);
+        res.status(500).json({ message: 'ไม่สามารถอัปเดตรูปภาพได้' });
+    }
+});
+
 app.get('/api/test-db', async (req, res) => {
     try {
         const [rows] = await pool.query("SELECT * FROM Candidates");

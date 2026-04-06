@@ -3,36 +3,65 @@ const pool = require('../db');
 // Add Candidate
 
 const createCandidate = async (req, res) => {
-    // 1. รับค่าที่ Admin ส่งมา (หน้าเว็บต้องส่ง term_id มาด้วยนะ!)
-    const { candidate_id, name, term_id } = req.body;
+    // 🚨 ไม่ต้องรับ candidate_id จากหน้าเว็บแล้ว รับแค่ ชื่อ กับ เทอม พอ!
+    const { name, term_id } = req.body;
 
-    // 2. ดักไว้ก่อน เผื่อส่งมาไม่ครบ
-    if (!candidate_id || !name || !term_id) {
-        return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบ (ID, ชื่อ และ Term ID) เดี่ยวโดนไม้กวาดฟาด!" });
+    if (!name || !term_id) {
+        return res.status(400).json({ message: "กรุณากรอกชื่อผู้สมัครและเลือกปีการศึกษาให้ครบถ้วน!" });
     }
 
+    const connection = await pool.getConnection();
     try {
-        // สังเกตว่าเราไม่ต้องไป SELECT หา is_active แล้ว! 
-        // จับยัดลง Database ตาม term_id ที่ส่งมาเลย 
-        // (เตือนก่อนนะจ่ะ: user_id จะเป็น NULL ไปก่อน รอให้ผู้สมัครมา Register ทีหลัง)
-        await pool.query(
-            "INSERT INTO candidates (candidate_id, name, is_registered, term_id) VALUES (?, ?, 0, ?)",
-            [candidate_id, name, term_id]
+        await connection.beginTransaction();
+
+        // ==========================================
+        // 🔮 1. ระบบ Auto-Generate รหัสผู้สมัคร (เช่น CAND-001, CAND-002)
+        // ==========================================
+        // ไปค้นหาว่า รหัสล่าสุดที่ขึ้นต้นด้วย CAND- คือเบอร์อะไร
+        const [lastUser] = await connection.query(
+            "SELECT username FROM users WHERE role = 'candidate' AND username LIKE 'CAND-%' ORDER BY LENGTH(username) DESC, username DESC LIMIT 1"
         );
 
-        res.status(200).json({
+        let nextNumber = 1;
+        if (lastUser.length > 0) {
+            // ตัดคำว่า CAND- ออก แล้วเอาตัวเลขมาบวก 1
+            const lastIdString = lastUser[0].username.replace('CAND-', '');
+            nextNumber = parseInt(lastIdString, 10) + 1;
+        }
+
+        // ปั้นรหัสใหม่ และเติมเลข 0 ข้างหน้าให้ครบ 3 หลัก (เช่น CAND-007)
+        const generatedCandidateId = `CAND-${String(nextNumber).padStart(3, '0')}`;
+
+        // ==========================================
+        // 💾 2. บันทึกข้อมูลลง Database
+        // ==========================================
+        // สร้าง User ก่อน โดยใช้รหัสที่เสกมาใหม่เป็น username
+        const [userResult] = await connection.query(
+            "INSERT INTO users (username, password, role, is_enable) VALUES (?, 'NOT_REGISTERED', 'candidate', 1)",
+            [generatedCandidateId]
+        );
+        const newUserId = userResult.insertId;
+
+        // สร้าง Candidate
+        await connection.query(
+            "INSERT INTO candidates (user_id, name, is_registered, term_id) VALUES (?, ?, 0, ?)",
+            [newUserId, name, term_id]
+        );
+
+        await connection.commit();
+        res.status(201).json({
             status: "success",
-            message: `สร้างรหัสผู้สมัคร ${candidate_id} สำหรับ ${name} ลงในเทอม ${term_id} ได้แวว`
+            // ส่งรหัสที่ระบบสร้างขึ้นกลับไปบอกแอดมินด้วย จะได้รู้ว่าคนนี้ได้รหัสอะไร
+            message: `สร้างผู้สมัคร ${name} สำเร็จ! (ระบบสร้างรหัส: ${generatedCandidateId})`,
+            candidate_id: generatedCandidateId 
         });
 
     } catch (error) {
+        await connection.rollback();
         console.error("Admin Create Candidate Error:", error);
-
-        // เช็คกรณี Admin เผลอสร้าง ID ซ้ำ
-        if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ message: "Candidate ID นี้มีในระบบแล้วนาจา" });
-        }
-        res.status(500).json({ message: "Server กาก ไปแก้แปป" });
+        res.status(500).json({ message: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์" });
+    } finally {
+        connection.release();
     }
 };
 
@@ -40,24 +69,28 @@ const createCandidate = async (req, res) => {
 const getCandidates = async (req, res) => {
     const { term_id } = req.query;
 
-    const connection = await pool.getConnection();
     try {
-        let query = "SELECT * FROM candidates";
+        // ดึง username จากตาราง users มาในชื่อ display_id (เช่น CAND-001)
+        let query = `
+            SELECT c.candidate_id AS internal_id, 
+                   u.username AS display_id, 
+                   c.name, c.policies, c.score, c.is_registered, c.term_id,
+                   u.is_enable AS status_enable
+            FROM candidates c
+            JOIN users u ON c.user_id = u.user_id
+        `;
         let params = [];
 
-        // ถ้ามีการส่ง term_id มา ให้กรองข้อมูลด้วย
         if (term_id) {
-            query += " WHERE term_id = ?";
+            query += " WHERE c.term_id = ?";
             params.push(term_id);
         }
 
-        const [candidates] = await connection.query(query, params);
+        const [candidates] = await pool.query(query, params);
         res.status(200).json({ status: "success", data: candidates });
     } catch (error) {
         console.error("Get Candidates Error:", error);
         res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลผู้สมัคร" });
-    } finally {
-        connection.release();
     }
 };
 

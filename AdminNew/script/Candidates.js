@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarLinks = document.querySelectorAll('aside ul li a');
     sidebarLinks.forEach(link => {
         const originalHref = link.getAttribute('href');
-        
+
         // กรองลิงก์ที่ไม่ต้องใส่ term_id ออก (เช่น # หรือหน้า Term)
         if (originalHref && originalHref !== '#' && !originalHref.includes('Term.html')) {
             // ดักไว้เผื่อลิงก์มันมี ?term_id อยู่แล้ว จะได้ไม่เบิ้ลซ้ำ
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-    loadCandidates(); 
+    loadCandidates();
 });
 
 // ==========================================
@@ -63,7 +63,7 @@ async function loadCandidates(searchQuery = '') {
 
 // วาดกราฟแท่ง (Live Results)
 function renderLiveResults(candidates) {
-    const container = document.querySelector('.flex-col.gap-5'); 
+    const container = document.querySelector('.flex-col.gap-5');
     container.innerHTML = ''; // ล้างของเก่า
 
     // หาคนที่คะแนนเยอะสุด เพื่อเทียบสัดส่วน 100% ของความยาวกราฟ
@@ -73,14 +73,14 @@ function renderLiveResults(candidates) {
     candidates.forEach(cand => {
         const widthPercent = (cand.score / safeMaxScore) * 100;
         const barHtml = `
-            <div class="flex items-center gap-4">
-                <div class="w-24 font-bold text-gray-700">${cand.candidate_id}</div>
-                <div class="flex-1 bg-gray-100 rounded-sm h-6 overflow-hidden">
-                    <div class="bg-mfu-red h-full transition-all duration-500" style="width: ${widthPercent}%"></div>
-                </div>
-                <div class="w-12 text-right font-bold text-gray-600">${cand.score}</div>
-            </div>
-        `;
+        <div class="flex items-center gap-4">
+        <div class="w-24 font-bold text-gray-700">${cand.display_id}</div> 
+        <div class="flex-1 bg-gray-100 rounded-sm h-6 overflow-hidden">
+            <div class="bg-mfu-red h-full transition-all duration-500" style="width: ${widthPercent}%"></div>
+        </div>
+        <div class="w-12 text-right font-bold text-gray-600">${cand.score}</div>
+    </div>
+`;
         container.innerHTML += barHtml;
     });
 }
@@ -88,38 +88,38 @@ function renderLiveResults(candidates) {
 // วาดตาราง Candidate Management
 function renderTable(candidates) {
     const tbody = document.querySelector('tbody');
-    tbody.innerHTML = ''; 
+    tbody.innerHTML = '';
 
     candidates.forEach(cand => {
-        const statusBadge = cand.status_enable === 1 
-            ? `<span class="badge badge-success badge-sm text-white font-bold">enabled</span>` 
+        const statusBadge = cand.status_enable === 1
+            ? `<span class="badge badge-success badge-sm text-white font-bold">enabled</span>`
             : `<span class="badge badge-error badge-sm text-white font-bold">disabled</span>`;
 
         // สลับค่าที่จะส่งไป API: ถ้าปัจจุบันเปิด(1) ให้ส่งคำสั่งปิด(0)
         const nextStatus = cand.status_enable === 1 ? 0 : 1;
 
         const rowHtml = `
-            <tr class="hover:bg-gray-50">
-                <td class="font-bold text-gray-700">${cand.candidate_id}</td>
-                <td>${cand.name}</td>
-                <td class="text-center">
-                    <button class="btn btn-xs btn-outline border-gray-300 text-gray-600" onclick="showPolicies('${cand.policies}')">Read</button>
-                </td>
-                <td class="text-center">${statusBadge}</td>
-                <td class="text-center">
-                    <div class="flex justify-center gap-2">
-                        <button class="btn btn-xs btn-outline ${cand.status_enable === 1 ? 'btn-error' : 'btn-success'} w-16" 
-                                onclick="toggleStatus('${cand.candidate_id}', ${nextStatus})">
-                            ${cand.status_enable === 1 ? 'Disable' : 'Enable'}
-                        </button>
-                        <button class="btn btn-xs btn-error text-white w-16" 
-                                onclick="deleteCandidate('${cand.candidate_id}')">
-                            Delete
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
+    <tr class="hover:bg-gray-50">
+        <td class="font-bold text-gray-700">${cand.display_id}</td> 
+        <td>${cand.name}</td>
+        <td class="text-center">
+            <button class="btn btn-xs btn-outline border-gray-300 text-gray-600" onclick="showPolicies('${cand.policies}')">Read</button>
+        </td>
+        <td class="text-center">${statusBadge}</td>
+        <td class="text-center">
+            <div class="flex justify-center gap-2">
+                <button class="btn btn-xs btn-outline ${cand.status_enable === 1 ? 'btn-error' : 'btn-success'} w-16" 
+                        onclick="toggleStatus('${cand.display_id}', ${nextStatus})">
+                    ${cand.status_enable === 1 ? 'Disable' : 'Enable'}
+                </button>
+                <button class="btn btn-xs btn-error text-white w-16" 
+                        onclick="deleteCandidate('${cand.display_id}')">
+                    Delete
+                </button>
+            </div>
+        </td>
+    </tr>
+`;
         tbody.innerHTML += rowHtml;
     });
 }
@@ -139,11 +139,11 @@ async function toggleStatus(candidateId, newStatus) {
     // 🛡️ 1. FRONTEND VALIDATION (ดักจับก่อนทำงานจริง)
     if (!candidateId) {
         Swal.fire('ข้อผิดพลาด', 'ไม่พบรหัสผู้สมัคร ไม่สามารถเปลี่ยนสถานะได้', 'error');
-        return; 
+        return;
     }
     if (newStatus !== 0 && newStatus !== 1) {
         Swal.fire('ข้อผิดพลาด', 'ค่าสถานะไม่ถูกต้อง (ต้องเป็น 0 หรือ 1)', 'error');
-        return; 
+        return;
     }
 
     const actionText = newStatus === 1 ? 'เปิดใช้งาน (Enable)' : 'ระงับการใช้งาน (Disable)';
@@ -155,8 +155,8 @@ async function toggleStatus(candidateId, newStatus) {
         showCancelButton: true,
         confirmButtonText: 'ใช่, ดำเนินการเลย!',
         cancelButtonText: 'ยกเลิก',
-        buttonsStyling: false, 
-        scrollbarPadding: false, 
+        buttonsStyling: false,
+        scrollbarPadding: false,
         customClass: {
             confirmButton: `btn ${newStatus === 1 ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} text-white mx-2 border-none`,
             cancelButton: 'btn btn-outline mx-2'
@@ -169,9 +169,9 @@ async function toggleStatus(candidateId, newStatus) {
             const response = await fetch('http://localhost:3000/api/admin/toggle-candidate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    candidate_id: candidateId, 
-                    status: newStatus 
+                body: JSON.stringify({
+                    candidate_id: candidateId,
+                    status: newStatus
                 })
             });
 
@@ -210,15 +210,16 @@ const candidateInputs = document.querySelectorAll('#addCandidateForm input');
 
 if (addCandidateBtn) {
     addCandidateBtn.addEventListener('click', async () => {
-        // 2. ดึงค่าที่แอดมินพิมพ์ออกมา
-        const candidate_id = candidateInputs[0].value.trim(); // ช่องแรก: Candidate ID
-        const name = candidateInputs[1].value.trim();         // ช่องสอง: ชื่อ
+        // 🚨 ดึงข้อมูลแค่ "ช่องชื่อ" ช่องเดียว (เพราะเราลบช่อง ID ทิ้งไปแล้ว)
+        // ใช้ querySelector จับ input ตัวแรกและตัวเดียวในฟอร์มได้เลย
+        const nameInput = document.querySelector('#addCandidateForm input');
+        const name = nameInput.value.trim();
 
-        // เช็คว่าพิมพ์ครบไหม (ถ้าไม่ครบ เด้งด่าเบาๆ)
-        if (!candidate_id || !name) {
+        // เช็คว่าพิมพ์ชื่อหรือยัง?
+        if (!name) {
             Swal.fire({
                 title: 'แจ้งเตือน',
-                text: 'กรุณากรอกรหัสและชื่อผู้สมัครให้ครบถ้วน',
+                text: 'กรุณากรอกชื่อผู้สมัครให้ครบถ้วน',
                 icon: 'warning',
                 confirmButtonText: 'ตกลง',
                 customClass: { confirmButton: 'btn btn-warning text-white' }
@@ -227,48 +228,44 @@ if (addCandidateBtn) {
         }
 
         try {
-            // ยิง API ส่งข้อมูลไปให้หลังบ้าน
+            // ยิง API ส่งข้อมูลไปให้หลังบ้าน (ไม่ส่ง candidate_id แล้ว)
             const response = await fetch('http://localhost:3000/api/admin/create-candidate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    candidate_id: candidate_id, 
+                body: JSON.stringify({
                     name: name,
-                    term_id: currentTermId // 🚨 เพิ่มบรรทัดนี้! ส่ง term_id รอดพ้นไม้กวาดฟาดแน่นอน!
+                    term_id: currentTermId
                 })
             });
 
             const result = await response.json();
 
-            // ถ้ายิงผ่าน
             if (result.status === 'success') {
-                
-                // สั่งปิดหน้าต่าง Modal ด้วยคำสั่งดั้งเดิมของ HTML5
+
+                // สั่งปิดหน้าต่าง Modal 
                 const modal = document.getElementById('add_candidate_modal');
                 if (modal) {
-                    modal.close(); 
+                    modal.close();
                 }
-                
+
                 // ล้างข้อมูลฟอร์ม
                 document.getElementById('addCandidateForm').reset();
-                
-                // รีเฟรชตารางและกราฟ
-                loadCandidates(); 
 
-                // ท่าไม้ตายใหม่: หน่วงเวลา 0.1 วินาที ให้ Modal ปิดสนิทก่อน ค่อยโชว์ SweetAlert (หลบหลีกปัญหา Top Layer)
+                // รีเฟรชตารางและกราฟ
+                loadCandidates();
+
                 setTimeout(() => {
                     Swal.fire({
                         title: 'เพิ่มผู้สมัครสำเร็จ!',
-                        text: result.message,
+                        text: result.message, // ข้อความนี้จะบอกรหัสที่ Backend สร้างให้ (เช่น CAND-001)
                         icon: 'success',
                         scrollbarPadding: false,
                         confirmButtonText: 'ตกลง',
                         customClass: { confirmButton: 'btn bg-mfu-red text-white hover:bg-red-900 border-none' }
                     });
-                }, 150); // 150 มิลลิวินาที
-                
+                }, 150);
+
             } else {
-                // ถ้า API ตอบกลับมาว่ามี Error (เช่น ID ซ้ำ)
                 Swal.fire({
                     title: 'ไม่สามารถเพิ่มได้',
                     text: result.message,
@@ -292,7 +289,7 @@ async function deleteCandidate(candidateId) {
         Swal.fire('ข้อผิดพลาด', 'ไม่พบรหัสผู้สมัครที่ต้องการลบ', 'error');
         return;
     }
-    
+
     // 1. เด้งถามให้ชัวร์ก่อนลบ (ปุ่มสีแดงขู่ไว้ก่อน)
     const confirm = await Swal.fire({
         title: 'ยืนยันการลบ?',
@@ -327,9 +324,9 @@ async function deleteCandidate(candidateId) {
                     buttonsStyling: false,
                     customClass: { confirmButton: 'btn bg-mfu-red text-white hover:bg-red-900 border-none' }
                 });
-                
+
                 // รีเฟรชตารางให้ข้อมูลหายไปทันที
-                loadCandidates(); 
+                loadCandidates();
             } else {
                 Swal.fire({
                     title: 'ไม่สามารถลบได้',
