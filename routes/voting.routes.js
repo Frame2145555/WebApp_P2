@@ -6,6 +6,6 @@ const votingController = require('../controllers/voting.controller');
 router.get('/candidates', votingController.getCandidates);
 
 // POST: /api/voting/vote (ส่งคะแนน)
-router.post('/vote', votingController.submitVote);
+router.post('/submit', votingController.submitVote);
 
 module.exports = router;

@@ -12,7 +12,7 @@ const login = async (req, res) => {
     try {
         // ดึงข้อมูลจากตาราง users และ candidates พ่วงมาด้วยเลย
         const sql = `
-            SELECT u.user_id, u.username, u.password, u.role,
+            SELECT u.user_id, u.username, u.password, u.role, u.is_enable,
                    c.candidate_id, c.name AS display_name, c.policies AS bio, c.profile_picture
             FROM users u
             LEFT JOIN candidates c ON u.user_id = c.user_id
@@ -22,6 +22,10 @@ const login = async (req, res) => {
 
         if (results.length !== 1) {
             return res.status(401).send('Wrong username');
+        }
+
+        if (results[0].is_enable === 0) {
+            return res.status(403).send('บัญชีของคุณถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ');
         }
 
         const role = results[0].role;
@@ -85,8 +89,9 @@ const verifyCandidate = async (req, res) => {
     const { candidate_id } = req.params;
 
     try {
+        // เพิ่ม u.is_enable เข้าไปในคำสั่ง SELECT
         const [rows] = await pool.query(
-            `SELECT u.user_id, c.name, u.password
+            `SELECT u.user_id, c.name, u.password, u.is_enable
              FROM users u
              JOIN candidates c ON u.user_id = c.user_id
              WHERE u.username = ? AND u.role = 'candidate'`,
@@ -97,8 +102,9 @@ const verifyCandidate = async (req, res) => {
             return res.status(404).json({ error: 'Invalid Candidate ID' });
         }
 
-        if (rows[0].password !== 'NOT_REGISTERED') {
-            return res.status(409).json({ error: 'This Candidate ID has already been registered' });
+        // ด่านตรวจ: โดนแบนอยู่ ห้ามลงทะเบียน!
+        if (rows[0].is_enable === 0) {
+            return res.status(403).json({ error: 'บัญชีนี้ถูกระงับการใช้งาน ไม่สามารถลงทะเบียนได้' });
         }
 
         return res.json({ valid: true, name: rows[0].name });
@@ -126,13 +132,19 @@ const register = async (req, res) => {
     }
 
     try {
+        // เพิ่ม is_enable เข้าไปในคำสั่ง SELECT
         const [rows] = await pool.query(
-            `SELECT user_id, password FROM users WHERE username = ? AND role = 'candidate'`,
+            `SELECT user_id, password, is_enable FROM users WHERE username = ? AND role = 'candidate'`,
             [candidate_id]
         );
 
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Invalid Candidate ID' });
+        }
+
+        // ด่านตรวจสุดท้าย: ถ้าโดนแบน ให้เตะกลับไป
+        if (rows[0].is_enable === 0) {
+            return res.status(403).json({ error: 'บัญชีนี้ถูกระงับการใช้งาน' });
         }
 
         if (rows[0].password !== 'NOT_REGISTERED') {

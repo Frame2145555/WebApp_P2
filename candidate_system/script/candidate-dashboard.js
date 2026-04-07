@@ -312,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const reader = new FileReader();
     reader.onload = () => {
       state.pendingProfileImage = String(reader.result || '');
+      state.pendingProfileFile = file; // 🚨 เพิ่มบรรทัดนี้: เก็บ "ไฟล์ของจริง" ไว้เตรียมส่งให้ Backend
       elements.profilePicturePreview.src = state.pendingProfileImage;
       elements.savePhotoButton.disabled = false;
       setProfilePhotoStatus('Ready to save new photo', 'success');
@@ -324,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ส่งรูปโปรไฟล์ไป backend
   async function saveProfilePicture() {
-    if (!state.pendingProfileImage) {
+    if (!state.pendingProfileFile) {
       setProfilePhotoStatus('Choose a photo first', 'error');
       return;
     }
@@ -333,26 +334,30 @@ document.addEventListener('DOMContentLoaded', () => {
     setProfilePhotoStatus('Uploading photo...', 'default');
 
     try {
+      // 🚨 ปั้นก้อนข้อมูลแบบ FormData (สำหรับส่งไฟล์ผ่าน HTTP)
+      const formData = new FormData();
+      formData.append('user_id', user.user_id);
+      formData.append('profile_image', state.pendingProfileFile); // แนบไฟล์ของจริงไป
+
+      // เรียกใช้ API (ตัว VotingApp.api ฉลาดพอที่จะรู้ว่านี่คือไฟล์ และจะจัดการให้อัตโนมัติ)
       const response = await VotingApp.api('/api/update-profile-picture', {
         method: 'POST',
-        body: {
-          user_id: user.user_id,
-          imageDataUrl: state.pendingProfileImage
-        }
+        body: formData
       });
 
-      user.candidate_id = response.user?.candidate_id ?? user.candidate_id ?? null;
+      // อัปเดตข้อมูล LocalStorage
       user.profile_picture = response.user?.profile_picture ?? user.profile_picture ?? null;
-      user.display_name = response.user?.display_name ?? user.display_name ?? user.username;
       VotingApp.setUser(user);
 
       renderProfilePicture(user.profile_picture);
       state.pendingProfileImage = null;
+      state.pendingProfileFile = null;
       elements.profileImageInput.value = '';
       setProfilePhotoStatus('Profile photo updated', 'success');
     } catch (error) {
       renderProfilePicture(user.profile_picture);
       setProfilePhotoStatus(error.message, 'error');
+      elements.savePhotoButton.disabled = false;
     }
   }
 });

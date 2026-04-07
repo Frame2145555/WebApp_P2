@@ -88,38 +88,37 @@ function renderLiveResults(candidates) {
 // วาดตาราง Candidate Management
 function renderTable(candidates) {
     const tbody = document.querySelector('tbody');
-    tbody.innerHTML = '';
+    tbody.innerHTML = ''; 
 
     candidates.forEach(cand => {
-        const statusBadge = cand.status_enable === 1
-            ? `<span class="badge badge-success badge-sm text-white font-bold">enabled</span>`
+        const statusBadge = cand.status_enable === 1 
+            ? `<span class="badge badge-success badge-sm text-white font-bold">enabled</span>` 
             : `<span class="badge badge-error badge-sm text-white font-bold">disabled</span>`;
 
-        // สลับค่าที่จะส่งไป API: ถ้าปัจจุบันเปิด(1) ให้ส่งคำสั่งปิด(0)
         const nextStatus = cand.status_enable === 1 ? 0 : 1;
 
         const rowHtml = `
-    <tr class="hover:bg-gray-50">
-        <td class="font-bold text-gray-700">${cand.display_id}</td> 
-        <td>${cand.name}</td>
-        <td class="text-center">
-            <button class="btn btn-xs btn-outline border-gray-300 text-gray-600" onclick="showPolicies('${cand.policies}')">Read</button>
-        </td>
-        <td class="text-center">${statusBadge}</td>
-        <td class="text-center">
-            <div class="flex justify-center gap-2">
-                <button class="btn btn-xs btn-outline ${cand.status_enable === 1 ? 'btn-error' : 'btn-success'} w-16" 
-                        onclick="toggleStatus('${cand.display_id}', ${nextStatus})">
-                    ${cand.status_enable === 1 ? 'Disable' : 'Enable'}
-                </button>
-                <button class="btn btn-xs btn-error text-white w-16" 
-                        onclick="deleteCandidate('${cand.display_id}')">
-                    Delete
-                </button>
-            </div>
-        </td>
-    </tr>
-`;
+            <tr class="hover:bg-gray-50">
+                <td class="font-bold text-gray-700">${cand.display_id}</td>
+                <td>${cand.name}</td>
+                <td class="text-center">
+                    <button class="btn btn-xs btn-outline border-gray-300 text-gray-600" onclick="showPolicies('${cand.policies}')">Read</button>
+                </td>
+                <td class="text-center">${statusBadge}</td>
+                <td class="text-center">
+                    <div class="flex justify-center gap-2">
+                        <button class="btn btn-xs btn-outline ${cand.status_enable === 1 ? 'btn-error' : 'btn-success'} w-16" 
+                                onclick="toggleStatus('${cand.internal_id}', '${cand.display_id}', ${nextStatus})">
+                            ${cand.status_enable === 1 ? 'Disable' : 'Enable'}
+                        </button>
+                        <button class="btn btn-xs btn-error text-white w-16" 
+                                onclick="deleteCandidate('${cand.internal_id}', '${cand.display_id}')">
+                            Delete
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
         tbody.innerHTML += rowHtml;
     });
 }
@@ -134,10 +133,9 @@ if (searchInput) {
 }
 
 // ฟังก์ชัน เปิด/ปิด สถานะ candidate
-// ฟังก์ชัน เปิด/ปิด สถานะ candidate
-async function toggleStatus(candidateId, newStatus) {
-    // 🛡️ 1. FRONTEND VALIDATION (ดักจับก่อนทำงานจริง)
-    if (!candidateId) {
+async function toggleStatus(internalId, displayId, newStatus) {
+    // 1. FRONTEND VALIDATION (ดักจับก่อนทำงานจริง) - ใช้ internalId เช็ค
+    if (!internalId) {
         Swal.fire('ข้อผิดพลาด', 'ไม่พบรหัสผู้สมัคร ไม่สามารถเปลี่ยนสถานะได้', 'error');
         return;
     }
@@ -150,7 +148,8 @@ async function toggleStatus(candidateId, newStatus) {
 
     const confirm = await Swal.fire({
         title: `ยืนยันการ${actionText}?`,
-        text: `คุณต้องการ${actionText} ผู้สมัครรหัส ${candidateId} ใช่หรือไม่?`,
+        // 🚨 ไฮไลท์: โชว์รหัส CAND-XXX (displayId) ให้แอดมินดู
+        text: `คุณต้องการ${actionText} ผู้สมัครรหัส ${displayId} ใช่หรือไม่?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'ใช่, ดำเนินการเลย!',
@@ -163,14 +162,14 @@ async function toggleStatus(candidateId, newStatus) {
         }
     });
 
-    // ถ้ายืนยัน ให้ยิง API ไปหลังบ้าน
     if (confirm.isConfirmed) {
         try {
             const response = await fetch('http://localhost:3000/api/admin/toggle-candidate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    candidate_id: candidateId,
+                    // 🚨 ไฮไลท์: ส่งตัวเลขจริงๆ (internalId) ไปให้ Database ทำงาน
+                    candidate_id: internalId,
                     status: newStatus
                 })
             });
@@ -183,7 +182,7 @@ async function toggleStatus(candidateId, newStatus) {
                     text: result.message,
                     icon: 'success',
                     buttonsStyling: false,
-                    scrollbarPadding: false, // ใส่ตรงนี้ด้วย
+                    scrollbarPadding: false,
                     customClass: { confirmButton: 'btn bg-mfu-red text-white hover:bg-red-900 border-none' }
                 });
                 loadCandidates(); // รีเฟรชตาราง
@@ -284,16 +283,17 @@ if (addCandidateBtn) {
 // ==========================================
 // ฟังก์ชัน ลบผู้สมัคร (Delete Candidate)
 // ==========================================
-async function deleteCandidate(candidateId) {
-    if (!candidateId) {
+async function deleteCandidate(internalId, displayId) {
+    // ใช้ internalId ในการตรวจสอบความถูกต้องเบื้องต้น
+    if (!internalId) {
         Swal.fire('ข้อผิดพลาด', 'ไม่พบรหัสผู้สมัครที่ต้องการลบ', 'error');
         return;
     }
 
-    // 1. เด้งถามให้ชัวร์ก่อนลบ (ปุ่มสีแดงขู่ไว้ก่อน)
     const confirm = await Swal.fire({
         title: 'ยืนยันการลบ?',
-        text: `คุณแน่ใจหรือไม่ว่าต้องการลบผู้สมัครรหัส ${candidateId}? (ข้อมูลจะหายไปถาวร!)`,
+        // โชว์ CAND-XXX (displayId) ให้แอดมินมั่นใจ
+        text: `คุณแน่ใจหรือไม่ว่าต้องการลบผู้สมัครรหัส ${displayId}? (ข้อมูลจะหายไปถาวร!)`,
         icon: 'error',
         showCancelButton: true,
         confirmButtonText: 'ลบเลย!',
@@ -306,11 +306,11 @@ async function deleteCandidate(candidateId) {
         }
     });
 
-    // 2. ถ้ากดยืนยัน ก็ยิง API ลบเลย
     if (confirm.isConfirmed) {
         try {
-            const response = await fetch(`http://localhost:3000/api/admin/candidate/${candidateId}`, {
-                method: 'DELETE' // 🚨 เรียกใช้ Method DELETE ที่เราเพิ่งสร้าง
+            // ใช้ internalId (ตัวเลข) ต่อท้าย URL เพื่อสั่งลบที่หลังบ้าน
+            const response = await fetch(`http://localhost:3000/api/admin/candidate/${internalId}`, {
+                method: 'DELETE'
             });
 
             const result = await response.json();
@@ -324,8 +324,6 @@ async function deleteCandidate(candidateId) {
                     buttonsStyling: false,
                     customClass: { confirmButton: 'btn bg-mfu-red text-white hover:bg-red-900 border-none' }
                 });
-
-                // รีเฟรชตารางให้ข้อมูลหายไปทันที
                 loadCandidates();
             } else {
                 Swal.fire({

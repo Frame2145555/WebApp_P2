@@ -2,9 +2,15 @@ const path = require('path');
 const express = require('express');
 const pool = require('./db'); 
 const app = express();
+const multer = require('multer');
+const fs = require('fs');
 
 // 1. ตั้งค่าพื้นฐาน & Static Files
 app.use(express.json());
+
+if (!fs.existsSync('./uploads')) {
+    fs.mkdirSync('./uploads');
+}
 
 // ไฟล์ JS กลางของระบบ (ไม่ทับกับ /public เดิมของหน้า login)
 app.use('/public/js', express.static(path.join(__dirname, 'public/js')));
@@ -27,6 +33,8 @@ app.get('/Login', (req, res) => {
 app.get('/Candidate-Register', (req, res) => {
     res.status(200).sendFile(path.join(__dirname, 'index-Login-register(tua)/public/Candidate-register.html'));
 });
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 3. API สำหรับทดสอบระบบ (Test APIs)
 app.get('/api/status', (req, res) => {
@@ -83,15 +91,41 @@ app.post('/api/update-bio', async (req, res) => {
     }
 });
 
-// 2. อัปเดตรูปโปรไฟล์ (Profile Picture)
-app.post('/api/update-profile-picture', async (req, res) => {
-    const { user_id, imageDataUrl } = req.body;
+
+// ตั้งค่าระบบรับไฟล์ (Multer)
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, './uploads'); // เก็บไฟล์ไว้ในโฟลเดอร์ uploads
+    },
+    filename: function (req, file, cb) {
+        // ตั้งชื่อไฟล์ใหม่ให้ไม่ซ้ำกัน: เช่น candidate-5-171234567.jpg
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, 'candidate-' + req.body.user_id + '-' + uniqueSuffix + ext);
+    }
+});
+const upload = multer({ storage: storage });
+
+// API สำหรับรับและบันทึกไฟล์รูปภาพ
+app.post('/api/update-profile-picture', upload.single('profile_image'), async (req, res) => {
     try {
-        await pool.query("UPDATE candidates SET profile_picture = ? WHERE user_id = ?", [imageDataUrl, user_id]);
-        res.json({ user: { profile_picture: imageDataUrl } });
+        const { user_id } = req.body;
+        
+        // ถ้าไม่มีไฟล์แนบมา ให้ตีกลับ
+        if (!req.file) {
+            return res.status(400).json({ message: 'กรุณาเลือกไฟล์รูปภาพ' });
+        }
+
+        // เส้นทางไฟล์ที่จะเอาไปเซฟลง DB (เก็บแค่นี้พอ ฐานข้อมูลจะได้ตัวเบาๆ)
+        const imageUrl = '/uploads/' + req.file.filename;
+
+        // อัปเดต Path ลง Database
+        await pool.query("UPDATE candidates SET profile_picture = ? WHERE user_id = ?", [imageUrl, user_id]);
+        
+        res.json({ status: 'success', user: { profile_picture: imageUrl } });
     } catch (error) {
-        console.error('Update Profile Pic Error:', error);
-        res.status(500).json({ message: 'ไม่สามารถอัปเดตรูปภาพได้' });
+        console.error("Upload Error:", error);
+        res.status(500).json({ message: 'อัปโหลดรูปภาพไม่สำเร็จ' });
     }
 });
 
