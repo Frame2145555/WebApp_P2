@@ -1,6 +1,5 @@
-// ==========================================
+
 // ฟังก์ชัน: ก๊อปปี้ term_id ปัจจุบัน แล้วส่งไปหน้าใหม่
-// ==========================================
 function goToPage(pageName) {
     // 1. ก๊อปปี้ term_id จาก URL ด้านบนของหน้าปัจจุบัน
     const urlParams = new URLSearchParams(window.location.search);

@@ -19,26 +19,32 @@ const {
     getTermById
 } = require('../controllers/admin.controller');
 
-// Dashboard (หน้าสถิติและผลคะแนน)
+// ============================== admin ========================================
+// Dashboard
 router.get('/dashboard', getDashboardStats);
 router.get('/results', getResults);
 
-// Terms Management (หน้าจัดการรอบการเลือกตั้ง/ปีการศึกษา)
+// Terms Management
 router.get('/terms', getTerms);
 router.post('/create-term', createTerm); 
 router.get('/term/:id', getTermById);
 router.put('/term/:id/status', toggleTermStatus);
 router.post('/toggle-voting', toggleVoting); 
 
-// Candidates Management (หน้าจัดการผู้สมัคร)
+// Candidates Management
 router.post('/create-candidate', createCandidate);
 router.get('/candidates', getCandidates);
 router.post('/toggle-candidate', toggleCandidateStatus);
 router.delete('/candidate/:id', deleteCandidate);
 
-// Voters & Users Management (หน้าจัดการผู้มีสิทธิ์โหวต)
+// Voters & Users Management
 router.post('/create-voter', createVoter);
 router.get('/voters', listVoters);
 router.post('/toggle-user', toggleUser);
+
+// ================================ User ===========================================
+
+
+// ================================ Page ===========================================
 
 module.exports = router;

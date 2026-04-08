@@ -2,10 +2,12 @@ const express = require('express');
 const router = express.Router();
 const votingController = require('../controllers/voting.controller');
 
-// GET: /api/voting/candidates (ดึงรายชื่อ)
+// ===================== User =========================
+
+// ดึงรายชื่อ
 router.get('/candidates', votingController.getCandidates);
 
-// POST: /api/voting/vote (ส่งคะแนน)
+// ส่งคะแนน
 router.post('/submit', votingController.submitVote);
 
 module.exports = router;

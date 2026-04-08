@@ -111,18 +111,31 @@ app.post('/api/update-profile-picture', upload.single('profile_image'), async (r
     try {
         const { user_id } = req.body;
         
-        // ถ้าไม่มีไฟล์แนบมา ให้ตีกลับ
         if (!req.file) {
             return res.status(400).json({ message: 'กรุณาเลือกไฟล์รูปภาพ' });
         }
 
-        // เส้นทางไฟล์ที่จะเอาไปเซฟลง DB (เก็บแค่นี้พอ ฐานข้อมูลจะได้ตัวเบาๆ)
-        const imageUrl = '/uploads/' + req.file.filename;
+        const newImageUrl = '/uploads/' + req.file.filename;
 
-        // อัปเดต Path ลง Database
-        await pool.query("UPDATE candidates SET profile_picture = ? WHERE user_id = ?", [imageUrl, user_id]);
+        // ดึงชื่อไฟล์รูปเก่ามาจาก Database ก่อน
+        const [oldData] = await pool.query("SELECT profile_picture FROM candidates WHERE user_id = ?", [user_id]);
+        const oldImageUrl = oldData[0]?.profile_picture;
+
+        // อัปเดต Path ของรูปใหม่ลง Database
+        await pool.query("UPDATE candidates SET profile_picture = ? WHERE user_id = ?", [newImageUrl, user_id]);
         
-        res.json({ status: 'success', user: { profile_picture: imageUrl } });
+        // ตามไปลบไฟล์รูปเก่าทิ้งจากโฟลเดอร์ uploads
+        if (oldImageUrl && oldImageUrl.startsWith('/uploads/')) {
+            // แปลง URL ให้เป็นที่อยู่ไฟล์จริงๆ ในเครื่อง (เช่น C:\project\uploads\old-image.jpg)
+            const oldFilePath = path.join(__dirname, oldImageUrl);
+            
+            // เช็คก่อนว่ามีไฟล์นี้อยู่จริงไหม ถ้ามีให้สั่งลบ (unlink)
+            if (fs.existsSync(oldFilePath)) {
+                fs.unlinkSync(oldFilePath);
+            }
+        }
+
+        res.json({ status: 'success', user: { profile_picture: newImageUrl } });
     } catch (error) {
         console.error("Upload Error:", error);
         res.status(500).json({ message: 'อัปโหลดรูปภาพไม่สำเร็จ' });
