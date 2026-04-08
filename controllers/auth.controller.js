@@ -1,13 +1,13 @@
 const argon2 = require('@node-rs/argon2');
 const pool = require('../db');
 
-// 1. ฟังก์ชัน Login
+// ฟังก์ชัน Login
 const login = async (req, res) => {
     const { username, password } = req.body;
 
-    if (!username || !password) {
-        return res.status(400).send('Please enter username and password');
-    }
+    // if (!username || !password) {
+    //     return res.status(400).send('Please enter username and password');
+    // }
 
     try {
         // ดึงข้อมูลจากตาราง users และ candidates พ่วงมาด้วยเลย
@@ -115,9 +115,7 @@ const verifyCandidate = async (req, res) => {
     }
 };
 
-// ==========================================
-// 3. ฟังก์ชันตั้งรหัสผ่านใหม่ (Register)
-// ==========================================
+// ฟังก์ชันตั้งรหัสผ่านใหม่ (Register)
 const register = async (req, res) => {
     const { candidate_id, password, confirm_password } = req.body;
 
@@ -168,9 +166,7 @@ const register = async (req, res) => {
     }
 };
 
-// ==========================================
-// 4. ฟังก์ชันอัปเดต Bio (Manifesto) ของผู้สมัคร
-// ==========================================
+// ฟังก์ชันอัปเดต Bio (Manifesto) ของผู้สมัคร
 const updateBio = async (req, res) => {
     const { user_id, bio } = req.body;
 
@@ -223,7 +219,6 @@ const updateBio = async (req, res) => {
     }
 };
 
-// ส่งออกไปให้ Router ใช้
 module.exports = { 
     login, 
     verifyCandidate, 

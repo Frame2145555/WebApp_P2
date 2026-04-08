@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return; // หยุดการทำงานทันที
     }
 
-    // 🚨 อัปเดตลิงก์ใน Sidebar ให้ห้อย term_id ไปด้วย (รอจน HTML โหลดเสร็จแล้วถึงทำ)
+    // อัปเดตลิงก์ใน Sidebar ให้ห้อย term_id ไปด้วย (รอจน HTML โหลดเสร็จแล้วถึงทำ)
     const sidebarLinks = document.querySelectorAll('aside ul li a');
     sidebarLinks.forEach(link => {
         const originalHref = link.getAttribute('href');
@@ -26,15 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCandidates();
 });
 
-// ==========================================
 // ฟังก์ชัน: ก๊อปปี้ term_id ปัจจุบัน แล้วส่งไปหน้าใหม่
-// ==========================================
 function goToPage(pageName) {
-    // 1. ก๊อปปี้ term_id จาก URL ด้านบนของหน้าปัจจุบัน
+    // ก๊อปปี้ term_id จาก URL ด้านบนของหน้าปัจจุบัน
     const urlParams = new URLSearchParams(window.location.search);
     const currentTermId = urlParams.get('term_id');
 
-    // 2. เช็คว่าก๊อปปี้มาได้ไหม
+    // เช็คว่าก๊อปปี้มาได้ไหม
     if (currentTermId) {
         // ถ้ามี: สั่งวาร์ปไปหน้าใหม่ พร้อมแปะ ?term_id=... ห้อยท้ายไปด้วย!
         window.location.href = `/AdminNew/views/${pageName}?term_id=${currentTermId}`;
@@ -148,7 +146,7 @@ async function toggleStatus(internalId, displayId, newStatus) {
 
     const confirm = await Swal.fire({
         title: `ยืนยันการ${actionText}?`,
-        // 🚨 ไฮไลท์: โชว์รหัส CAND-XXX (displayId) ให้แอดมินดู
+        // โชว์รหัส CAND-XXX (displayId) ให้แอดมินดู
         text: `คุณต้องการ${actionText} ผู้สมัครรหัส ${displayId} ใช่หรือไม่?`,
         icon: 'warning',
         showCancelButton: true,
@@ -168,7 +166,7 @@ async function toggleStatus(internalId, displayId, newStatus) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    // 🚨 ไฮไลท์: ส่งตัวเลขจริงๆ (internalId) ไปให้ Database ทำงาน
+                    // ไฮไลท์: ส่งตัวเลขจริงๆ (internalId) ไปให้ Database ทำงาน
                     candidate_id: internalId,
                     status: newStatus
                 })

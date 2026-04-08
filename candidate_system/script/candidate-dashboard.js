@@ -334,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setProfilePhotoStatus('Uploading photo...', 'default');
 
     try {
-      // 🚨 ปั้นก้อนข้อมูลแบบ FormData (สำหรับส่งไฟล์ผ่าน HTTP)
+      // ปั้นก้อนข้อมูลแบบ FormData (สำหรับส่งไฟล์ผ่าน HTTP)
       const formData = new FormData();
       formData.append('user_id', user.user_id);
       formData.append('profile_image', state.pendingProfileFile); // แนบไฟล์ของจริงไป
