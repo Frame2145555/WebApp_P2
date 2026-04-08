@@ -32,9 +32,7 @@ const getCandidates = async (req, res) => {
     }
 };
 
-// ==========================================
-// 2. API ส่งคะแนนโหวต (ระบบ Transaction กันเหนียว)
-// ==========================================
+// 2. API ส่งคะแนนโหวต
 const submitVote = async (req, res) => {
     const { user_id, candidate_id } = req.body; 
 
@@ -47,7 +45,7 @@ const submitVote = async (req, res) => {
     try {
         await conn.beginTransaction();
 
-        // 1. หา voter เทอมที่เปิดอยู่ และเช็คสิทธิ์
+        // 1. หารอบการโหวตที่เปิดอยู่ (Active Term)
         const [active] = await conn.query("SELECT term_id FROM terms WHERE is_active = 1 LIMIT 1");
         if (active.length === 0) {
             await conn.rollback();
@@ -55,7 +53,7 @@ const submitVote = async (req, res) => {
         }
         const activeTermId = active[0].term_id;
 
-        // 2. ตรวจสอบสิทธิ์ผู้โหวต
+        // 2. ตรวจสอบสิทธิ์คนโหวต (Voter)
         const [voters] = await conn.query(
             `SELECT v.voter_id, v.is_voted, u.is_enable
              FROM voters v
@@ -66,39 +64,52 @@ const submitVote = async (req, res) => {
 
         if (voters.length === 0) {
             await conn.rollback();
-            return res.status(404).json({ status: "error", message: "คุณไม่มีสิทธิ์โหวตในรอบนี้" }); // ขออนุญาตปรับคำให้ซอฟต์ลงนิดนึงนะครับ 😅
+            return res.status(404).json({ status: "error", message: "คุณไม่มีสิทธิ์โหวตในรอบนี้" });
         }
-
-        const voter = voters[0];
-        if (voter.is_enable === 0) {
+        if (voters[0].is_enable === 0) {
             await conn.rollback();
             return res.status(403).json({ status: "error", message: "บัญชีของคุณถูกระงับสิทธิ์" });
         }
-
-        if (voter.is_voted === 1) {
+        if (voters[0].is_voted === 1) {
             await conn.rollback();
             return res.status(403).json({ status: "error", message: "คุณได้ใช้สิทธิ์โหวตไปแล้ว!" });
         }
 
-        // 3. ตรวจว่าผู้สมัครอยู่ในเทอมเดียวกัน
+        // ตรวจสอบสถานะผู้สมัคร (Candidate) - เพิ่มการ JOIN users เพื่อเช็ค is_enable
         const [cand] = await conn.query(
-            "SELECT candidate_id FROM candidates WHERE candidate_id = ? AND term_id = ?",
+            `SELECT c.candidate_id, u.is_enable, c.is_registered 
+             FROM candidates c
+             JOIN users u ON c.user_id = u.user_id
+             WHERE c.candidate_id = ? AND c.term_id = ?`,
             [candidate_id, activeTermId]
         );
+
         if (cand.length === 0) {
             await conn.rollback();
-            return res.status(404).json({ status: "error", message: "ไม่พบผู้สมัครรายนี้ในรอบการโหวตปัจจุบัน" });
+            return res.status(404).json({ status: "error", message: "ไม่พบผู้สมัครรายนี้ในระบบ" });
         }
 
-        const voter_id = voter.voter_id;
+        // ด่านตรวจ: ผู้สมัครโดน Disable
+        if (cand[0].is_enable === 0) {
+            await conn.rollback();
+            return res.status(403).json({ status: "error", message: "ผู้สมัครรายนี้ถูกระงับการใช้งานชั่วคราว ไม่สามารถรับคะแนนโหวตได้" });
+        }
 
-        // 4. บันทึกข้อมูลแบบ 3 เด้ง!
+        // ด่านตรวจใหม่: ผู้สมัครยังไม่ได้ตั้งรหัสผ่าน (ยังไม่ Register) ห้ามรับโหวต!
+        if (cand[0].is_registered === 0) {
+            await conn.rollback();
+            return res.status(403).json({ status: "error", message: "ผู้สมัครรายนี้ยังไม่ได้ลงทะเบียนเข้าสู่ระบบ ไม่สามารถรับคะแนนโหวตได้" });
+        }
+
+        const voter_id = voters[0].voter_id;
+
+        // 4. บันทึกคะแนน
         await conn.query("UPDATE voters SET is_voted = 1 WHERE voter_id = ?", [voter_id]);
         await conn.query("UPDATE candidates SET score = score + 1 WHERE candidate_id = ?", [candidate_id]);
         await conn.query("INSERT INTO votes (voter_id, candidate_id) VALUES (?, ?)", [voter_id, candidate_id]);
 
         await conn.commit();
-        res.json({ status: "success", message: "ลงคะแนนโหวตสำเร็จ! ขอบคุณที่ใช้สิทธิ์" });
+        res.json({ status: "success", message: "ลงคะแนนโหวตสำเร็จ!" });
 
     } catch (error) {
         await conn.rollback();
