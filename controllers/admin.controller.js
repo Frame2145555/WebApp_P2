@@ -3,7 +3,7 @@ const pool = require('../db');
 // Add Candidate
 
 const createCandidate = async (req, res) => {
-    // 🚨 ไม่ต้องรับ candidate_id จากหน้าเว็บแล้ว รับแค่ ชื่อ กับ เทอม พอ!
+    // ไม่ต้องรับ candidate_id จากหน้าเว็บแล้ว รับแค่ ชื่อ กับ เทอม พอ!
     const { name, term_id } = req.body;
 
     if (!name || !term_id) {
@@ -14,9 +14,7 @@ const createCandidate = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // ==========================================
-        // 🔮 1. ระบบ Auto-Generate รหัสผู้สมัคร (เช่น CAND-001, CAND-002)
-        // ==========================================
+        // ระบบ Auto-Generate รหัสผู้สมัคร เช่น CAND-001, CAND-002
         // ไปค้นหาว่า รหัสล่าสุดที่ขึ้นต้นด้วย CAND- คือเบอร์อะไร
         const [lastUser] = await connection.query(
             "SELECT username FROM users WHERE role = 'candidate' AND username LIKE 'CAND-%' ORDER BY LENGTH(username) DESC, username DESC LIMIT 1"
@@ -32,9 +30,7 @@ const createCandidate = async (req, res) => {
         // ปั้นรหัสใหม่ และเติมเลข 0 ข้างหน้าให้ครบ 3 หลัก (เช่น CAND-007)
         const generatedCandidateId = `CAND-${String(nextNumber).padStart(3, '0')}`;
 
-        // ==========================================
         // 💾 2. บันทึกข้อมูลลง Database
-        // ==========================================
         // สร้าง User ก่อน โดยใช้รหัสที่เสกมาใหม่เป็น username
         const [userResult] = await connection.query(
             "INSERT INTO users (username, password, role, is_enable) VALUES (?, 'NOT_REGISTERED', 'candidate', 1)",

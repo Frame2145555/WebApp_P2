@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const reader = new FileReader();
     reader.onload = () => {
       state.pendingProfileImage = String(reader.result || '');
-      state.pendingProfileFile = file; // 🚨 เพิ่มบรรทัดนี้: เก็บ "ไฟล์ของจริง" ไว้เตรียมส่งให้ Backend
+      state.pendingProfileFile = file;
       elements.profilePicturePreview.src = state.pendingProfileImage;
       elements.savePhotoButton.disabled = false;
       setProfilePhotoStatus('Ready to save new photo', 'success');
@@ -334,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setProfilePhotoStatus('Uploading photo...', 'default');
 
     try {
-      // 🚨 ปั้นก้อนข้อมูลแบบ FormData (สำหรับส่งไฟล์ผ่าน HTTP)
+      // ปั้นก้อนข้อมูลแบบ FormData (สำหรับส่งไฟล์ผ่าน HTTP)
       const formData = new FormData();
       formData.append('user_id', user.user_id);
       formData.append('profile_image', state.pendingProfileFile); // แนบไฟล์ของจริงไป
