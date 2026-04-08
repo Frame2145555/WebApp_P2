@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const reader = new FileReader();
     reader.onload = () => {
       state.pendingProfileImage = String(reader.result || '');
-      state.pendingProfileFile = file; // 🚨 เพิ่มบรรทัดนี้: เก็บ "ไฟล์ของจริง" ไว้เตรียมส่งให้ Backend
+      state.pendingProfileFile = file;
       elements.profilePicturePreview.src = state.pendingProfileImage;
       elements.savePhotoButton.disabled = false;
       setProfilePhotoStatus('Ready to save new photo', 'success');
