@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Voting Dashboard</title>
+    <link rel="stylesheet" href="/VoterDashboard/public/css/VoterDash.css">
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo-section">
+                <div class="logo-circle">MFU</div>
+                <div class="logo-text">
+                    <span class="main">E-VOTING</span>
+                    <span class="sub">Dashboard</span>
+                </div>
+            </div>
+
+            <div class="voter-info-sidebar" onclick="switchTab('profile', this)">
+                <div class="voter-status" id="sidebarStatus">Loading...</div>
+                <div class="voter-id" id="sidebarVoterId">ID: ---</div>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-title">MAIN MENU</div>
+                <button class="menu-item" onclick="switchTab('profile', this)"><span class="menu-icon">👤</span>
+                    <span>Profile</span></button>
+                <button class="menu-item active" onclick="switchTab('dashboard', this)"><span
+                        class="menu-icon">📊</span> <span>Dashboard</span></button>
+                <button class="menu-item" onclick="switchTab('candidates', this)"><span class="menu-icon">👥</span>
+                    <span>Policies</span></button>
+                <button class="menu-item" onclick="switchTab('vote', this)"><span class="menu-icon">🗳️</span>
+                    <span>Vote</span></button>
+                <button class="menu-item" onclick="switchTab('history', this)"><span class="menu-icon">📜</span>
+                    <span>History</span></button>
+            </div>
+            <div class="menu-section">
+                <div class="menu-title">RESULTS</div>
+                <button class="menu-item" onclick="switchTab('search', this)"><span class="menu-icon">🔍</span>
+                    <span>Search Results</span></button>
+            </div>
+            <button class="logout-btn" onclick="logout()">Log Out</button>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="page-header">
+                    <h1 class="page-title" id="pageTitle">Dashboard Overview</h1>
+                    <span class="page-subtitle">System Live</span>
+                </div>
+                <div class="status-indicator"><span class="status-dot"></span> <span>Live Data</span></div>
+            </div>
+
+            <div class="content">
+
+                <div class="tab-content" id="profile">
+                    <div class="profile-container">
+
+                        <div class="profile-header">
+                            <div class="avatar-wrapper" onclick="document.getElementById('avatarUpload').click()">
+                                <div class="profile-avatar" id="profileAvatarDisplay">👤</div>
+                                <div class="avatar-edit-badge">📷</div>
+                                <input type="file" id="avatarUpload" accept="image/*" style="display: none;"
+                                    onchange="handleAvatarUpload(event)">
+                            </div>
+
+                            <div class="profile-details">
+                                <h2 id="profName">Student Name</h2>
+                                <p id="profId">Student ID: ---</p>
+                                <p id="profFaculty">Faculty: ---</p>
+                                <div id="profStatusBadge" class="profile-status-badge">Status: ---</div>
+                            </div>
+                        </div>
+                        <div class="profile-info-grid">
+                            <div class="info-box"><label>Voting Rights</label><span>1 Vote (Presidential)</span></div>
+                            <div class="info-box"><label>Registration Date</label><span>1 Sep 2024</span></div>
+                            <div class="info-box"><label>Election Type</label><span>Student Council</span></div>
+                            <div class="info-box"><label>System Security</label><span style="color: #2e7d32;">Verified &
+                                    Encrypted</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content active" id="dashboard">
+                    <div class="overview-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-label">Total Voters</div>
+                            <div class="stat-value" id="totalVoters">0</div>
+                            <div class="stat-change">Registered voters</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🎯</div>
+                            <div class="stat-label">Candidates</div>
+                            <div class="stat-value" id="totalCandidates">0</div>
+                            <div class="stat-change">Running</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">✓</div>
+                            <div class="stat-label">Total Votes</div>
+                            <div class="stat-value" id="totalVotes">0</div>
+                            <div class="stat-change">Votes casted</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-label">Voting %</div>
+                            <div class="stat-value" id="votingPercent">0%</div>
+                            <div class="stat-change">Voter participation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="candidates">
+                    <div class="candidates-grid" id="candidatesGridPolicies"></div>
+                </div>
+
+                <div class="tab-content" id="vote">
+                    <div id="voteContainer"></div>
+                </div>
+
+                <div class="tab-content" id="history">
+                    <div id="historyContainer"></div>
+                </div>
+
+                <div class="tab-content" id="search">
+                    <div class="search-input-group">
+                        <input type="text" id="searchInput" placeholder="Search candidate name or party..."
+                            oninput="performSearch()">
+                        <button class="search-btn" onclick="performSearch()">Search</button>
+                    </div>
+                    <div id="searchResultsContainer"></div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="policyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="policyTitle">Policy</h2>
+                <button class="modal-close" onclick="closeModal('policyModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="policyContent" style="line-height: 1.6; color: var(--text-mid);"></div>
+            <div class="modal-footer"><button class="modal-btn modal-btn-secondary"
+                    onclick="closeModal('policyModal')">Close</button></div>
+        </div>
+    </div>
+
+    <div class="modal" id="confirmVoteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Confirm Vote</h2>
+                <button class="modal-close" onclick="closeModal('confirmVoteModal')">&times;</button>
+            </div>
+            <div class="modal-body confirm-candidate-info">
+                <h3 id="confirmName" style="margin-bottom: 5px;">Name</h3>
+                <p id="confirmParty" style="color:var(--text-muted);">Party</p>
+            </div>
+            <div class="alert-box" style="text-align: left;">⚠️ You are about to cast your vote. This action cannot be
+                undone.</div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" onclick="closeModal('confirmVoteModal')">Cancel</button>
+                <button class="modal-btn modal-btn-primary" onclick="processVote()">Submit Vote</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="successModal">
+        <div class="modal-content" style="text-align: center;">
+            <h2 style="color: #2e7d32; margin-bottom: 15px;">Vote Successful!</h2>
+            <div class="success-box">
+                You have voted for <strong id="successCandidate"></strong><br>
+                Time: <span id="successTime"></span>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="modal-btn modal-btn-primary" onclick="finishVotingFlow()">View History</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/VoterDashboard/public/js/VoterDash.js"></script>
+</body>
+
+</html>
