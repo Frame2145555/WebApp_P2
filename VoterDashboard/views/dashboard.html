@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - E-Voting</title>
+    <link rel="stylesheet" href="/public/css/dashboard.css">
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo-section">
+                <div class="logo-circle">MFU</div>
+                <div class="logo-text"><span class="main">E-VOTING</span><span class="sub">Dashboard</span></div>
+            </div>
+            <div class="menu-section">
+                <div class="menu-title">MAIN MENU</div>
+                <a href="/views/profile.html" class="menu-item"><span class="menu-icon">👤</span>
+                    <span>Profile</span></a>
+                <a href="/views/dashboard.html" class="menu-item active"><span class="menu-icon">📊</span>
+                    <span>Dashboard</span></a>
+                <a href="/views/policies.html" class="menu-item"><span class="menu-icon">👥</span>
+                    <span>Policies</span></a>
+                <a href="/views/vote.css" class="menu-item"><span class="menu-icon">🗳️</span> <span>Vote</span></a>
+                <a href="/views/hitory.css" class="menu-item"><span class="menu-icon">📜</span> <span>History</span></a>
+            </div>
+            <div class="menu-section">
+                <div class="menu-title">RESULTS</div>
+                <a href="/views/search.html" class="menu-item"><span class="menu-icon">🔍</span> <span>Search
+                        Results</span></a>
+            </div>
+            <button class="logout-btn">Log Out</button>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="page-header">
+                    <h1 class="page-title">Dashboard Overview</h1>
+                    <span class="page-subtitle">System Live</span>
+                </div>
+                <div class="status-indicator"><span class="status-dot"></span> <span>Live Data</span></div>
+            </div>
+            <div class="content">
+                <div class="overview-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-label">Total Voters</div>
+                        <div class="stat-value">1,250</div>
+                        <div class="stat-change">Registered voters</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-label">Candidates</div>
+                        <div class="stat-value">4</div>
+                        <div class="stat-change">Running</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✓</div>
+                        <div class="stat-label">Total Votes</div>
+                        <div class="stat-value">850</div>
+                        <div class="stat-change">Votes casted</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/public/js/dashboard.js"></script>
+</body>
+</html>

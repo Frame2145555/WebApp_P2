@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - E-Voting</title>
+    <link rel="stylesheet" href="/public/css/hitory.css">
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo-section">
+                <div class="logo-circle">MFU</div>
+                <div class="logo-text"><span class="main">E-VOTING</span><span class="sub">Dashboard</span></div>
+            </div>
+            <div class="menu-section">
+                <div class="menu-title">MAIN MENU</div>
+                <a href="/views/profile.html" class="menu-item"><span class="menu-icon">👤</span>
+                    <span>Profile</span></a>
+                <a href="/views/dashboard.html" class="menu-item"><span class="menu-icon">📊</span>
+                    <span>Dashboard</span></a>
+                <a href="/views/policies.html" class="menu-item"><span class="menu-icon">👥</span>
+                    <span>Policies</span></a>
+                <a href="/views/vote.html" class="menu-item"><span class="menu-icon">🗳️</span> <span>Vote</span></a>
+                <a href="/views/history.html" class="menu-item active"><span class="menu-icon">📜</span>
+                    <span>History</span></a>
+            </div>
+            <div class="menu-section">
+                <div class="menu-title">RESULTS</div>
+                <a href="/views/search.html" class="menu-item"><span class="menu-icon">🔍</span> <span>Search
+                        Results</span></a>
+            </div>
+            <button class="logout-btn">Log Out</button>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="page-header">
+                    <h1 class="page-title">Voting History</h1>
+                    <span class="page-subtitle">Your activity log</span>
+                </div>
+                <div class="status-indicator"><span class="status-dot"></span> <span>Live Data</span></div>
+            </div>
+            <div class="content">
+                <div class="history-table">
+                    <div class="table-header">
+                        <div>Action</div>
+                        <div>Status</div>
+                        <div>Time</div>
+                    </div>
+                    <div class="table-row">
+                        <div>Voted for President</div>
+                        <div style="color: #2e7d32; font-weight: bold;">Success</div>
+                        <div class="timestamp-cell">10 Apr 2026, 21:12</div>
+                    </div>
+                    <div class="table-row">
+                        <div>System Login</div>
+                        <div style="color: #2e7d32; font-weight: bold;">Success</div>
+                        <div class="timestamp-cell">10 Apr 2026, 21:05</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/public/js/hitory.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - E-Voting</title>
+    <link rel="stylesheet" href="/public/css/profile.css">
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo-section">
+                <div class="logo-circle">MFU</div>
+                <div class="logo-text"><span class="main">E-VOTING</span><span class="sub">Dashboard</span></div>
+            </div>
+            <div class="menu-section">
+                <div class="menu-title">MAIN MENU</div>
+                <a href="/views/profile.html" class="menu-item active"><span class="menu-icon">👤</span>
+                    <span>Profile</span></a>
+                <a href="/views/dashboard.html" class="menu-item"><span class="menu-icon">📊</span>
+                    <span>Dashboard</span></a>
+                <a href="/views/policies.html" class="menu-item"><span class="menu-icon">👥</span>
+                    <span>Policies</span></a>
+                <a href="/views/vote.html" class="menu-item"><span class="menu-icon">🗳️</span> <span>Vote</span></a>
+                <a href="/views/history.html" class="menu-item"><span class="menu-icon">📜</span>
+                    <span>History</span></a>
+            </div>
+            <div class="menu-section">
+                <div class="menu-title">RESULTS</div>
+                <a href="/views/search.html" class="menu-item"><span class="menu-icon">🔍</span> <span>Search
+                        Results</span></a>
+            </div>
+            <button class="logout-btn">Log Out</button>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="page-header">
+                    <h1 class="page-title">Voter Profile</h1>
+                    <span class="page-subtitle">Your personal information</span>
+                </div>
+                <div class="status-indicator"><span class="status-dot"></span> <span>Live Data</span></div>
+            </div>
+            <div class="content">
+                <div class="profile-container">
+                    <div class="profile-header">
+                        <div class="profile-avatar-wrapper">
+                            <div class="profile-avatar" id="profileAvatarDisplay">👤</div>
+                            <label for="avatarInput" class="upload-badge">📷 เปลี่ยนรูป</label>
+                            <input type="file" id="avatarInput" accept="image/*" onchange="handleAvatarUpload(event)"
+                                hidden>
+                        </div>
+
+                        <div class="profile-details">
+                            <h2 id="profName">User Name</h2>
+                            <p id="profId">ID: XXXXXX</p>
+                            <p id="profFaculty">Faculty: XXX</p>
+                            <div id="profStatusBadge" class="profile-status-badge status-ready">Status: Ready to Vote
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-info-grid">
+                        <div class="info-box"><label>Voting Rights</label><span>1 Vote (Presidential)</span></div>
+                        <div class="info-box"><label>Registration Date</label><span>1 Sep 2024</span></div>
+                        <div class="info-box"><label>Election Type</label><span>Student Council</span></div>
+                        <div class="info-box"><label>System Security</label><span style="color: #2e7d32;">Verified &
+                                Encrypted</span></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/public/js/profile.js"></script>
+</body>
+
+</html>
