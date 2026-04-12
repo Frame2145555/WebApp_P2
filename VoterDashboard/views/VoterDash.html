@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Voting Dashboard</title>
     <link rel="stylesheet" href="/VoterDashboard/public/css/VoterDash.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -58,7 +59,6 @@
 
                 <div class="tab-content" id="profile">
                     <div class="profile-container">
-
                         <div class="profile-header">
                             <div class="avatar-wrapper" onclick="document.getElementById('avatarUpload').click()">
                                 <div class="profile-avatar" id="profileAvatarDisplay">👤</div>
@@ -66,7 +66,6 @@
                                 <input type="file" id="avatarUpload" accept="image/*" style="display: none;"
                                     onchange="handleAvatarUpload(event)">
                             </div>
-
                             <div class="profile-details">
                                 <h2 id="profName">Student Name</h2>
                                 <p id="profId">Student ID: ---</p>
@@ -78,8 +77,7 @@
                             <div class="info-box"><label>Voting Rights</label><span>1 Vote (Presidential)</span></div>
                             <div class="info-box"><label>Registration Date</label><span>1 Sep 2024</span></div>
                             <div class="info-box"><label>Election Type</label><span>Student Council</span></div>
-                            <div class="info-box"><label>System Security</label><span style="color: #2e7d32;">Verified &
-                                    Encrypted</span></div>
+                            <div class="info-box"><label>System Security</label><span style="color: #2e7d32;">Verified & Encrypted</span></div>
                         </div>
                     </div>
                 </div>
@@ -109,6 +107,15 @@
                             <div class="stat-label">Voting %</div>
                             <div class="stat-value" id="votingPercent">0%</div>
                             <div class="stat-change">Voter participation</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid #8C1515;">
+                        <h3 style="color: #8C1515; margin-bottom: 20px; font-family: 'Cinzel', serif; font-weight: bold; font-size: 1.2rem;">
+                            Top 3 Leading Candidates
+                        </h3>
+                        <div style="position: relative; height: 300px; width: 100%;">
+                            <canvas id="topCandidatesChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -160,8 +167,7 @@
                 <h3 id="confirmName" style="margin-bottom: 5px;">Name</h3>
                 <p id="confirmParty" style="color:var(--text-muted);">Party</p>
             </div>
-            <div class="alert-box" style="text-align: left;">⚠️ You are about to cast your vote. This action cannot be
-                undone.</div>
+            <div class="alert-box" style="text-align: left;">⚠️ You are about to cast your vote. This action cannot be undone.</div>
             <div class="modal-footer">
                 <button class="modal-btn modal-btn-secondary" onclick="closeModal('confirmVoteModal')">Cancel</button>
                 <button class="modal-btn modal-btn-primary" onclick="processVote()">Submit Vote</button>

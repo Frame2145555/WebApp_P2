@@ -115,19 +115,17 @@
 
                 const response = await fetch('/api/login', options);
                 if (response.ok) {
-                    const data = await response.json(); // รับ JSON
+                    const data = await response.json();
 
-                    // 🚨 ลบโค้ดเดิมที่เพื่อนปั้นก้อนข้อมูลเองทิ้งไปเลย
-                    // แล้วเอา data.user ที่ส่งมาจาก Backend (ซึ่งมีข้อมูลครบทุกอย่าง) ยัดลงกระเป๋าตรงๆ!
                     if (data.user) {
-                        localStorage.setItem('user', JSON.stringify(data.user));
+                        // เปลี่ยนจาก localStorage เป็น sessionStorage
+                        sessionStorage.setItem('user', JSON.stringify(data.user));
                     } else {
-                        // (ใส่เผื่อไว้กรณีฉุกเฉิน)
                         const sessionUser = { user_id: data.user_id, role: data.role, username };
-                        localStorage.setItem('user', JSON.stringify(sessionUser));
+                        sessionStorage.setItem('user', JSON.stringify(sessionUser));
                     }
 
-                    location.replace(data.redirect);    // ดึง redirect จาก JSON
+                    location.replace(data.redirect);
                 } else {
                     const message = await response.text();
                     throw new Error(message);

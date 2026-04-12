@@ -1,114 +1,71 @@
-// script.js
-// โครงสร้างข้อมูลสำหรับ 1 ผู้ใช้งาน (Single User)
-let appData = {
-    voters: 5000,
-    user: {
-        name: "John Doe",
-        id: "6431201011",
-        faculty: "Information Technology",
-        hasVoted: false,
-        history: [],
-        avatarUrl: "" // เอาไว้เก็บรูปภาพ Base64 ที่อัปโหลด
-    },
-    candidates: [
-        { id: 1, initials: 'A', name: 'Alice Smith', party: 'Student Action', votes: 450, policy: 'Improve campus Wi-Fi. More study spaces.' },
-        { id: 2, initials: 'B', name: 'Bob Jones', party: 'Campus Voice', votes: 320, policy: 'Better cafeteria food. Extension of library hours.' },
-        { id: 3, initials: 'C', name: 'Charlie Brown', party: 'Future Leaders', votes: 150, policy: 'More funding for clubs. Greener campus initiatives.' }
-    ]
+
+// เก็บข้อมูลจาก Database
+let state = {
+    user: null,         // ข้อมูล Voter ที่ล็อกอินเข้ามา
+    candidates: [],     // รายชื่อผู้สมัครจาก Database
+    hasVoted: false,    // สถานะการโหวต
+    chartInstance: null // เก็บตัวแปรกราฟ
 };
 
-function initApp() {
-    // โหลดข้อมูลเก่า (ถ้ามี)
-    const savedData = localStorage.getItem('mfuVoting_SingleUser');
-    if (savedData) appData = JSON.parse(savedData);
+// 🚀 Initialization (ตอนโหลดหน้าเว็บ)
+async function initApp() {
+    // เปลี่ยนจาก localStorage เป็น sessionStorage
+    const userData = sessionStorage.getItem('user');
+    if (!userData) {
+        alert("กรุณาเข้าสู่ระบบก่อน");
+        window.location.replace('/public/Login.html');
+        return;
+    }
+    state.user = JSON.parse(userData);
 
+    // เปลี่ยนการเช็คสถานะการโหวต
+    state.hasVoted = sessionStorage.getItem(`voted_${state.user.user_id}`) === 'true';
+
+    await fetchCandidates();
     refreshAllUI();
+
+    setInterval(async () => {
+        await fetchCandidates();
+        updateDashboard();
+        renderChart();
+    }, 10000);
 }
 
-function saveData() {
-    localStorage.setItem('mfuVoting_SingleUser', JSON.stringify(appData));
-}
-
-// ==========================================
-// ระบบอัปโหลดรูปภาพโปรไฟล์ (Image Upload)
-// ==========================================
-function handleAvatarUpload(event) {
-    const file = event.target.files[0];
-    if (file) {
-        // จำกัดขนาดคร่าวๆ (ออปชันเสริม)
-        if (file.size > 2 * 1024 * 1024) {
-            alert("ไฟล์ใหญ่เกินไป กรุณาเลือกรูปขนาดไม่เกิน 2MB");
-            return;
+// 🚀 API Calls (เชื่อมต่อ Backend)
+async function fetchCandidates() {
+    try {
+        const response = await fetch('/api/voting/candidates');
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            state.candidates = result.data;
+            state.totalVoters = result.total_voters || 0; // 🚨 เก็บค่าจาก DB ไว้ใน state
         }
-
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            // บันทึกรูปเป็น Base64
-            appData.user.avatarUrl = e.target.result;
-            saveData();
-            updateProfileAvatarUI(); // อัปเดต UI
-        };
-        reader.readAsDataURL(file);
+    } catch (error) {
+        console.error("Error fetching candidates:", error);
     }
 }
 
-function updateProfileAvatarUI() {
-    const avatarDisplay = document.getElementById('profileAvatarDisplay');
-    if (appData.user.avatarUrl) {
-        // แทรกรูปภาพเข้าไปแทนที่อีโมจิ 👤
-        avatarDisplay.innerHTML = `<img src="${appData.user.avatarUrl}" alt="Profile Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
-    } else {
-        avatarDisplay.innerHTML = '👤';
-    }
-}
-
-// ==========================================
-// ระบบ UI ทั่วไป
-// ==========================================
+// 🚀 UI Renders
 function refreshAllUI() {
     updateProfileUI();
-    updateProfileAvatarUI();
     updateDashboard();
     renderPolicies();
     renderVotingSection();
-    renderHistory();
-}
-
-function switchTab(tabId, element) {
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
-
-    if (element && element.classList.contains('menu-item')) element.classList.add('active');
-
-    const titles = {
-        'profile': 'My Profile',
-        'dashboard': 'Dashboard Overview',
-        'candidates': 'Candidates & Policies',
-        'vote': 'Cast Your Vote',
-        'history': 'Voting History',
-        'search': 'Search Results'
-    };
-    document.getElementById('pageTitle').innerText = titles[tabId];
-
-    // ทันทีที่เปิดหน้า Search ให้แสดงรายชื่อทั้งหมดก่อน
-    if (tabId === 'search') {
-        performSearch();
-    }
+    renderChart();
 }
 
 function updateProfileUI() {
-    document.getElementById('profName').innerText = appData.user.name;
-    document.getElementById('profId').innerText = `ID: ${appData.user.id}`;
-    document.getElementById('profFaculty').innerText = `Faculty: ${appData.user.faculty}`;
-    document.getElementById('sidebarVoterId').innerText = `ID: ${appData.user.id}`;
+    document.getElementById('profName').innerText = state.user.display_name || state.user.username;
+    document.getElementById('profId').innerText = `ID: ${state.user.username}`;
+    document.getElementById('sidebarVoterId').innerText = `ID: ${state.user.username}`;
 
-    const statusText = appData.user.hasVoted ? "✓ Voted" : "Ready to Vote";
+    const statusText = state.hasVoted ? "✓ Voted" : "Ready to Vote";
     document.getElementById('sidebarStatus').innerText = statusText;
-    document.getElementById('sidebarStatus').style.color = appData.user.hasVoted ? "#4CAF50" : "var(--gold-bright)";
+    document.getElementById('sidebarStatus').style.color = state.hasVoted ? "#4CAF50" : "var(--gold-bright)";
 
     const badge = document.getElementById('profStatusBadge');
-    if (appData.user.hasVoted) {
+    if (state.hasVoted) {
         badge.innerText = "Status: Voted Successfully";
         badge.className = "profile-status-badge status-voted";
     } else {
@@ -118,151 +75,189 @@ function updateProfileUI() {
 }
 
 function updateDashboard() {
-    let totalV = appData.candidates.reduce((sum, c) => sum + c.votes, 0);
-    document.getElementById('totalVoters').innerText = appData.voters.toLocaleString();
-    document.getElementById('totalCandidates').innerText = appData.candidates.length;
+    let totalV = state.candidates.reduce((sum, c) => sum + (c.score || 0), 0);
+    
+    document.getElementById('totalCandidates').innerText = state.candidates.length;
     document.getElementById('totalVotes').innerText = totalV.toLocaleString();
-    document.getElementById('votingPercent').innerText = ((totalV / appData.voters) * 100).toFixed(1) + "%";
+    
+    // ใช้ตัวเลขจริงจาก Database
+    const realTotalVoters = state.totalVoters || 0; 
+    document.getElementById('totalVoters').innerText = realTotalVoters.toLocaleString();
+    
+    // คำนวณเปอร์เซ็นต์แบบไม่ให้หารศูนย์ (NaN)
+    const percent = realTotalVoters > 0 ? ((totalV / realTotalVoters) * 100).toFixed(1) : 0;
+    document.getElementById('votingPercent').innerText = percent + "%";
+}
+
+// ฟังก์ชันวาดกราฟ Top 3
+function renderChart() {
+    const ctx = document.getElementById('topCandidatesChart').getContext('2d');
+
+    // เรียงลำดับคนคะแนนเยอะสุด และตัดมาแค่ 3 คน
+    const top3 = [...state.candidates]
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3);
+
+    const labels = top3.map(c => `${c.name} (${c.display_id})`);
+    const data = top3.map(c => c.score);
+    const colors = ['#8C1515', '#D4AF37', '#4a4a4a']; // แดงมฟล, ทอง, เทา
+
+    if (state.chartInstance) {
+        state.chartInstance.destroy(); // ลบกราฟเก่าก่อนวาดใหม่
+    }
+
+    state.chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'คะแนนโหวต',
+                data: data,
+                backgroundColor: colors,
+                borderRadius: 8,
+                maxBarThickness: 60 // 🚨 บังคับไม่ให้แท่งกราฟอ้วนเกิน 60px
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // 🚨 บังคับให้กราฟพอดีกับความสูงของกล่อง (300px)
+            layout: {
+                padding: { top: 10, bottom: 10 } // เพิ่มระยะขอบนิดหน่อยให้ดูโปร่ง
+            },
+            plugins: { 
+                legend: { display: false } 
+            },
+            scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { precision: 0 } 
+                },
+                x: {
+                    grid: { display: false } // 🚨 ซ่อนเส้นตารางแนวตั้ง จะทำให้กราฟดูคลีนและโมเดิร์นขึ้น
+                }
+            }
+        }
+    });
 }
 
 function renderPolicies() {
-    const html = appData.candidates.map(c => `
+    const html = state.candidates.map(c => `
         <div class="candidate-card">
-            <div class="candidate-avatar">${c.initials}</div>
+            <div class="candidate-avatar">
+                ${c.profile_picture ? `<img src="${c.profile_picture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : '👤'}
+            </div>
             <div class="candidate-name">${c.name}</div>
-            <div class="candidate-party">${c.party}</div>
-            <button class="policy-btn" onclick="viewPolicy(${c.id})">Read Policy</button>
+            <div class="candidate-party">${c.display_id}</div>
+            <button class="policy-btn" onclick="viewPolicy(${c.candidate_id})">Read Policy</button>
         </div>
     `).join('');
-    document.getElementById('candidatesGridPolicies').innerHTML = html;
+    document.getElementById('candidatesGridPolicies').innerHTML = html || '<p>ยังไม่มีผู้สมัคร</p>';
 }
 
 function renderVotingSection() {
     const container = document.getElementById('voteContainer');
-    if (appData.user.hasVoted) {
+    if (state.hasVoted) {
         container.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon" style="color:#4CAF50">✅</div>
-                <h3 style="color:var(--crimson-dark); margin-bottom:10px;">You have already voted!</h3>
-                <p>Thank you for participating. You cannot vote again.</p>
-                <button class="policy-btn" style="margin-top:20px" onclick="switchTab('history', document.querySelectorAll('.menu-item')[4])">View History</button>
+                <h3 style="color:#8C1515; margin-bottom:10px;">You have already voted!</h3>
+                <p>คุณได้ใช้สิทธิ์ลงคะแนนเสียงไปเรียบร้อยแล้ว ไม่สามารถโหวตซ้ำได้</p>
             </div>`;
         return;
     }
 
     container.innerHTML = `
         <div class="alert-box" style="margin-bottom: 24px;">
-            <strong>Note:</strong> You can only vote ONCE. Choose your candidate carefully.
+            <strong>Note:</strong> คุณสามารถโหวตได้เพียง 1 ครั้งเท่านั้น กรุณาตรวจสอบให้แน่ใจก่อนกดยืนยัน
         </div>
         <div class="candidates-grid">
-            ${appData.candidates.map(c => `
+            ${state.candidates.map(c => `
                 <div class="candidate-card">
-                    <div class="candidate-avatar">${c.initials}</div>
+                    <div class="candidate-avatar">
+                        ${c.profile_picture ? `<img src="${c.profile_picture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : '👤'}
+                    </div>
                     <div class="candidate-name">${c.name}</div>
-                    <div class="candidate-party">${c.party}</div>
+                    <div class="candidate-party">${c.display_id}</div>
                     <div class="candidate-actions">
-                        <button class="vote-btn" onclick="confirmVote(${c.id})">VOTE for ${c.name}</button>
+                        <button class="vote-btn" onclick="confirmVote(${c.candidate_id})">VOTE</button>
                     </div>
                 </div>
             `).join('')}
         </div>`;
 }
 
-function renderHistory() {
-    const container = document.getElementById('historyContainer');
-    if (appData.user.history.length === 0) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-icon">📜</div>No voting history found.</div>`;
-        return;
-    }
-
-    let rows = appData.user.history.map(h => `
-        <div class="table-row">
-            <div><strong>${h.candidate}</strong><br><span style="color:var(--text-muted); font-size:12px;">${h.party}</span></div>
-            <div>1 Vote</div>
-            <div class="timestamp-cell">${h.time}</div>
-        </div>
-    `).join('');
-
-    container.innerHTML = `<div class="history-table">
-        <div class="table-header"><div>Candidate</div><div>Action</div><div>Timestamp</div></div>
-        ${rows}</div>`;
-}
+// 🚀 ระบบจัดการการโหวต (Voting Process)
+let selectedCandidate = null;
 
 function viewPolicy(id) {
-    let c = appData.candidates.find(x => x.id === id);
-    document.getElementById('policyTitle').innerText = c.name + "'s Policy";
-    document.getElementById('policyContent').innerText = c.policy;
+    let c = state.candidates.find(x => x.candidate_id === id);
+    document.getElementById('policyTitle').innerText = `นโยบายของ ${c.name}`;
+    document.getElementById('policyContent').innerText = c.policies || 'ยังไม่มีนโยบาย';
     document.getElementById('policyModal').classList.add('active');
 }
 
-let selectedCandidate = null;
 function confirmVote(id) {
-    if (appData.user.hasVoted) return alert("You have already voted!");
-    selectedCandidate = appData.candidates.find(x => x.id === id);
+    if (state.hasVoted) return alert("You have already voted!");
+    selectedCandidate = state.candidates.find(x => x.candidate_id === id);
     document.getElementById('confirmName').innerText = selectedCandidate.name;
-    document.getElementById('confirmParty').innerText = selectedCandidate.party;
+    document.getElementById('confirmParty').innerText = selectedCandidate.display_id;
     document.getElementById('confirmVoteModal').classList.add('active');
 }
 
-function processVote() {
+// 🚨 ฟังก์ชันยิงคะแนนเข้า Database ของจริง!
+async function processVote() {
+    // ปิดหน้าต่างยืนยันก่อน
     closeModal('confirmVoteModal');
-    selectedCandidate.votes += 1;
-    appData.user.hasVoted = true;
 
-    const timestamp = new Date().toLocaleString('en-GB');
-    appData.user.history.push({
-        candidate: selectedCandidate.name,
-        party: selectedCandidate.party,
-        time: timestamp
-    });
+    try {
+        const response = await fetch('/api/voting/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: state.user.user_id,
+                candidate_id: selectedCandidate.candidate_id
+            })
+        });
 
-    saveData();
-    refreshAllUI();
+        const result = await response.json();
 
-    document.getElementById('successCandidate').innerText = selectedCandidate.name;
-    document.getElementById('successTime').innerText = timestamp;
-    document.getElementById('successModal').classList.add('active');
-}
+        if (result.status === 'success') {
+            // สำเร็จ! ล็อคสถานะการโหวต
+            state.hasVoted = true;
+            // เปลี่ยนมาเก็บใน sessionStorage
+            sessionStorage.setItem(`voted_${state.user.user_id}`, 'true');
 
-function finishVotingFlow() {
-    closeModal('successModal');
-    switchTab('history', document.querySelectorAll('.menu-item')[4]);
-}
+            await fetchCandidates();
+            refreshAllUI();
 
-// ==========================================
-// ระบบค้นหา (Real-time Search)
-// ==========================================
-function performSearch() {
-    let q = document.getElementById('searchInput').value.toLowerCase();
+            // โชว์หน้าต่าง Success
+            document.getElementById('successCandidate').innerText = selectedCandidate.name;
+            document.getElementById('successTime').innerText = new Date().toLocaleString('th-TH');
+            document.getElementById('successModal').classList.add('active');
 
-    // ค้นหาทั้งจากชื่อและชื่อพรรค (กรองทันทีที่พิมพ์)
-    let res = appData.candidates.filter(c =>
-        c.name.toLowerCase().includes(q) || c.party.toLowerCase().includes(q)
-    );
-
-    let html = res.map(c => `
-        <div class="search-result-item">
-            <div>
-                <strong>${c.name}</strong> 
-                <span style="color:var(--text-muted); font-size:13px; margin-left:8px;">(${c.party})</span>
-            </div>
-            <div class="result-score">${c.votes} Votes</div>
-        </div>
-    `).join('');
-
-    // ถ้าไม่เจอใครเลยให้แสดงข้อความนี้
-    if (!html) {
-        html = `
-        <div class="empty-state">
-            <div class="empty-icon">🔍</div>
-            <p>No results found for "${q}"</p>
-        </div>`;
+        } else {
+            // โดนหลังบ้านเตะกลับมา (เช่น โหวตไปแล้ว, โดนแบน)
+            alert(`ไม่สามารถโหวตได้: ${result.message}`);
+        }
+    } catch (error) {
+        console.error("Voting Error:", error);
+        alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
     }
-
-    document.getElementById('searchResultsContainer').innerHTML = html;
 }
 
+// ฟังก์ชันอื่นๆ (Tabs, Close Modal)
+function finishVotingFlow() { closeModal('successModal'); switchTab('dashboard', document.querySelectorAll('.menu-item')[1]); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-function logout() { alert("Logged out successfully."); }
+function logout() {
+    sessionStorage.removeItem('user'); // ลบออกจาก sessionStorage
+    window.location.replace('/public/Login.html');
+}
+function switchTab(tabId, element) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (element && element.classList.contains('menu-item')) element.classList.add('active');
+    if (tabId === 'search') performSearch();
+}
 
 window.onload = initApp;

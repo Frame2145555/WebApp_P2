@@ -41,6 +41,17 @@ app.get('/api/status', (req, res) => {
     res.json({ message: "Server is running" });
 });
 
+app.get('/TestLogin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'FrameFile', 'TestLogin.html'));
+});
+
+// 2. Route เปิดหน้า Voter Dashboard ตัวจริง
+app.get('/Voter-Dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'VoterDashboard', 'views', 'VoterDash.html'));
+});
+
+app.use('/VoterDashboard/public', express.static(path.join(__dirname, 'VoterDashboard', 'public')));
+
 // API สำหรับหน้า Candidate Dashboard (ผลคะแนนตามเทอมที่ active)
 app.get('/api/results', async (req, res) => {
     try {

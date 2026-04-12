@@ -1,8 +1,6 @@
 const pool = require('../db');
 
-// ==========================================
 // 1. API ดึงรายชื่อผู้สมัครไปโชว์หน้าเว็บ
-// ==========================================
 const getCandidates = async (req, res) => {
     try {
         let { term_id } = req.query;
@@ -16,7 +14,7 @@ const getCandidates = async (req, res) => {
             return res.status(404).json({ status: "error", message: "ไม่พบรอบเลือกตั้งที่เปิดในขณะนี้" });
         }
 
-        // 🚨 อัปเกรด: เพิ่ม c.profile_picture และเปลี่ยน u.username เป็น display_id
+        // อัปเกรด: เพิ่ม c.profile_picture และเปลี่ยน u.username เป็น display_id
         const [candidates] = await pool.query(
             `SELECT c.candidate_id, c.score, c.policies, c.profile_picture, u.username AS display_id, c.name
              FROM candidates c
@@ -25,7 +23,13 @@ const getCandidates = async (req, res) => {
              ORDER BY c.candidate_id ASC`,
             [term_id]
         );
-        res.json({ status: "success", data: candidates, term_id });
+
+        // สิ่งที่เพิ่มเข้ามา: สั่งนับจำนวน Voter ทั้งหมดในเทอมนี้
+        const [voterCount] = await pool.query("SELECT COUNT(*) AS total FROM voters WHERE term_id = ?", [term_id]);
+        const total_voters = voterCount[0].total;
+
+        // ส่ง total_voters กลับไปให้หน้าเว็บด้วย
+        res.json({ status: "success", data: candidates, term_id: term_id, total_voters: total_voters });
     } catch (error) {
         console.error("Get Candidates Error:", error);
         res.status(500).json({ status: "error", message: "ดึงข้อมูลผู้สมัครล้มเหลว" });
@@ -34,13 +38,13 @@ const getCandidates = async (req, res) => {
 
 // 2. API ส่งคะแนนโหวต
 const submitVote = async (req, res) => {
-    const { user_id, candidate_id } = req.body; 
+    const { user_id, candidate_id } = req.body;
 
     if (!user_id || !candidate_id) {
         return res.status(400).json({ status: "error", message: "ข้อมูลไม่ครบถ้วน" });
     }
 
-    const conn = await pool.getConnection(); 
+    const conn = await pool.getConnection();
 
     try {
         await conn.beginTransaction();
