@@ -17,9 +17,7 @@
     </style>
 </head>
 <body class="bg-bgLight min-h-screen text-gray-900">
-    <!-- โครงหน้าหลักแบบสองคอลัมน์ คล้ายแนว AdminNew -->
     <div class="lg:flex">
-        <!-- Sidebar ฝั่งผู้สมัคร -->
         <aside class="w-full bg-mfuRed text-white shadow-2xl lg:w-72 lg:min-h-screen">
             <div class="p-8 text-center border-b border-white/10">
                 <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -38,7 +36,6 @@
             </div>
         </aside>
 
-        <!-- เนื้อหาหลักของหน้า -->
         <main class="flex-grow p-6 md:p-10">
             <header id="overview" class="mb-8">
                 <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -59,11 +56,11 @@
                     <p class="opacity-90 mt-2">Track your ranking, update your manifesto, and search the latest candidate standings.</p>
                 </div>
                 <div class="flex flex-wrap gap-4">
-                    <div class="bg-white/10 rounded-2xl px-5 py-4 min-w-40">
+                    <div class="bg-white/10 rounded-2xl px-5 py-4 min-w-40 text-center">
                         <p class="text-xs uppercase tracking-[0.3em] text-white/70">Total Votes</p>
                         <p id="voteCount" class="text-4xl font-black mt-2">0</p>
                     </div>
-                    <div class="bg-white/10 rounded-2xl px-5 py-4 min-w-40">
+                    <div class="bg-white/10 rounded-2xl px-5 py-4 min-w-40 text-center">
                         <p class="text-xs uppercase tracking-[0.3em] text-white/70">Current Rank</p>
                         <p id="rankValue" class="text-4xl font-black mt-2">--</p>
                     </div>
@@ -91,7 +88,7 @@
                         <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-6">
                             <div>
                                 <h3 class="text-xl font-bold">Leaderboard Snapshot</h3>
-                                <p class="text-sm text-gray-500">Top candidates by votes, with your result highlighted.</p>
+                                <p class="text-sm text-gray-500">Top 5 candidates by votes, with your result highlighted.</p>
                             </div>
                             <p id="resultsStatus" class="text-sm font-semibold text-mfuRed">Loading results...</p>
                         </div>
@@ -123,20 +120,13 @@
                     </div>
 
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 h-fit">
-                        <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Quick Search</h4>
-                        <label for="searchInput" class="text-sm font-semibold text-gray-700">Search candidate standings</label>
-                        <input id="searchInput" type="text" class="w-full mt-3 px-4 py-3 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-mfuGold" placeholder="Search candidate name">
-                        <p class="text-sm text-gray-500 mt-4">Use this to filter the live results table below, similar to your original local search card.</p>
-                    </div>
-
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 h-fit">
                         <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Candidate Summary</h4>
                         <div class="space-y-4">
-                            <div class="rounded-2xl bg-gray-50 px-4 py-4">
+                            <div class="rounded-2xl bg-gray-50 px-4 py-4 text-center">
                                 <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Displayed Name</p>
                                 <p id="summaryName" class="mt-2 text-lg font-black text-mfuRed">--</p>
                             </div>
-                            <div class="rounded-2xl bg-gray-50 px-4 py-4">
+                            <div class="rounded-2xl bg-gray-50 px-4 py-4 text-center">
                                 <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Results Position</p>
                                 <p id="summaryRank" class="mt-2 text-2xl font-black">--</p>
                             </div>
@@ -146,11 +136,17 @@
             </section>
 
             <section id="results" class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 mt-6">
-                <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-6">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2">
                     <div>
                         <h2 class="text-xl font-bold text-mfuRed">Voting Results</h2>
                         <p class="text-sm text-gray-500">A live table version of the ranking view you built locally.</p>
                     </div>
+                    <div class="w-full md:w-72">
+                        <input id="searchInput" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-mfuGold text-sm" placeholder="Search candidate name...">
+                    </div>
+                </div>
+                
+                <div class="mb-6">
                     <p id="tableStatus" class="text-sm font-semibold text-gray-500">Waiting for results...</p>
                 </div>
 
@@ -171,7 +167,6 @@
         </main>
     </div>
 
-    <!-- Modal สำหรับอัปเดต manifesto -->
     <div id="bioModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[100] backdrop-blur-sm p-4">
         <div class="bg-white p-8 md:p-10 rounded-[2rem] w-full max-w-lg">
             <h3 class="text-2xl font-black mb-4">Update Manifesto</h3>

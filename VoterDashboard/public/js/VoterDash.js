@@ -92,18 +92,17 @@ function updateDashboard() {
 // ฟังก์ชันวาดกราฟ Top 3
 function renderChart() {
     const ctx = document.getElementById('topCandidatesChart').getContext('2d');
-
-    // เรียงลำดับคนคะแนนเยอะสุด และตัดมาแค่ 3 คน
+    
     const top3 = [...state.candidates]
         .sort((a, b) => b.score - a.score)
         .slice(0, 3);
 
-    const labels = top3.map(c => `${c.name} (${c.display_id})`);
+    const labels = top3.map(c => c.name);
     const data = top3.map(c => c.score);
-    const colors = ['#8C1515', '#D4AF37', '#4a4a4a']; // แดงมฟล, ทอง, เทา
+    const colors = ['#8C1515', '#D4AF37', '#4a4a4a']; 
 
     if (state.chartInstance) {
-        state.chartInstance.destroy(); // ลบกราฟเก่าก่อนวาดใหม่
+        state.chartInstance.destroy();
     }
 
     state.chartInstance = new Chart(ctx, {
@@ -111,30 +110,22 @@ function renderChart() {
         data: {
             labels: labels,
             datasets: [{
-                label: 'คะแนนโหวต',
                 data: data,
                 backgroundColor: colors,
-                borderRadius: 8,
-                maxBarThickness: 60 // 🚨 บังคับไม่ให้แท่งกราฟอ้วนเกิน 60px
+                borderRadius: 5,
+                maxBarThickness: 40
             }]
         },
         options: {
+            indexAxis: 'y',
             responsive: true,
-            maintainAspectRatio: false, // 🚨 บังคับให้กราฟพอดีกับความสูงของกล่อง (300px)
-            layout: {
-                padding: { top: 10, bottom: 10 } // เพิ่มระยะขอบนิดหน่อยให้ดูโปร่ง
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
             },
-            plugins: { 
-                legend: { display: false } 
-            },
-            scales: { 
-                y: { 
-                    beginAtZero: true, 
-                    ticks: { precision: 0 } 
-                },
-                x: {
-                    grid: { display: false } // 🚨 ซ่อนเส้นตารางแนวตั้ง จะทำให้กราฟดูคลีนและโมเดิร์นขึ้น
-                }
+            scales: {
+                x: { beginAtZero: true },
+                y: { grid: { display: false } }
             }
         }
     });
@@ -147,7 +138,7 @@ function renderPolicies() {
                 ${c.profile_picture ? `<img src="${c.profile_picture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : '👤'}
             </div>
             <div class="candidate-name">${c.name}</div>
-            <div class="candidate-party">${c.display_id}</div>
+            <div class="candidate-party">ผู้สมัครรับเลือกตั้ง</div>
             <button class="policy-btn" onclick="viewPolicy(${c.candidate_id})">Read Policy</button>
         </div>
     `).join('');
@@ -200,7 +191,7 @@ function confirmVote(id) {
     if (state.hasVoted) return alert("You have already voted!");
     selectedCandidate = state.candidates.find(x => x.candidate_id === id);
     document.getElementById('confirmName').innerText = selectedCandidate.name;
-    document.getElementById('confirmParty').innerText = selectedCandidate.display_id;
+    document.getElementById('confirmParty').innerText = 'โปรดตรวจสอบชื่อให้ถูกต้องก่อนยืนยัน';
     document.getElementById('confirmVoteModal').classList.add('active');
 }
 

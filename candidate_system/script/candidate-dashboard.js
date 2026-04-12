@@ -182,9 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
   }
 
-  // วาดกราฟอันดับ top 5 ด้วย Chart.js
   function renderChart() {
-    const chartResults = sortResults(state.results).slice(0, 5);
+    const chartResults = sortResults(state.results).slice(0, 5); 
     const labels = chartResults.length ? chartResults.map((candidate) => getCandidateLabel(candidate)) : ['No Data'];
     const data = chartResults.length ? chartResults.map((candidate) => normalizeVoteCount(candidate.vote_count)) : [0];
     const colors = chartResults.length
@@ -209,7 +208,20 @@ document.addEventListener('DOMContentLoaded', () => {
       options: {
         responsive: true,
         plugins: {
-          legend: { display: false }
+          // เพิ่ม Legend อธิบายสีตรงนี้
+          legend: { 
+            display: true,
+            position: 'top',
+            labels: {
+                font: { family: 'Kanit' },
+                generateLabels: () => {
+                    return [
+                        { text: 'คะแนนของคุณ (You)', fillStyle: '#8C1D1D', strokeStyle: '#8C1D1D' },
+                        { text: 'ผู้สมัครคนอื่น (Others)', fillStyle: '#B38E50', strokeStyle: '#B38E50' }
+                    ];
+                }
+            }
+          }
         },
         scales: {
           y: {
