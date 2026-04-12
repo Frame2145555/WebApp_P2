@@ -14,25 +14,31 @@
 <body class="bg-gray-50">
 
     <div class="flex h-screen overflow-hidden">
-        <aside class="sidebar w-64 text-white flex-shrink-0 flex flex-col h-full">
+        <aside class="sidebar w-64 text-white flex-shrink-0 flex flex-col h-full" style="background-color: #5c0f0f;">
             <div class="p-6 text-center">
-                <h1 class="text-2xl font-bold mfu-gold">MFU E-VOTING</h1>
+                <h1 class="text-2xl font-bold mfu-gold" style="color: #c9973a;">MFU E-VOTING</h1>
                 <p class="text-xs opacity-80 mt-1">Admin Control Panel</p>
             </div>
             <ul class="flex flex-col gap-1 px-4 text-sm font-medium">
                 <li><a href="/AdminNew/views/Term.html"
-                        class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Terms</a></li>
+                        class="block px-4 py-3 rounded transition-colors" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'" onmouseout="this.style.backgroundColor=''">Terms</a></li>
 
                 <li><a href="#" onclick="goToPage('Dashboard.html')"
-                        class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Dashboard</a></li>
+                        class="block px-4 py-3 rounded transition-colors" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'" onmouseout="this.style.backgroundColor=''">Dashboard</a></li>
                 <li><a href="#" onclick="goToPage('Voting.html')"
-                        class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Voter Management</a></li>
+                        class="block px-4 py-3 rounded transition-colors" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'" onmouseout="this.style.backgroundColor=''">Voter Management</a></li>
                 <li><a href="#" onclick="goToPage('Candidates.html')"
-                        class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Candidate Management</a></li>
+                        class="block px-4 py-3 rounded transition-colors" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'" onmouseout="this.style.backgroundColor=''">Candidate Management</a></li>
             </ul>
             <div class="p-6 mt-auto">
-                <button id="logout-Btn"
-                    class="w-full text-left font-bold px-4 py-2 hover:bg-red-900 rounded transition-colors flex justify-center">logout</button>
+                <button id="logout-Btn" type="button"
+                    onclick="window.location.href='/public/index.html'"
+                    class="w-full font-bold rounded"
+                    style="display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:8px 22px; background: transparent; color: #e8b84b; border-radius:10px; font-size:0.95rem; font-weight:600; letter-spacing:0.02em; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); border:1.5px solid rgba(201,151,58,0.6);"
+                    onmouseover="this.style.background='rgba(201,151,58,0.12)'; this.style.borderColor='rgba(201,151,58,0.9)'; this.style.boxShadow='0 0 20px rgba(201,151,58,0.2)'"
+                    onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(201,151,58,0.6)'; this.style.boxShadow='none'">
+                    logout
+                </button>
             </div>
         </aside>
 

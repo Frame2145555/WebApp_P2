@@ -14,8 +14,8 @@
             theme: {
                 extend: {
                     colors: {
-                        'mfu-red': '#8C1515',
-                        'mfu-yellow': '#D4AF37'
+                        'mfu-red': '#5c0f0f',
+                        'mfu-yellow': '#c9973a'
                     }
                 }
             }
@@ -25,15 +25,19 @@
 
 <body class="bg-slate-50 font-Kanit min-h-screen flex flex-col">
 
-    <nav class="bg-mfu-red text-white p-4 shadow-md flex justify-between items-center px-6 lg:px-12">
+    <nav class="text-white p-4 shadow-md flex justify-between items-center px-6 lg:px-12" style="background-color: #5c0f0f;">
         <div class="flex items-center gap-3">
-            <h1 class="text-2xl font-black text-mfu-yellow">MFU E-VOTING</h1>
+            <h1 class="text-2xl font-black text-mfu-yellow" style="color: #c9973a;">MFU E-VOTING</h1>
             <div class="hidden md:block h-6 w-px bg-white/30"></div>
             <p class="hidden md:block text-sm font-Kanit opacity-80">Admin Control Panel</p>
         </div>
 
-        <button
-            class="btn btn-sm btn-outline text-white hover:bg-white hover:text-mfu-red hover:border-white border-white" id="logout-Btn">
+        <button id="logout-Btn" type="button"
+            onclick="window.location.href='/public/index.html'"
+            class="font-bold rounded"
+            style="display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:8px 22px; background: transparent; color: #e8b84b; border-radius:10px; font-size:0.95rem; font-weight:600; letter-spacing:0.02em; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); border:1.5px solid rgba(201,151,58,0.6);"
+            onmouseover="this.style.background='rgba(201,151,58,0.12)'; this.style.borderColor='rgba(201,151,58,0.9)'; this.style.boxShadow='0 0 20px rgba(201,151,58,0.2)'"
+            onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(201,151,58,0.6)'; this.style.boxShadow='none'">
             Logout
         </button>
     </nav>

@@ -13,13 +13,13 @@
     <link rel="stylesheet" href="/AdminNew/style/Candidates.css">
 
     <script>
-        // ตั้งค่าสี Theme ของทีม
+        // ตั้งค่าสี Theme ของทีม (ตรงกับ Login page)
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'mfu-red': '#8C1515',   // แดง
-                        'mfu-yellow': '#D4AF37' // เหลือง
+                        'mfu-red': '#5c0f0f',   // แดง
+                        'mfu-yellow': '#c9973a' // ทอง
                     }
                 }
             }
@@ -34,7 +34,7 @@
         <aside class="w-64 bg-mfu-red text-white flex flex-col justify-between h-full z-20 shadow-xl">
             <div>
                 <div class="p-6 text-center">
-                    <h1 class="text-2xl font-black text-mfu-yellow mb-1">MFU E-VOTING</h1>
+                    <h1 class="text-2xl font-black text-mfu-yellow mb-1" style="color: #c9973a;">MFU E-VOTING</h1>
                     <p class="text-xs font-Kanit opacity-80">Admin Control Panel</p>
                 </div>
 
@@ -53,8 +53,14 @@
             </div>
 
             <div class="p-6">
-                <button id="logout-Btn"
-                    class="w-full text-left font-bold px-4 py-2 hover:bg-red-900 rounded transition-colors flex justify-center">logout</button>
+                <button id="logout-Btn" type="button"
+                    onclick="window.location.href='/public/index.html'"
+                    class="w-full font-bold rounded"
+                    style="display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:8px 22px; background: transparent; color: #e8b84b; border-radius:10px; font-size:0.95rem; font-weight:600; letter-spacing:0.02em; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); border:1.5px solid rgba(201,151,58,0.6);"
+                    onmouseover="this.style.background='rgba(201,151,58,0.12)'; this.style.borderColor='rgba(201,151,58,0.9)'; this.style.boxShadow='0 0 20px rgba(201,151,58,0.2)'"
+                    onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(201,151,58,0.6)'; this.style.boxShadow='none'">
+                    logout
+                </button>
             </div>
         </aside>
 
@@ -79,7 +85,7 @@
                         <input type="text" placeholder="Search ID or Name"
                             class="input input-bordered input-sm w-full bg-gray-50 focus:bg-white" />
                     </div>
-                    <button class="btn btn-sm bg-mfu-red hover:bg-red-900 text-white border-none"
+                    <button class="btn btn-sm text-white border-none" style="background-color: #5c0f0f;" onmouseover="this.style.backgroundColor='#3d0a0a'" onmouseout="this.style.backgroundColor='#5c0f0f'"
                         onclick="add_candidate_modal.showModal()">
                         + Add Candidate
                     </button>
@@ -106,7 +112,7 @@
     </div>
     <dialog id="add_candidate_modal" class="modal">
         <div class="modal-box bg-white">
-            <h3 class="font-bold text-xl mb-6 text-mfu-red border-b pb-2">Add Candidate</h3>
+            <h3 class="font-bold text-xl mb-6 border-b pb-2" style="color: #5c0f0f;">Add Candidate</h3>
             <form id="addCandidateForm">
                 <div class="form-control mb-6">
                     <label class="label"><span class="label-text font-bold text-gray-600">Candidate Name
@@ -119,7 +125,7 @@
                         <button class="btn btn-ghost text-gray-500">Cancel</button>
                     </form>
                     <button type="button"
-                        class="btn bg-mfu-red hover:bg-red-900 text-white border-none px-8">Add</button>
+                        class="btn text-white border-none px-8" style="background-color: #5c0f0f;" onmouseover="this.style.backgroundColor='#3d0a0a'" onmouseout="this.style.backgroundColor='#5c0f0f'">Add</button>
                 </div>
             </form>
         </div>

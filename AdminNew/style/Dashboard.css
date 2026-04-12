@@ -1,14 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
 
 :root {
-    --mfu-red: #8C1515;
-    --mfu-gold: #D4AF37;
+    --crimson:       #5c0f0f;
+    --crimson-dark:  #3d0a0a;
+    --crimson-glass: rgba(92, 15, 15, 0.92);
+    --gold:          #c9973a;
+    --gold-light:    #e8b84b;
+    --gold-bright:   #f5cc60;
+    --gold-pale:     rgba(201, 151, 58, 0.12);
+    --cream:         #fdf8f0;
+    --white:         #ffffff;
+    --text-muted:    rgba(253, 248, 240, 0.45);
+    --input-bg:      #f7f3ee;
+    --border:        rgba(92, 15, 15, 0.12);
+    --shadow-deep:   0 20px 60px rgba(61, 10, 10, 0.18);
+    --mfu-red:       var(--crimson);
+    --mfu-gold:      var(--gold);
 }
 
 body { font-family: 'Kanit', sans-serif; }
 
-.sidebar { background-color: var(--mfu-red); }
-.mfu-gold { color: var(--mfu-gold); }
+.sidebar { background-color: var(--crimson); }
+.mfu-gold { color: var(--gold); }
 
 .nav-item {
     display: block;

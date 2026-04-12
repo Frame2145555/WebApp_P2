@@ -14,6 +14,40 @@
 
 <body>
     <div class="container">
+        <!-- Success Popup Modal -->
+        <div id="successModal" class="modal-overlay">
+            <div class="modal-content success-modal">
+                <button type="button" class="modal-close" onclick="closeSuccessModal()">
+                    <i class="bx bx-x"></i>
+                </button>
+                <div class="modal-icon success-icon">
+                    <i class="bx bx-check-circle"></i>
+                </div>
+                <h2 class="modal-title">ลงทะเบียนสำเร็จ</h2>
+                <p class="modal-message">บัญชีของคุณสร้างเสร็จแล้ว<br>กำลังนำคุณไปยังหน้า Login...</p>
+                <div class="modal-loader">
+                    <div class="loader-dot"></div>
+                    <div class="loader-dot"></div>
+                    <div class="loader-dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Popup Modal -->
+        <div id="errorModal" class="modal-overlay">
+            <div class="modal-content error-modal">
+                <button type="button" class="modal-close" onclick="closeErrorModal()">
+                    <i class="bx bx-x"></i>
+                </button>
+                <div class="modal-icon error-icon">
+                    <i class="bx bx-error-circle"></i>
+                </div>
+                <h2 class="modal-title">เกิดข้อผิดพลาด</h2>
+                <p class="modal-message" id="errorMessage"></p>
+                <button type="button" class="modal-btn" onclick="closeErrorModal()">ลองใหม่อีกครั้ง</button>
+            </div>
+        </div>
+
         <nav class="navbar">
             <div class="nav-brand">
                 <a class="nav-logo-icon" href="/public/index.html">
@@ -54,8 +88,13 @@
                         <div class="input-wrapper">
                             <i class="bx bx-lock-alt input-icon"></i>
                             <input type="password" id="password" name="password" placeholder="Create a password (ขั้นต่ำ 8 ตัวอักษร)" required>
-                            <button class="toggle-pw" type="button" tabindex="-1" onclick="togglePassword('password','eyeIcon1')">
-                                <i class="bx bx-hide" id="eyeIcon1"></i>
+                            <button class="toggle-pw" type="button" tabindex="-1" onclick="togglePasswordField('password')">
+                                <svg class="eye-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path class="eye-open" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle class="eye-open" cx="12" cy="12" r="3"></circle>
+                                    <path class="eye-closed" style="display:none;" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line class="eye-closed" style="display:none;" x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
                             </button>
                         </div>
                     </div>
@@ -65,8 +104,13 @@
                         <div class="input-wrapper">
                             <i class="bx bx-lock-alt input-icon"></i>
                             <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
-                            <button class="toggle-pw" type="button" tabindex="-1" onclick="togglePassword('confirm_password','eyeIcon2')">
-                                <i class="bx bx-hide" id="eyeIcon2"></i>
+                            <button class="toggle-pw" type="button" tabindex="-1" onclick="togglePasswordField('confirm_password')">
+                                <svg class="eye-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path class="eye-open" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle class="eye-open" cx="12" cy="12" r="3"></circle>
+                                    <path class="eye-closed" style="display:none;" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line class="eye-closed" style="display:none;" x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
                             </button>
                         </div>
                     </div>
@@ -91,14 +135,55 @@
     </div>
 
     <script>
-        // ── Toggle show / hide password ──
-        function togglePassword(inputId, iconId) {
+        const successModal = document.getElementById('successModal');
+        const errorModal = document.getElementById('errorModal');
+
+        // Toggle password visibility with SVG
+        function togglePasswordField(inputId) {
             const input = document.getElementById(inputId);
-            const icon = document.getElementById(iconId);
-            const isHidden = input.type === 'password';
-            input.type = isHidden ? 'text' : 'password';
-            icon.className = isHidden ? 'bx bx-show' : 'bx bx-hide';
+            const button = event.target.closest('.toggle-pw');
+            const eyeOpenPaths = button.querySelectorAll('.eye-open');
+            const eyeClosedPaths = button.querySelectorAll('.eye-closed');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeOpenPaths.forEach(el => el.style.display = 'none');
+                eyeClosedPaths.forEach(el => el.style.display = 'inherit');
+            } else {
+                input.type = 'password';
+                eyeOpenPaths.forEach(el => el.style.display = 'inherit');
+                eyeClosedPaths.forEach(el => el.style.display = 'none');
+            }
         }
+
+        function showSuccessModal(redirectUrl) {
+            successModal.classList.add('show');
+            setTimeout(() => {
+                location.replace(redirectUrl);
+            }, 2500);
+        }
+
+        function closeSuccessModal() {
+            successModal.classList.remove('show');
+        }
+
+        function showErrorModal(message) {
+            document.getElementById('errorMessage').textContent = message;
+            errorModal.classList.add('show');
+        }
+
+        function closeErrorModal() {
+            errorModal.classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        successModal.addEventListener('click', (e) => {
+            if (e.target === successModal) closeSuccessModal();
+        });
+
+        errorModal.addEventListener('click', (e) => {
+            if (e.target === errorModal) closeErrorModal();
+        });
 
         // ── Submit form ──
         const formRegister = document.getElementById('formRegister');
@@ -106,57 +191,52 @@
         formRegister.onsubmit = async function (e) {
             e.preventDefault();
 
-            // 🚨 รับค่าจากฟิลด์ใหม่ที่เราเพิ่งแก้ไป
             const candidate_id = document.getElementById('candidateID').value.trim();
             const password = document.getElementById('password').value;
             const confirm_password = document.getElementById('confirm_password').value;
 
             if (!candidate_id) {
-                alert('กรุณากรอก Candidate ID');
+                showErrorModal('กรุณากรอก Candidate ID');
                 return;
             }
             if (password.length < 8) {
-                alert('Password must be at least 8 characters');
+                showErrorModal('Password must be at least 8 characters');
                 return;
             }
-            // 🚨 เช็คว่ารหัสผ่าน 2 ช่องตรงกันไหม
             if (password !== confirm_password) {
-                alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน!');
+                showErrorModal('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน!');
                 return;
             }
 
             try {
-                // Step 1: verify ก่อนว่า ID ถูกและยังไม่ register
                 const verifyRes = await fetch(`/api/register/verify/${encodeURIComponent(candidate_id)}`);
                 const verifyData = await verifyRes.json();
 
                 if (!verifyRes.ok) {
-                    alert(verifyData.error || 'Invalid Candidate ID');
+                    showErrorModal(verifyData.error || 'Invalid Candidate ID');
                     return;
                 }
 
-                // Step 2: register
                 const res = await fetch('/api/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         candidate_id,
                         password,
-                        confirm_password // 🚨 ส่งตัว confirm จริงๆ ไปให้ Backend ตรวจสอบ
+                        confirm_password
                     }),
                 });
                 const data = await res.json();
 
                 if (!res.ok) {
-                    alert(data.error || 'Registration failed');
+                    showErrorModal(data.error || 'Registration failed');
                     return;
                 }
 
-                alert('ลงทะเบียนสำเร็จ! กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่ของคุณ');
-                location.replace('/Login');
+                showSuccessModal('/public/Login.html');
 
             } catch (err) {
-                alert('Cannot connect to server');
+                showErrorModal('Cannot connect to server');
                 console.error(err);
             }
         }
