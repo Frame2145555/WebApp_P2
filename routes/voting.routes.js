@@ -4,6 +4,9 @@ const votingController = require('../controllers/voting.controller');
 
 // ===================== User =========================
 
+// ดึงเทอม
+router.get('/terms', votingController.getTerms);
+
 // ดึงรายชื่อ
 router.get('/candidates', votingController.getCandidates);
 

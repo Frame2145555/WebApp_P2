@@ -42,20 +42,61 @@
                     <h1 class="page-title">Cast Your Vote</h1>
                     <span class="page-subtitle">Select your preferred candidate</span>
                 </div>
-                <div class="status-indicator"><span class="status-dot"></span> <span>Live Data</span></div>
+                <div class="top-actions">
+                    <div class="term-control">
+                        <label for="termSelect">Voting Term</label>
+                        <select id="termSelect" class="term-select"></select>
+                    </div>
+                    <div class="status-indicator"><span class="status-dot"></span> <span>Live Data</span></div>
+                </div>
             </div>
             <div class="content">
-                <div class="candidates-grid">
-                    <div class="candidate-card">
-                        <div class="candidate-avatar">1</div>
-                        <h3 class="candidate-name">Candidate Name 1</h3>
-                        <p class="candidate-party">Party A</p>
-                        <button class="vote-btn">Vote Now</button>
+                <section class="term-summary">
+                    <div class="term-card">
+                        <div class="term-title" id="termTitle">Loading term...</div>
+                        <div class="term-desc" id="termDesc">Please wait</div>
+                        <div class="term-badges">
+                            <span class="badge" id="termStatus">Status</span>
+                            <span class="badge outline" id="termVoters">Voters: 0</span>
+                            <span class="badge outline" id="termVoteStatus">Vote status</span>
+                        </div>
                     </div>
-                </div>
+                </section>
+
+                <div id="voteContainer"></div>
             </div>
         </main>
     </div>
+    <div class="modal" id="confirmVoteModal">
+        <div class="modal-content">
+            <h3>Confirm Your Vote</h3>
+            <p>You are voting for:</p>
+            <div class="modal-highlight">
+                <span id="confirmName">-</span>
+            </div>
+            <p class="modal-sub" id="confirmParty"></p>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal('confirmVoteModal')">Cancel</button>
+                <button class="btn-primary" onclick="processVote()">Confirm Vote</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <h3>Vote Successful</h3>
+            <p>Thank you for voting.</p>
+            <div class="modal-highlight">
+                <span id="successCandidate">-</span>
+            </div>
+            <p class="modal-sub">Time: <span id="successTime">-</span></p>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="finishVotingFlow()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/public/js/voting-app.js"></script>
     <script src="/VoterDashboard/public/js/vote.js"></script>
 </body>
 

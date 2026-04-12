@@ -1,9 +1,22 @@
 const pool = require('../db');
 
-// 1. API ดึงรายชื่อผู้สมัครไปโชว์หน้าเว็บ
+// 1. API ดึงเทอมทั้งหมดสำหรับเลือกโหวต
+const getTerms = async (req, res) => {
+    try {
+        const [terms] = await pool.query(
+            "SELECT term_id, name, description, is_active FROM terms ORDER BY term_id DESC"
+        );
+        res.json({ status: "success", data: terms });
+    } catch (error) {
+        console.error("Get Terms Error:", error);
+        res.status(500).json({ status: "error", message: "ดึงข้อมูลเทอมล้มเหลว" });
+    }
+};
+
+// 2. API ดึงรายชื่อผู้สมัครไปโชว์หน้าเว็บ
 const getCandidates = async (req, res) => {
     try {
-        let { term_id } = req.query;
+        let { term_id, user_id } = req.query;
         // ถ้าไม่ส่ง term_id มา ให้หา term ที่กำลัง active อยู่
         if (!term_id) {
             const [active] = await pool.query("SELECT term_id FROM terms WHERE is_active = 1 LIMIT 1");
@@ -12,6 +25,15 @@ const getCandidates = async (req, res) => {
 
         if (!term_id) {
             return res.status(404).json({ status: "error", message: "ไม่พบรอบเลือกตั้งที่เปิดในขณะนี้" });
+        }
+
+        const [termRows] = await pool.query(
+            "SELECT term_id, name, description, is_active FROM terms WHERE term_id = ? LIMIT 1",
+            [term_id]
+        );
+
+        if (termRows.length === 0) {
+            return res.status(404).json({ status: "error", message: "ไม่พบข้อมูลเทอมที่เลือก" });
         }
 
         // อัปเกรด: เพิ่ม c.profile_picture และเปลี่ยน u.username เป็น display_id
@@ -26,10 +48,25 @@ const getCandidates = async (req, res) => {
 
         // สิ่งที่เพิ่มเข้ามา: สั่งนับจำนวน Voter ทั้งหมดในเทอมนี้
         const [voterCount] = await pool.query("SELECT COUNT(*) AS total FROM voters WHERE term_id = ?", [term_id]);
-        const total_voters = voterCount[0].total;
+        const total_voters = voterCount[0]?.total || 0;
 
-        // ส่ง total_voters กลับไปให้หน้าเว็บด้วย
-        res.json({ status: "success", data: candidates, term_id: term_id, total_voters: total_voters });
+        let user_has_voted = false;
+        if (user_id) {
+            const [voterRows] = await pool.query(
+                "SELECT is_voted FROM voters WHERE user_id = ? AND term_id = ? LIMIT 1",
+                [user_id, term_id]
+            );
+            user_has_voted = voterRows[0]?.is_voted === 1;
+        }
+
+        // ส่งข้อมูลเทอม + สถานะผู้โหวตกลับไปให้หน้าเว็บด้วย
+        res.json({
+            status: "success",
+            data: candidates,
+            term: termRows[0],
+            total_voters: total_voters,
+            user_has_voted: user_has_voted
+        });
     } catch (error) {
         console.error("Get Candidates Error:", error);
         res.status(500).json({ status: "error", message: "ดึงข้อมูลผู้สมัครล้มเหลว" });
@@ -124,4 +161,4 @@ const submitVote = async (req, res) => {
     }
 };
 
-module.exports = { getCandidates, submitVote };
+module.exports = { getTerms, getCandidates, submitVote };

@@ -188,6 +188,31 @@ a {
     z-index: 10;
 }
 
+.top-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.term-control {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.term-select {
+    min-width: 220px;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--gold-border);
+    background: var(--white);
+    color: var(--text-dark);
+    font-family: var(--font-body);
+    font-size: 14px;
+}
+
 .page-title {
     font-size: 24px;
     font-weight: 700;
@@ -221,6 +246,52 @@ a {
     padding: 40px;
     flex: 1;
     overflow-y: auto;
+}
+
+.term-summary {
+    margin-bottom: 24px;
+}
+
+.term-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    border: 1px solid var(--gold-border);
+    box-shadow: var(--shadow-card);
+}
+
+.term-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--crimson-dark);
+    margin-bottom: 6px;
+}
+
+.term-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.term-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.badge {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--gold);
+    color: var(--crimson-dark);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge.outline {
+    background: transparent;
+    border: 1px solid var(--gold-border);
+    color: var(--text-mid);
 }
 
 @keyframes pulse {
@@ -286,6 +357,12 @@ a {
     font-weight: 500;
 }
 
+.candidate-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .vote-btn {
     width: 100%;
     padding: 12px;
@@ -302,4 +379,114 @@ a {
 .vote-btn:hover {
     background: var(--crimson-dark);
     transform: scale(1.02);
+}
+
+.vote-btn[disabled] {
+    background: #c8c1b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.alert-box {
+    background: var(--gold-pale);
+    border: 1px solid var(--gold-border);
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    color: var(--text-mid);
+    margin-bottom: 20px;
+}
+
+.empty-state {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    text-align: center;
+    border: 1px dashed var(--gold-border);
+    color: var(--text-mid);
+}
+
+.empty-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+/* === Modal === */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(33, 15, 15, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: var(--tr);
+    z-index: 2000;
+}
+
+.modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    width: min(420px, 92vw);
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+.modal-content h3 {
+    color: var(--crimson-dark);
+    margin-bottom: 12px;
+}
+
+.modal-highlight {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--crimson);
+    margin: 12px 0;
+}
+
+.modal-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--crimson);
+    color: var(--white);
+}
+
+.btn-secondary {
+    background: var(--cream-dark);
+    color: var(--text-mid);
+}
+
+.btn-primary:hover {
+    background: var(--crimson-dark);
+}
+
+.btn-secondary:hover {
+    background: var(--cream);
 }
