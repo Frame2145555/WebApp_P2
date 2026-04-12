@@ -55,7 +55,7 @@
   // อ่านข้อมูลผู้ใช้ที่เก็บไว้ใน localStorage
   function getUser() {
     try {
-      return JSON.parse(localStorage.getItem(USER_STORAGE_KEY));
+      return JSON.parse(sessionStorage.getItem(USER_STORAGE_KEY));
     } catch (error) {
       return null;
     }
@@ -63,12 +63,14 @@
 
   // บันทึกข้อมูลผู้ใช้ลง localStorage
   function setUser(user) {
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    // 🚨 เปลี่ยนตรงนี้เป็น sessionStorage
+    sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
   }
 
   // ลบ session ผู้ใช้จาก localStorage
   function clearUser() {
-    localStorage.removeItem(USER_STORAGE_KEY);
+    // 🚨 เปลี่ยนตรงนี้เป็น sessionStorage
+    sessionStorage.removeItem(USER_STORAGE_KEY);
   }
 
   // พาไปหน้า login (ใช้ path จาก root เพื่อให้ใช้ได้ทั้ง file:// และ http://)
