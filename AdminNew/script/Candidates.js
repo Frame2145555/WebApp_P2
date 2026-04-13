@@ -202,7 +202,7 @@ async function toggleStatus(internalId, displayId, newStatus) {
 
 // ฟังก์ชัน เพิ่มผู้สมัครใหม่ (Add Candidate)
 // 1. จับตัวปุ่ม Add และ ช่องกรอกข้อมูลทั้ง 2 ช่อง
-const addCandidateBtn = document.querySelector('#addCandidateForm button.bg-mfu-red');
+const addCandidateBtn = document.getElementById('addCandidateBtn');
 const candidateInputs = document.querySelectorAll('#addCandidateForm input');
 
 if (addCandidateBtn) {
