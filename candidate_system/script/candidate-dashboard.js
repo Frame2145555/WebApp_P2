@@ -216,8 +216,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 font: { family: 'Kanit' },
                 generateLabels: () => {
                     return [
-                        { text: 'คะแนนของคุณ (You)', fillStyle: '#8C1D1D', strokeStyle: '#8C1D1D' },
-                        { text: 'ผู้สมัครคนอื่น (Others)', fillStyle: '#B38E50', strokeStyle: '#B38E50' }
+                    { text: 'Your votes (You)', fillStyle: '#8C1D1D', strokeStyle: '#8C1D1D' },
+                    { text: 'Other candidates (Others)', fillStyle: '#B38E50', strokeStyle: '#B38E50' }
                     ];
                 }
             }

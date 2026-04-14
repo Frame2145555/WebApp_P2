@@ -14,7 +14,7 @@ async function loadTerms() {
         }
     } catch (error) {
         console.error('Error loading terms:', error);
-        Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลรอบการเลือกตั้งได้', 'error');
+        Swal.fire('Error', 'Unable to load election term data.', 'error');
     }
 }
 
@@ -25,7 +25,7 @@ function renderTermCards(terms) {
 
     // ถ้ายังไม่มีข้อมูลเลย
     if (terms.length === 0) {
-        container.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">ยังไม่มีข้อมูลรอบการเลือกตั้ง กรุณาเพิ่มข้อมูลใหม่</p>';
+        container.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">No election terms available yet. Please add a new term.</p>';
         return;
     }
 
@@ -44,7 +44,7 @@ function renderTermCards(terms) {
                 class="card bg-white shadow-sm border border-gray-100 border-t-4 ${borderClass} rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer block">
                 <div class="card-body items-center text-center p-8">
                     <h2 class="card-title text-4xl font-bold text-gray-800">${term.name}</h2>
-                    <p class="text-gray-400 text-sm mt-2">${term.description || 'คลิกเพื่อดูสถิติและจัดการ'}</p>
+                    <p class="text-gray-400 text-sm mt-2">${term.description || 'Click to view statistics and manage this term.'}</p>
                     <div class="mt-4">
                         <span class="font-bold px-4 py-1 rounded-full text-sm ${statusClass}">${statusText}</span>
                     </div>
@@ -69,8 +69,8 @@ if (btnSubmitTerm) {
         // 1. เช็คว่ากรอกชื่อเทอมหรือยัง
         if (!name) {
             Swal.fire({
-                title: 'แจ้งเตือน',
-                text: 'กรุณากรอกชื่อรอบการเลือกตั้ง (เช่น 1/2569)',
+                title: 'Notice',
+                text: 'Please enter an election term name (e.g., 1/2026).',
                 icon: 'warning',
                 scrollbarPadding: false,
                 customClass: { confirmButton: 'btn btn-warning text-white' }
@@ -102,20 +102,20 @@ if (btnSubmitTerm) {
                 // โชว์แจ้งเตือนสำเร็จ (หน่วงเวลาหลบ Modal เหมือนเดิม)
                 setTimeout(() => {
                     Swal.fire({
-                        title: 'สำเร็จ!',
+                        title: 'Success!',
                         text: result.message,
                         icon: 'success',
                         scrollbarPadding: false,
-                        confirmButtonText: 'ตกลง',
+                        confirmButtonText: 'OK',
                         customClass: { confirmButton: 'btn bg-mfu-red text-white hover:bg-red-900 border-none' }
                     });
                 }, 150);
             } else {
-                Swal.fire('ไม่สามารถเพิ่มได้', result.message, 'error');
+                Swal.fire('Unable to add term', result.message, 'error');
             }
         } catch (error) {
             console.error('Create Term Error:', error);
-            Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+            Swal.fire('Error', 'Unable to connect to the server.', 'error');
         }
     });
 }

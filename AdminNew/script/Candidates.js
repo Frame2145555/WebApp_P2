@@ -134,24 +134,24 @@ if (searchInput) {
 async function toggleStatus(internalId, displayId, newStatus) {
     // 1. FRONTEND VALIDATION (ดักจับก่อนทำงานจริง) - ใช้ internalId เช็ค
     if (!internalId) {
-        Swal.fire('ข้อผิดพลาด', 'ไม่พบรหัสผู้สมัคร ไม่สามารถเปลี่ยนสถานะได้', 'error');
+        Swal.fire('Error', 'Candidate ID not found. Unable to change status.', 'error');
         return;
     }
     if (newStatus !== 0 && newStatus !== 1) {
-        Swal.fire('ข้อผิดพลาด', 'ค่าสถานะไม่ถูกต้อง (ต้องเป็น 0 หรือ 1)', 'error');
+        Swal.fire('Error', 'Invalid status value (must be 0 or 1).', 'error');
         return;
     }
 
-    const actionText = newStatus === 1 ? 'เปิดใช้งาน (Enable)' : 'ระงับการใช้งาน (Disable)';
+    const actionText = newStatus === 1 ? 'Enable' : 'Disable';
 
     const confirm = await Swal.fire({
-        title: `ยืนยันการ${actionText}?`,
+        title: `Confirm ${actionText}?`,
         // โชว์รหัส CAND-XXX (displayId) ให้แอดมินดู
-        text: `คุณต้องการ${actionText} ผู้สมัครรหัส ${displayId} ใช่หรือไม่?`,
+        text: `Do you want to ${actionText.toLowerCase()} candidate ${displayId}?`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'ใช่, ดำเนินการเลย!',
-        cancelButtonText: 'ยกเลิก',
+        confirmButtonText: 'Yes, proceed!',
+        cancelButtonText: 'Cancel',
         buttonsStyling: false,
         scrollbarPadding: false,
         customClass: {
@@ -176,7 +176,7 @@ async function toggleStatus(internalId, displayId, newStatus) {
 
             if (result.status === 'success') {
                 Swal.fire({
-                    title: 'สำเร็จ!',
+                    title: 'Success!',
                     text: result.message,
                     icon: 'success',
                     buttonsStyling: false,
@@ -186,7 +186,7 @@ async function toggleStatus(internalId, displayId, newStatus) {
                 loadCandidates(); // รีเฟรชตาราง
             } else {
                 Swal.fire({
-                    title: 'แจ้งเตือน',
+                    title: 'Notice',
                     text: result.message,
                     icon: 'warning',
                     buttonsStyling: false,
@@ -195,7 +195,7 @@ async function toggleStatus(internalId, displayId, newStatus) {
             }
         } catch (error) {
             console.error('Error:', error);
-            Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+            Swal.fire('Error', 'Unable to connect to the server.', 'error');
         }
     }
 }
@@ -215,10 +215,10 @@ if (addCandidateBtn) {
         // เช็คว่าพิมพ์ชื่อหรือยัง?
         if (!name) {
             Swal.fire({
-                title: 'แจ้งเตือน',
-                text: 'กรุณากรอกชื่อผู้สมัครให้ครบถ้วน',
+                title: 'Notice',
+                text: 'Please enter the candidate name.',
                 icon: 'warning',
-                confirmButtonText: 'ตกลง',
+                confirmButtonText: 'OK',
                 customClass: { confirmButton: 'btn btn-warning text-white' }
             });
             return;
@@ -253,27 +253,27 @@ if (addCandidateBtn) {
 
                 setTimeout(() => {
                     Swal.fire({
-                        title: 'เพิ่มผู้สมัครสำเร็จ!',
+                        title: 'Candidate added successfully!',
                         text: result.message, // ข้อความนี้จะบอกรหัสที่ Backend สร้างให้ (เช่น CAND-001)
                         icon: 'success',
                         scrollbarPadding: false,
-                        confirmButtonText: 'ตกลง',
+                        confirmButtonText: 'OK',
                         customClass: { confirmButton: 'btn bg-mfu-red text-white hover:bg-red-900 border-none' }
                     });
                 }, 150);
 
             } else {
                 Swal.fire({
-                    title: 'ไม่สามารถเพิ่มได้',
+                    title: 'Unable to add candidate',
                     text: result.message,
                     icon: 'error',
-                    confirmButtonText: 'ลองใหม่',
+                    confirmButtonText: 'Try again',
                     customClass: { confirmButton: 'btn btn-error text-white' }
                 });
             }
         } catch (error) {
             console.error('Add Candidate Error:', error);
-            Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้', 'error');
+            Swal.fire('Error', 'Unable to connect to the server.', 'error');
         }
     });
 }
@@ -284,18 +284,18 @@ if (addCandidateBtn) {
 async function deleteCandidate(internalId, displayId) {
     // ใช้ internalId ในการตรวจสอบความถูกต้องเบื้องต้น
     if (!internalId) {
-        Swal.fire('ข้อผิดพลาด', 'ไม่พบรหัสผู้สมัครที่ต้องการลบ', 'error');
+        Swal.fire('Error', 'Candidate ID to delete was not found.', 'error');
         return;
     }
 
     const confirm = await Swal.fire({
-        title: 'ยืนยันการลบ?',
+        title: 'Confirm deletion?',
         // โชว์ CAND-XXX (displayId) ให้แอดมินมั่นใจ
-        text: `คุณแน่ใจหรือไม่ว่าต้องการลบผู้สมัครรหัส ${displayId}? (ข้อมูลจะหายไปถาวร!)`,
+        text: `Are you sure you want to delete candidate ${displayId}? This action cannot be undone.`,
         icon: 'error',
         showCancelButton: true,
-        confirmButtonText: 'ลบเลย!',
-        cancelButtonText: 'ยกเลิก',
+        confirmButtonText: 'Delete now',
+        cancelButtonText: 'Cancel',
         buttonsStyling: false,
         scrollbarPadding: false,
         customClass: {
@@ -315,7 +315,7 @@ async function deleteCandidate(internalId, displayId) {
 
             if (result.status === 'success') {
                 Swal.fire({
-                    title: 'ลบสำเร็จ!',
+                    title: 'Deleted successfully!',
                     text: result.message,
                     icon: 'success',
                     scrollbarPadding: false,
@@ -325,7 +325,7 @@ async function deleteCandidate(internalId, displayId) {
                 loadCandidates();
             } else {
                 Swal.fire({
-                    title: 'ไม่สามารถลบได้',
+                    title: 'Unable to delete candidate',
                     text: result.message,
                     icon: 'warning',
                     scrollbarPadding: false,
@@ -335,7 +335,7 @@ async function deleteCandidate(internalId, displayId) {
             }
         } catch (error) {
             console.error('Delete Error:', error);
-            Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+            Swal.fire('Error', 'Unable to connect to the server.', 'error');
         }
     }
 }

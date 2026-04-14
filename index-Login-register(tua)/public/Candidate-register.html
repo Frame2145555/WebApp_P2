@@ -23,8 +23,8 @@
                 <div class="modal-icon success-icon">
                     <i class="bx bx-check-circle"></i>
                 </div>
-                <h2 class="modal-title">ลงทะเบียนสำเร็จ</h2>
-                <p class="modal-message">บัญชีของคุณสร้างเสร็จแล้ว<br>กำลังนำคุณไปยังหน้า Login...</p>
+                <h2 class="modal-title">Registration successful</h2>
+                <p class="modal-message">Your account has been created.<br>Redirecting you to the login page...</p>
                 <div class="modal-loader">
                     <div class="loader-dot"></div>
                     <div class="loader-dot"></div>
@@ -42,9 +42,9 @@
                 <div class="modal-icon error-icon">
                     <i class="bx bx-error-circle"></i>
                 </div>
-                <h2 class="modal-title">เกิดข้อผิดพลาด</h2>
+                <h2 class="modal-title">An error occurred</h2>
                 <p class="modal-message" id="errorMessage"></p>
-                <button type="button" class="modal-btn" onclick="closeErrorModal()">ลองใหม่อีกครั้ง</button>
+                <button type="button" class="modal-btn" onclick="closeErrorModal()">Try again</button>
             </div>
         </div>
 
@@ -79,7 +79,7 @@
                         <label for="candidateID">Candidate ID</label>
                         <div class="input-wrapper">
                             <i class="bx bx-id-card input-icon"></i>
-                            <input type="text" id="candidateID" name="username" placeholder="เช่น CAND-001" required>
+                            <input type="text" id="candidateID" name="username" placeholder="e.g., CAND-001" required>
                         </div>
                     </div>
 
@@ -87,7 +87,7 @@
                         <label for="password">Password</label>
                         <div class="input-wrapper">
                             <i class="bx bx-lock-alt input-icon"></i>
-                            <input type="password" id="password" name="password" placeholder="Create a password (ขั้นต่ำ 8 ตัวอักษร)" required>
+                            <input type="password" id="password" name="password" placeholder="Create a password (minimum 8 characters)" required>
                             <button class="toggle-pw" type="button" tabindex="-1" onclick="togglePasswordField('password')">
                                 <svg class="eye-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path class="eye-open" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -196,7 +196,7 @@
             const confirm_password = document.getElementById('confirm_password').value;
 
             if (!candidate_id) {
-                showErrorModal('กรุณากรอก Candidate ID');
+                showErrorModal('Please enter Candidate ID');
                 return;
             }
             if (password.length < 8) {
@@ -204,7 +204,7 @@
                 return;
             }
             if (password !== confirm_password) {
-                showErrorModal('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน!');
+                showErrorModal('Password and confirmation password do not match!');
                 return;
             }
 

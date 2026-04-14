@@ -48,7 +48,7 @@
             class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
                 <h2 class="text-3xl font-bold text-gray-800">Terms Management</h2>
-                <p class="text-gray-500 text-sm mt-2">เลือกรอบการเลือกตั้งเพื่อเข้าสู่ระบบจัดการและดูสถิติ</p>
+                <p class="text-gray-500 text-sm mt-2">Select an election term to open management and statistics.</p>
             </div>
             <button class="btn bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm px-6"
                 onclick="add_term_modal.showModal()">
@@ -79,14 +79,14 @@
             <form id="addTermForm">
                 <div class="form-control mb-4">
                     <label class="label"><span class="label-text font-bold text-gray-600">Year / Term</span></label>
-                    <input type="text" id="input-term-name" placeholder="เช่น 2/2569"
+                    <input type="text" id="input-term-name" placeholder="e.g., 2/2026"
                         class="input input-bordered w-full bg-gray-50 focus:bg-white" />
                 </div>
 
                 <div class="form-control mb-6">
                     <label class="label"><span class="label-text font-bold text-gray-600">Description</span></label>
                     <textarea id="input-term-desc" class="textarea textarea-bordered h-24 bg-gray-50 focus:bg-white"
-                        placeholder="รายละเอียดของวาระการเลือกตั้ง..."></textarea>
+                        placeholder="Description of this election term..."></textarea>
                 </div>
 
                 <div class="modal-action">

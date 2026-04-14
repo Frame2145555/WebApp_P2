@@ -12,7 +12,7 @@ async function initApp() {
     // เปลี่ยนจาก localStorage เป็น sessionStorage
     const userData = sessionStorage.getItem('user');
     if (!userData) {
-        alert("กรุณาเข้าสู่ระบบก่อน");
+        alert("Please sign in first.");
         window.location.replace('/public/Login.html');
         return;
     }
@@ -138,11 +138,11 @@ function renderPolicies() {
                 ${c.profile_picture ? `<img src="${c.profile_picture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : '👤'}
             </div>
             <div class="candidate-name">${c.name}</div>
-            <div class="candidate-party">ผู้สมัครรับเลือกตั้ง</div>
+            <div class="candidate-party">Election Candidate</div>
             <button class="policy-btn" onclick="viewPolicy(${c.candidate_id})">Read Policy</button>
         </div>
     `).join('');
-    document.getElementById('candidatesGridPolicies').innerHTML = html || '<p>ยังไม่มีผู้สมัคร</p>';
+    document.getElementById('candidatesGridPolicies').innerHTML = html || '<p>No candidates available yet.</p>';
 }
 
 function renderVotingSection() {
@@ -152,14 +152,14 @@ function renderVotingSection() {
             <div class="empty-state">
                 <div class="empty-icon" style="color:#4CAF50">✅</div>
                 <h3 style="color:#8C1515; margin-bottom:10px;">You have already voted!</h3>
-                <p>คุณได้ใช้สิทธิ์ลงคะแนนเสียงไปเรียบร้อยแล้ว ไม่สามารถโหวตซ้ำได้</p>
+                <p>Your vote has already been submitted. Duplicate voting is not allowed.</p>
             </div>`;
         return;
     }
 
     container.innerHTML = `
         <div class="alert-box" style="margin-bottom: 24px;">
-            <strong>Note:</strong> คุณสามารถโหวตได้เพียง 1 ครั้งเท่านั้น กรุณาตรวจสอบให้แน่ใจก่อนกดยืนยัน
+            <strong>Note:</strong> You can vote only once. Please double-check before confirming.
         </div>
         <div class="candidates-grid">
             ${state.candidates.map(c => `
@@ -182,8 +182,8 @@ let selectedCandidate = null;
 
 function viewPolicy(id) {
     let c = state.candidates.find(x => x.candidate_id === id);
-    document.getElementById('policyTitle').innerText = `นโยบายของ ${c.name}`;
-    document.getElementById('policyContent').innerText = c.policies || 'ยังไม่มีนโยบาย';
+    document.getElementById('policyTitle').innerText = `${c.name}'s Policy`;
+    document.getElementById('policyContent').innerText = c.policies || 'No policy provided yet.';
     document.getElementById('policyModal').classList.add('active');
 }
 
@@ -191,7 +191,7 @@ function confirmVote(id) {
     if (state.hasVoted) return alert("You have already voted!");
     selectedCandidate = state.candidates.find(x => x.candidate_id === id);
     document.getElementById('confirmName').innerText = selectedCandidate.name;
-    document.getElementById('confirmParty').innerText = 'โปรดตรวจสอบชื่อให้ถูกต้องก่อนยืนยัน';
+    document.getElementById('confirmParty').innerText = 'Please verify the candidate name before confirming.';
     document.getElementById('confirmVoteModal').classList.add('active');
 }
 
@@ -223,16 +223,16 @@ async function processVote() {
 
             // โชว์หน้าต่าง Success
             document.getElementById('successCandidate').innerText = selectedCandidate.name;
-            document.getElementById('successTime').innerText = new Date().toLocaleString('th-TH');
+            document.getElementById('successTime').innerText = new Date().toLocaleString('en-US');
             document.getElementById('successModal').classList.add('active');
 
         } else {
             // โดนหลังบ้านเตะกลับมา (เช่น โหวตไปแล้ว, โดนแบน)
-            alert(`ไม่สามารถโหวตได้: ${result.message}`);
+            alert(`Unable to submit vote: ${result.message}`);
         }
     } catch (error) {
         console.error("Voting Error:", error);
-        alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+        alert("A server connection error occurred.");
     }
 }
 

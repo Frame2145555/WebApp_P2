@@ -6,7 +6,7 @@ function handleAvatarUpload(event) {
     if (file) {
         // จำกัดขนาดไฟล์ไม่เกิน 2MB
         if (file.size > 2 * 1024 * 1024) {
-            alert("ไฟล์รูปใหญ่เกินไปครับ กรุณาเลือกไฟล์ขนาดไม่เกิน 2MB");
+            alert("Image file is too large. Please choose a file up to 2MB.");
             return;
         }
 

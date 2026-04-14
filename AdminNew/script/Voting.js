@@ -176,14 +176,14 @@ function goToPage(pageName) {
         const fullName = String(result.value?.fullName || '').trim();
         const termId = new URLSearchParams(window.location.search).get('term_id');
         if (!termId) {
-            await Swal.fire('Error', 'ไม่พบ term_id ใน URL', 'error');
+            await Swal.fire('Error', 'term_id was not found in the URL.', 'error');
             return;
         }
 
         const citizenId = normalizeCitizenId(citizenIdRaw);
         const validationError = validateVoterInput({ citizenId, laserId, fullName });
         if (validationError) {
-            await Swal.fire('กรอกข้อมูลไม่ถูกต้อง', validationError, 'error');
+            await Swal.fire('Invalid input', validationError, 'error');
             return;
         }
 
@@ -197,22 +197,22 @@ function goToPage(pageName) {
             const json = await res.json().catch(() => ({}));
 
             if (!res.ok) {
-                await Swal.fire('Error', json?.message || 'เพิ่มรายชื่อ Voter ไม่สำเร็จ', 'error');
+                await Swal.fire('Error', json?.message || 'Failed to add voter.', 'error');
                 return;
             }
 
             saveVoterName(citizenId, fullName);
-            await Swal.fire('Success', json?.message || 'เพิ่มข้อมูลเรียบร้อยแล้ว', 'success');
+            await Swal.fire('Success', json?.message || 'Voter added successfully.', 'success');
             await refreshVoterTableFromServer();
         } catch (error) {
-            await Swal.fire('Error', 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ', 'error');
+            await Swal.fire('Error', 'Unable to connect to the server.', 'error');
         }
     };
 
     function validateVoterInput({ citizenId, laserId, fullName }) {
-        if (!fullName) return 'กรุณากรอก Full Name';
-        if (!/^[0-9]{13}$/.test(citizenId)) return 'Citizen ID ต้องเป็นตัวเลข 13 หลักเท่านั้น';
-        if (!/^[A-Za-z0-9]{12}$/.test(laserId)) return 'Laser ID ต้องยาว 12 ตัว และเป็นตัวเลข/อักษรอังกฤษเท่านั้น';
+        if (!fullName) return 'Please enter full name.';
+        if (!/^[0-9]{13}$/.test(citizenId)) return 'Citizen ID must contain exactly 13 digits.';
+        if (!/^[A-Za-z0-9]{12}$/.test(laserId)) return 'Laser ID must be exactly 12 alphanumeric characters.';
         return null;
     }
 

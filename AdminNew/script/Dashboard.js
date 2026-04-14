@@ -67,14 +67,14 @@ if (toggleVotingStatus) {
 
         // เด้ง SweetAlert ถามเพื่อความชัวร์ (กันมือลั่น)
         const confirmResult = await Swal.fire({
-            title: isTurningOn ? 'ยืนยันการเปิดระบบโหวต?' : 'ยืนยันการปิดระบบโหวต?',
-            text: isTurningOn ? "เทอมอื่นๆ ที่เปิดอยู่จะถูกปิดอัตโนมัติ" : "ผู้ใช้งานจะไม่สามารถลงคะแนนได้อีก",
+            title: isTurningOn ? 'Confirm enabling voting?' : 'Confirm disabling voting?',
+            text: isTurningOn ? "Other active terms will be closed automatically." : "Users will no longer be able to vote.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: isTurningOn ? '#22c55e' : '#ef4444', // สีเขียวตอนเปิด สีแดงตอนปิด
             cancelButtonColor: '#9ca3af',
-            confirmButtonText: isTurningOn ? 'ใช่, เปิดโหวตเลย!' : 'ใช่, ปิดโหวตเลย!',
-            cancelButtonText: 'ยกเลิก'
+            confirmButtonText: isTurningOn ? 'Yes, enable now' : 'Yes, disable now',
+            cancelButtonText: 'Cancel'
         });
 
         // ถ้ากดยกเลิก ให้ดันสวิตช์กลับไปที่เดิม
@@ -95,7 +95,7 @@ if (toggleVotingStatus) {
 
             if (result.status === 'success') {
                 Swal.fire({
-                    title: 'สำเร็จ!',
+                    title: 'Success!',
                     text: result.message,
                     icon: 'success',
                     timer: 1500,
@@ -106,7 +106,7 @@ if (toggleVotingStatus) {
             }
         } catch (error) {
             console.error('Update Status Error:', error);
-            Swal.fire('ข้อผิดพลาด', 'ไม่สามารถอัปเดตสถานะได้', 'error');
+            Swal.fire('Error', 'Unable to update status.', 'error');
             e.target.checked = !isTurningOn; // ดันสวิตช์กลับไปที่เดิมถ้า Error
         }
     });

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -24,8 +24,8 @@
                 <div class="modal-icon success-icon">
                     <i class="bx bx-check-circle"></i>
                 </div>
-                <h2 class="modal-title">เข้าสู่ระบบสำเร็จ</h2>
-                <p class="modal-message">ยินดีต้อนรับเข้าระบบ MFU-Voting<br>กำลังนำคุณไปยังหน้าถัดไป...</p>
+                <h2 class="modal-title">Login successful</h2>
+                <p class="modal-message">Welcome to MFU-Voting.<br>Redirecting you to the next page...</p>
                 <div class="modal-loader">
                     <div class="loader-dot"></div>
                     <div class="loader-dot"></div>
@@ -43,9 +43,9 @@
                 <div class="modal-icon error-icon">
                     <i class="bx bx-error-circle"></i>
                 </div>
-                <h2 class="modal-title">เกิดข้อผิดพลาด</h2>
+                <h2 class="modal-title">An error occurred</h2>
                 <p class="modal-message" id="errorMessage"></p>
-                <button type="button" class="modal-btn" onclick="closeErrorModal()">ลองใหม่อีกครั้ง</button>
+                <button type="button" class="modal-btn" onclick="closeErrorModal()">Try again</button>
             </div>
         </div>
 
@@ -218,7 +218,7 @@
                 }
 
             } catch (error) {
-                showErrorModal("แจ้งเตือน: " + error.message);
+                showErrorModal("Notice: " + error.message);
                 console.error("เกิดข้อผิดพลาด:", error);
             }
         }
