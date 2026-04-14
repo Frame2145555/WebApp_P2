@@ -67,9 +67,11 @@ function goToPage(pageName) {
             const citizenId = String(voter.citizen_id ?? '').trim();
             const isVoted = Number(voter.is_voted) === 1;
             const isEnabled = Number(voter.is_enable) === 1;
+            const userId = Number(voter.user_id);
             const fullName = (nameMap[citizenId] || '').trim();
 
             const tr = document.createElement('tr');
+            tr.dataset.userId = Number.isFinite(userId) ? String(userId) : '';
             tr.dataset.citizenId = citizenId;
             tr.dataset.voted = isVoted ? '1' : '0';
             tr.dataset.enabled = isEnabled ? '1' : '0';
@@ -130,22 +132,50 @@ function goToPage(pageName) {
         });
     }
 
-    window.toggleVoterStatus = function toggleVoterStatus(btn) {
+    window.toggleVoterStatus = async function toggleVoterStatus(btn) {
         const row = btn.closest('tr');
         if (!row) return;
 
         const isEnabled = row.dataset.enabled === '1';
-        row.dataset.enabled = isEnabled ? '0' : '1';
+        const userId = Number(row.dataset.userId);
 
-        const accountCell = row.cells?.[3];
-        if (accountCell) {
-            accountCell.innerHTML = isEnabled
-                ? '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Disabled</span>'
-                : '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Enabled</span>';
+        if (!Number.isFinite(userId)) {
+            Swal.fire('Error', 'ไม่พบ user_id ของผู้ใช้คนนี้', 'error');
+            return;
         }
 
-        btn.innerText = isEnabled ? 'Enable' : 'Disable';
-        btn.className = `${isEnabled ? 'text-green-600' : 'text-red-600'} text-sm font-medium hover:underline`;
+        const nextStatus = isEnabled ? 0 : 1;
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/admin/toggle-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, status: nextStatus })
+            });
+
+            const json = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                throw new Error(json?.message || 'ไม่สามารถอัปเดตสถานะได้');
+            }
+
+            row.dataset.enabled = String(nextStatus);
+
+            const accountCell = row.cells?.[3];
+            if (accountCell) {
+                accountCell.innerHTML = nextStatus === 1
+                    ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Enabled</span>'
+                    : '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Disabled</span>';
+            }
+
+            btn.innerText = nextStatus === 1 ? 'Disable' : 'Enable';
+            btn.className = `${nextStatus === 1 ? 'text-red-600' : 'text-green-600'} text-sm font-medium hover:underline`;
+        } catch (error) {
+            Swal.fire('Error', error.message || 'ไม่สามารถอัปเดตสถานะได้', 'error');
+        } finally {
+            btn.disabled = false;
+        }
     };
 
     // Modal สำหรับเพิ่ม voter ใหม่ + validation
