@@ -173,6 +173,9 @@ app.use('/api/admin', adminRoutes);
 const votingRoutes = require('./routes/voting.routes');
 app.use('/api/voting', votingRoutes);
 
+const voterDashboardRoutes = require('./routes/voter-dashboard.routes');
+app.use('/api/voter-dashboard', voterDashboardRoutes);
+
 // 5. Error Handler & Start Server
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);

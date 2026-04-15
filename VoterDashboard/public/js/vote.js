@@ -36,7 +36,7 @@ function setLoadingState(message) {
 }
 
 async function fetchTerms() {
-    const result = await VotingApp.api('/api/voting/terms');
+    const result = await VotingApp.api('/api/voter-dashboard/terms');
     state.terms = result.data || [];
 
     const select = document.getElementById('termSelect');
@@ -70,7 +70,7 @@ async function loadCandidates() {
         user_id: state.user.user_id
     });
 
-    const result = await VotingApp.api(`/api/voting/candidates?${query.toString()}`);
+    const result = await VotingApp.api(`/api/voter-dashboard/candidates?${query.toString()}`);
 
     state.term = result.term || null;
     state.candidates = result.data || [];
@@ -185,7 +185,7 @@ async function processVote() {
     closeModal('confirmVoteModal');
 
     try {
-        const result = await VotingApp.api('/api/voting/submit', {
+        const result = await VotingApp.api('/api/voter-dashboard/submit', {
             method: 'POST',
             body: {
                 user_id: state.user.user_id,

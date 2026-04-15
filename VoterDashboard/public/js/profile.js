@@ -40,28 +40,78 @@ function updateProfileUI() {
     // ป้องกัน Error ถ้าหน้าปัจจุบันไม่มี ID profName สคริปต์จะไม่ทำงานต่อและไม่พัง
     if (!profName) return;
 
-    profName.innerText = appData.user.name;
-    document.getElementById('profId').innerText = `ID: ${appData.user.id}`;
-    document.getElementById('profFaculty').innerText = `Faculty: ${appData.user.faculty}`;
+    // Show loading state
+    profName.innerText = 'Loading...';
+    document.getElementById('profId').innerText = 'ID: ---';
+    document.getElementById('profFaculty').innerText = 'Faculty: ---';
 
-    // อัปเดต Sidebar ด้วย (ถ้ามี)
-    const sidebarVoterId = document.getElementById('sidebarVoterId');
-    if (sidebarVoterId) sidebarVoterId.innerText = `ID: ${appData.user.id}`;
-
-    const sidebarStatus = document.getElementById('sidebarStatus');
-    if (sidebarStatus) {
-        sidebarStatus.innerText = appData.user.hasVoted ? "✓ Voted" : "Ready to Vote";
-        sidebarStatus.style.color = appData.user.hasVoted ? "#4CAF50" : "var(--gold-bright)";
+    // Get user from session
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user) {
+        profName.innerText = 'Not logged in';
+        return;
     }
 
-    const badge = document.getElementById('profStatusBadge');
-    if (badge) {
-        if (appData.user.hasVoted) {
-            badge.innerText = "Status: Voted Successfully";
-            badge.className = "profile-status-badge status-voted";
-        } else {
-            badge.innerText = "Status: Ready to Vote";
-            badge.className = "profile-status-badge status-ready";
-        }
-    }
+    // Fetch profile from API
+    fetch(`/api/voter-dashboard/profile/${user.user_id}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                const profile = result.data;
+
+                profName.innerText = profile.name;
+                document.getElementById('profId').innerText = `ID: ${profile.id}`;
+                document.getElementById('profFaculty').innerText = `Faculty: ${profile.faculty}`;
+
+                // อัปเดต Sidebar ด้วย (ถ้ามี)
+                const sidebarVoterId = document.getElementById('sidebarVoterId');
+                if (sidebarVoterId) sidebarVoterId.innerText = `ID: ${profile.id}`;
+
+                const sidebarStatus = document.getElementById('sidebarStatus');
+                if (sidebarStatus) {
+                    sidebarStatus.innerText = profile.hasVoted ? "✓ Voted" : "Ready to Vote";
+                    sidebarStatus.style.color = profile.hasVoted ? "#4CAF50" : "var(--gold-bright)";
+                }
+
+                const badge = document.getElementById('profStatusBadge');
+                if (badge) {
+                    if (profile.hasVoted) {
+                        badge.innerText = "Status: Voted Successfully";
+                        badge.className = "profile-status-badge status-voted";
+                    } else {
+                        badge.innerText = "Status: Ready to Vote";
+                        badge.className = "profile-status-badge status-ready";
+                    }
+                }
+            } else {
+                profName.innerText = 'Error loading profile';
+                console.error('Profile loading error:', result.message);
+            }
+        })
+        .catch(error => {
+            profName.innerText = 'Connection error';
+            console.error('Profile loading error:', error);
+        });
 }
+
+function redirectToLogin() {
+    const loginPath = window.location.protocol === 'file:'
+        ? '../../index-Login-register(tua)/public/Login.html'
+        : '/Login';
+    window.location.href = loginPath;
+}
+
+function handleLogout() {
+    sessionStorage.removeItem('user');
+    redirectToLogin();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const logoutButton = document.querySelector('.logout-btn');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', handleLogout);
+    }
+
+    // Load profile data
+    updateProfileUI();
+});

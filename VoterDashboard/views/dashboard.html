@@ -23,8 +23,8 @@
                     <span>Dashboard</span></a>
                 <a href="/VoterDashboard/views/policies.html" class="menu-item"><span class="menu-icon">👥</span>
                     <span>Policies</span></a>
-                <a href="/VoterDashboard/views/vote.css" class="menu-item"><span class="menu-icon">🗳️</span> <span>Vote</span></a>
-                <a href="/VoterDashboard/views/hitory.css" class="menu-item"><span class="menu-icon">📜</span> <span>History</span></a>
+                <a href="/VoterDashboard/views/vote.html" class="menu-item"><span class="menu-icon">🗳️</span> <span>Vote</span></a>
+                <a href="/VoterDashboard/views/history.html" class="menu-item"><span class="menu-icon">📜</span> <span>History</span></a>
             </div>
             <div class="menu-section">
                 <div class="menu-title">RESULTS</div>
@@ -47,25 +47,32 @@
                     <div class="stat-card">
                         <div class="stat-icon">👥</div>
                         <div class="stat-label">Total Voters</div>
-                        <div class="stat-value">1,250</div>
+                        <div class="stat-value" id="totalVoters">Loading...</div>
                         <div class="stat-change">Registered voters</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">🎯</div>
                         <div class="stat-label">Candidates</div>
-                        <div class="stat-value">4</div>
+                        <div class="stat-value" id="totalCandidates">Loading...</div>
                         <div class="stat-change">Running</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">✓</div>
                         <div class="stat-label">Total Votes</div>
-                        <div class="stat-value">850</div>
+                        <div class="stat-value" id="totalVotes">Loading...</div>
                         <div class="stat-change">Votes casted</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-label">Voting Rate</div>
+                        <div class="stat-value" id="votingPercent">Loading...</div>
+                        <div class="stat-change">Participation</div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
+    <script src="/VoterDashboard/public/js/voting-app.js"></script>
     <script src="/VoterDashboard/public/js/dashboard.js"></script>
 </body>
 </html>

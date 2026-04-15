@@ -28,21 +28,30 @@ async function initApp() {
         await fetchCandidates();
         updateDashboard();
         renderChart();
+        renderRankingTable();
     }, 10000);
 }
 
 // 🚀 API Calls (เชื่อมต่อ Backend)
 async function fetchCandidates() {
     try {
-        const response = await fetch('/api/voting/candidates');
+        const userId = state.user?.user_id;
+        const url = userId ? `/api/voter-dashboard/candidates?user_id=${encodeURIComponent(userId)}` : '/api/voter-dashboard/candidates';
+        const response = await fetch(url);
         const result = await response.json();
         
         if (result.status === 'success') {
             state.candidates = result.data;
             state.totalVoters = result.total_voters || 0; // 🚨 เก็บค่าจาก DB ไว้ใน state
+        } else {
+            console.warn('Failed to fetch candidates:', result.message);
+            state.candidates = [];
+            state.totalVoters = 0;
         }
     } catch (error) {
         console.error("Error fetching candidates:", error);
+        state.candidates = [];
+        state.totalVoters = 0;
     }
 }
 
@@ -53,6 +62,7 @@ function refreshAllUI() {
     renderPolicies();
     renderVotingSection();
     renderChart();
+    renderRankingTable();
 }
 
 function updateProfileUI() {
@@ -131,6 +141,54 @@ function renderChart() {
     });
 }
 
+function renderRankingTable() {
+    const container = document.getElementById('dashboardRankingTable');
+    if (!container) return;
+
+    if (!state.candidates.length) {
+        container.innerHTML = `<div class="ranking-empty">No candidate results yet.</div>`;
+        return;
+    }
+
+    const sortedCandidates = [...state.candidates].sort((a, b) => {
+        const scoreB = Number(b.score) || 0;
+        const scoreA = Number(a.score) || 0;
+        if (scoreB !== scoreA) return scoreB - scoreA;
+
+        const nameA = (a.name || '').toLowerCase();
+        const nameB = (b.name || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
+
+    const rows = sortedCandidates.map((candidate, index) => {
+        const rank = index + 1;
+        const rankClass = rank <= 3 ? `rank-${rank}` : '';
+        const displayName = candidate.name || `Candidate #${candidate.candidate_id}`;
+        const displayId = candidate.display_id || `CID-${candidate.candidate_id}`;
+        const score = Number(candidate.score) || 0;
+
+        return `
+            <div class="ranking-row">
+                <div><span class="rank-chip ${rankClass}">${rank}</span></div>
+                <div>
+                    <div class="ranking-name">${displayName}</div>
+                    <div class="ranking-id">${displayId}</div>
+                </div>
+                <div class="ranking-votes">${score}</div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="ranking-table-head">
+            <div>Rank</div>
+            <div>Candidate</div>
+            <div style="text-align:right;">Votes</div>
+        </div>
+        ${rows}
+    `;
+}
+
 function renderPolicies() {
     const html = state.candidates.map(c => `
         <div class="candidate-card">
@@ -201,7 +259,7 @@ async function processVote() {
     closeModal('confirmVoteModal');
 
     try {
-        const response = await fetch('/api/voting/submit', {
+        const response = await fetch('/api/voter-dashboard/submit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -248,7 +306,78 @@ function switchTab(tabId, element) {
     document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
     if (element && element.classList.contains('menu-item')) element.classList.add('active');
-    if (tabId === 'search') performSearch();
+        if (tabId === 'search') performSearch();
+        if (tabId === 'history') {
+            renderHistory();
+        }
+    if (tabId === 'history') {
+        renderHistory();
+    }
+}
+
+async function renderHistory() {
+    const container = document.getElementById('historyContainer');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-icon">⏳</div>
+            <h3 style="color:var(--crimson-dark); margin-bottom:10px;">Loading History</h3>
+            <p>Please wait...</p>
+        </div>`;
+
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🔒</div>
+                <h3 style="color:var(--crimson-dark); margin-bottom:10px;">Not Logged In</h3>
+                <p>Please log in to view your voting history.</p>
+            </div>`;
+        return;
+    }
+
+    try {
+        const userIdentifier = user.user_id || user.username;
+        const response = await fetch(`/api/voter-dashboard/history/${encodeURIComponent(userIdentifier)}`);
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            const history = result.data;
+            if (history.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-icon">📜</div>No voting history found.</div>`;
+                return;
+            }
+
+            const rows = history.map(h => `
+                <div class="table-row">
+                    <div><strong>${h.candidate}</strong><br><span style="color:var(--text-muted); font-size:12px;">${h.party}</span></div>
+                    <div>1 Vote</div>
+                    <div class="timestamp-cell">${h.time}</div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `<div class="history-table">
+                <div class="table-header"><div>Candidate</div><div>Action</div><div>Timestamp</div></div>
+                ${rows}
+            </div>`;
+        } else {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">❌</div>
+                    <h3 style="color:var(--crimson-dark); margin-bottom:10px;">Error Loading History</h3>
+                    <p>${result.message || 'Failed to load voting history'}</p>
+                </div>`;
+        }
+    } catch (error) {
+        console.error('History loading error:', error);
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">❌</div>
+                <h3 style="color:var(--crimson-dark); margin-bottom:10px;">Connection Error</h3>
+                <p>Unable to load voting history. Please try again later.</p>
+            </div>`;
+    }
 }
 
 window.onload = initApp;

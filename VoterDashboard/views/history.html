@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>History - E-Voting</title>
-    <link rel="stylesheet" href="/VoterDashboard/public/css/hitory.css">
+    <link rel="stylesheet" href="/VoterDashboard/public/css/history.css">
 </head>
 
 <body>
@@ -44,27 +44,21 @@
                 <div class="status-indicator"><span class="status-dot"></span> <span>Live Data</span></div>
             </div>
             <div class="content">
-                <div class="history-table">
-                    <div class="table-header">
-                        <div>Action</div>
-                        <div>Status</div>
-                        <div>Time</div>
-                    </div>
-                    <div class="table-row">
-                        <div>Voted for President</div>
-                        <div style="color: #2e7d32; font-weight: bold;">Success</div>
-                        <div class="timestamp-cell">10 Apr 2026, 21:12</div>
-                    </div>
-                    <div class="table-row">
-                        <div>System Login</div>
-                        <div style="color: #2e7d32; font-weight: bold;">Success</div>
-                        <div class="timestamp-cell">10 Apr 2026, 21:05</div>
+                <div id="historyContainer">
+                    <div class="history-table">
+                        <div class="table-header">
+                            <div>Candidate</div>
+                            <div>Action</div>
+                            <div>Timestamp</div>
+                        </div>
+                        <!-- History data will be loaded here -->
                     </div>
                 </div>
             </div>
         </main>
     </div>
-    <script src="/VoterDashboard/public/js/hitory.js"></script>
+    <script src="/VoterDashboard/public/js/voting-app.js"></script>
+    <script src="/VoterDashboard/public/js/history.js"></script>
 </body>
 
 </html>

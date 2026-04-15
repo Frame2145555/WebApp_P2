@@ -45,21 +45,16 @@
             </div>
             <div class="content">
                 <div class="search-input-group">
-                    <input type="text" placeholder="Search candidate name or party...">
-                    <button class="search-btn">Search</button>
+                    <input type="text" id="searchInput" placeholder="Search candidate name or party...">
+                    <button class="search-btn" onclick="performSearch()">Search</button>
                 </div>
-                <div class="search-results">
-                    <div class="search-result-item">
-                        <div>
-                            <strong style="font-size: 18px; color: var(--crimson-dark);">Candidate Name 1</strong>
-                            <span style="color:var(--text-muted); display:block; margin-top: 5px;">Party A</span>
-                        </div>
-                        <div class="result-score">500 Votes</div>
-                    </div>
+                <div id="searchResultsContainer" class="search-results">
+                    <!-- Search results will be loaded here -->
                 </div>
             </div>
         </main>
     </div>
+    <script src="/VoterDashboard/public/js/voting-app.js"></script>
     <script src="/VoterDashboard/public/js/search.js"></script>
 </body>
 
