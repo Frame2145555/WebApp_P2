@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voter Dashboard | MFU Voting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="assets/js/theme.js"></script>
+</head>
+<body class="bg-bgLight min-h-screen text-gray-900">
+    <div class="lg:flex">
+        <!-- EN: Sidebar navigation for the voter workspace. -->
+        <!-- TH: เมนูด้านข้างสำหรับพื้นที่ทำงานของผู้โหวต -->
+        <aside class="w-full bg-mfuRed text-white shadow-2xl lg:w-72 lg:min-h-screen">
+            <div class="p-8 text-center border-b border-white/10">
+                <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white text-2xl font-black text-mfuRed shadow-lg">
+                    MFU
+                </div>
+                <h2 class="font-black text-2xl">MFU</h2>
+                <p class="text-sm text-white/70 mt-2">Voter workspace</p>
+            </div>
+            <nav class="flex-grow">
+                <a href="#overview" class="flex items-center px-8 py-4 bg-white/10 border-r-4 border-mfuGold font-bold">Dashboard</a>
+                <a href="#candidates" class="flex items-center px-8 py-4 opacity-80 hover:opacity-100 transition">Candidates</a>
+                <a href="#search" class="flex items-center px-8 py-4 opacity-80 hover:opacity-100 transition">Search Results</a>
+                <a href="#results" class="flex items-center px-8 py-4 opacity-80 hover:opacity-100 transition">Leaderboard</a>
+            </nav>
+            <div class="p-8">
+                <button id="logoutButton" class="w-full py-3 bg-mfuGold text-white rounded-xl font-bold shadow-lg">Logout</button>
+            </div>
+        </aside>
+
+        <main class="flex-grow p-6 md:p-10">
+            <!-- EN: Page header introducing the voter dashboard. -->
+            <!-- TH: ส่วนหัวของหน้าสำหรับแนะนำแดชบอร์ดผู้โหวต -->
+            <header id="overview" class="mb-8">
+                <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.3em] text-mfuRed/70">Voter Dashboard</p>
+                        <h1 class="text-3xl md:text-4xl font-black mt-2">Welcome, <span id="username" class="text-mfuRed">Voter</span></h1>
+                        <p class="text-gray-600 mt-2">Browse every candidate profile from the database, cast one vote, and search live voting results in a dedicated results window.</p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- EN: Top voting summary cards for the voter. -->
+            <!-- TH: การ์ดสรุปข้อมูลการโหวตด้านบนสำหรับผู้โหวต -->
+            <section class="bg-mfuRed text-white p-8 rounded-[2rem] shadow-xl mb-8 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div>
+                    <h2 class="text-3xl font-black uppercase">Voting Center</h2>
+                    <p id="heroStatusText" class="opacity-90 mt-2">Loading election status...</p>
+                </div>
+                <div class="flex flex-wrap gap-4">
+                    <div class="bg-white/10 rounded-2xl px-5 py-4 min-w-40">
+                        <p class="text-xs uppercase tracking-[0.3em] text-white/70">Candidates</p>
+                        <p id="totalCandidatesValue" class="text-4xl font-black mt-2">0</p>
+                    </div>
+                    <div class="bg-white/10 rounded-2xl px-5 py-4 min-w-40">
+                        <p class="text-xs uppercase tracking-[0.3em] text-white/70">Voting State</p>
+                        <p id="votingStateValue" class="text-2xl font-black mt-3">--</p>
+                    </div>
+                    <div class="bg-white/10 rounded-2xl px-5 py-4 min-w-40">
+                        <p class="text-xs uppercase tracking-[0.3em] text-white/70">Your Ballot</p>
+                        <p id="ballotSummaryValue" class="text-2xl font-black mt-3">--</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                <div class="xl:col-span-3 space-y-6">
+                    <!-- EN: All candidate profile cards loaded from the database. -->
+                    <!-- TH: การ์ดโปรไฟล์ผู้สมัครทั้งหมดที่โหลดมาจากฐานข้อมูล -->
+                    <section id="candidates" class="bg-white p-8 md:p-10 rounded-[2rem] shadow-sm border border-gray-100">
+                        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold mb-2">Candidate Profiles</h3>
+                                <p class="text-sm text-gray-500">Every candidate below is loaded from the database with their profile and policies.</p>
+                            </div>
+                            <p id="candidateStatus" class="text-sm font-semibold text-gray-500">Loading candidate profiles...</p>
+                        </div>
+                        <div id="candidateList" class="mt-6 grid grid-cols-1 gap-6"></div>
+                    </section>
+
+                    <!-- EN: Small chart showing the top live vote standings. -->
+                    <!-- TH: กราฟขนาดย่อที่แสดงอันดับคะแนนสดด้านบน -->
+                    <section class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                        <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-6">
+                            <div>
+                                <h3 class="text-xl font-bold">Leaderboard Snapshot</h3>
+                                <p class="text-sm text-gray-500">Current top candidates by recorded votes.</p>
+                            </div>
+                            <p id="resultsStatus" class="text-sm font-semibold text-mfuRed">Loading live results...</p>
+                        </div>
+                        <canvas id="leaderboardChart" height="110"></canvas>
+                    </section>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- EN: Voter account details for quick reference. -->
+                    <!-- TH: รายละเอียดบัญชีผู้โหวตสำหรับอ้างอิงอย่างรวดเร็ว -->
+                    <section class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 h-fit">
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Voter Details</h4>
+                        <div class="space-y-4">
+                            <div class="rounded-2xl bg-gray-50 px-4 py-4">
+                                <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">User ID</p>
+                                <p id="userId" class="mt-2 text-lg font-black text-mfuRed">--</p>
+                            </div>
+                            <div class="rounded-2xl bg-gray-50 px-4 py-4">
+                                <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Username</p>
+                                <p id="userUsername" class="mt-2 text-lg font-black text-gray-900">--</p>
+                            </div>
+                            <div class="rounded-2xl bg-gray-50 px-4 py-4">
+                                <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Role</p>
+                                <p id="userRole" class="mt-2 text-lg font-black text-gray-900">VOTER</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- EN: Ballot state and selected-candidate summary. -->
+                    <!-- TH: สถานะบัตรลงคะแนนและสรุปผู้สมัครที่เลือก -->
+                    <section class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 h-fit">
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Ballot Status</h4>
+                        <div class="rounded-2xl bg-gray-50 px-4 py-4">
+                            <p id="votingStatusMessage" class="text-sm font-semibold text-gray-700">Loading ballot status...</p>
+                        </div>
+                        <div class="mt-4 rounded-2xl bg-gray-50 px-4 py-4">
+                            <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Selected Candidate</p>
+                            <p id="selectedCandidateValue" class="mt-2 text-lg font-black text-mfuRed">--</p>
+                        </div>
+                        <div class="mt-4 rounded-2xl bg-gray-50 px-4 py-4">
+                            <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Active Term</p>
+                            <p id="activeTermValue" class="mt-2 text-lg font-black text-gray-900">--</p>
+                        </div>
+                    </section>
+
+                    <!-- EN: Database search controls for result lookup. -->
+                    <!-- TH: ส่วนควบคุมการค้นหาฐานข้อมูลสำหรับค้นหาผลคะแนน -->
+                    <section id="search" class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 h-fit">
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Database Search</h4>
+                        <form id="searchForm" class="space-y-4">
+                            <div>
+                                <label for="searchInput" class="text-sm font-semibold text-gray-700">Search voting results</label>
+                                <input id="searchInput" type="text" class="w-full mt-3 px-4 py-3 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-mfuGold" placeholder="Search candidate name, username, profile, or policies">
+                            </div>
+                            <button id="runSearchButton" type="submit" class="w-full rounded-2xl bg-mfuRed px-4 py-3 font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:bg-gray-300">
+                                Search Database
+                            </button>
+                        </form>
+                        <p id="searchStatus" class="text-sm font-semibold text-gray-500 mt-4">
+                            Search voting results from the database.
+                        </p>
+                    </section>
+                </div>
+            </section>
+
+            <!-- EN: Dedicated search-result window for voter-side queries. -->
+            <!-- TH: หน้าต่างผลการค้นหาเฉพาะสำหรับคำค้นของผู้โหวต -->
+            <section id="searchWindow" class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 mt-6">
+                <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-mfuRed">Search Results</h2>
+                        <p class="text-sm text-gray-500">This section shows search matches returned directly from the database.</p>
+                    </div>
+                </div>
+
+                <div id="searchResults" class="mt-6 space-y-4">
+                    <div class="rounded-[2rem] border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center text-gray-500">
+                        Search results from the database will appear here.
+                    </div>
+                </div>
+            </section>
+
+            <!-- EN: Full leaderboard table used to review current vote standings. -->
+            <!-- TH: ตาราง leaderboard แบบเต็มสำหรับตรวจสอบอันดับคะแนนปัจจุบัน -->
+            <section id="results" class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 mt-6">
+                <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-mfuRed">Voting Results</h2>
+                        <p class="text-sm text-gray-500">Live leaderboard for all candidates in the active term.</p>
+                    </div>
+                    <p id="tableStatus" class="text-sm font-semibold text-gray-500">Waiting for results...</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-separate border-spacing-y-3">
+                        <thead>
+                            <tr class="text-xs uppercase tracking-[0.25em] text-gray-400">
+                                <th class="pb-2 pr-4">Rank</th>
+                                <th class="pb-2 pr-4">Candidate</th>
+                                <th class="pb-2 pr-4">Votes</th>
+                                <th class="pb-2">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTable"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/voter-dashboard.js"></script>
+</body>
+</html>
