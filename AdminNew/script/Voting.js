@@ -82,19 +82,19 @@ function goToPage(pageName) {
                 <td class="px-6 py-4">${escapeHtml(fullName || '-')}</td>
                 <td class="px-6 py-4 text-center">
                     ${isVoted
-                        ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Voted</span>'
-                        : '<span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">Not Voted</span>'}
+                        ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">ใช้สิทธิ์แล้ว</span>'
+                        : '<span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">ยังไม่ได้ใช้สิทธิ์</span>'}
                 </td>
                 <td class="px-6 py-4 text-center">
                     ${isEnabled
-                        ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Enabled</span>'
-                        : '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Disabled</span>'}
+                        ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">เปิดใช้งาน</span>'
+                        : '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">ปิดใช้งาน</span>'}
                 </td>
                 <td class="px-6 py-4 text-center">
-                    <button onclick="toggleVoterStatus(this)" class="btn btn-xs btn-outline ${isEnabled ? 'btn-error' : 'btn-success'} w-16">
-                        ${isEnabled ? 'Disable' : 'Enable'}
+                    <button onclick="toggleVoterStatus(this)" class="btn btn-xs btn-outline ${isEnabled ? 'btn-error' : 'btn-success'} w-20">
+                        ${isEnabled ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}
                     </button>
-                    <button onclick="deleteVoter('${userId}', '${escapeHtml(citizenId)}')" class="btn btn-xs btn-error text-white w-16">Delete</button>
+                    <button onclick="deleteVoter('${userId}', '${escapeHtml(citizenId)}')" class="btn btn-xs btn-error text-white w-14">ลบ</button>
                 </td>
             `;
 
@@ -119,8 +119,8 @@ function goToPage(pageName) {
                 ? row.dataset.voted === '1'
                 : (() => {
                     const statusText = String(row.cells?.[2]?.textContent || '').toLowerCase();
-                    if (statusText.includes('not voted')) return false;
-                    if (statusText.includes('voted')) return true;
+                    if (statusText.includes('ยังไม่ได้ใช้สิทธิ์')) return false;
+                    if (statusText.includes('ใช้สิทธิ์แล้ว')) return true;
                     return false;
                 })();
 
@@ -139,23 +139,23 @@ function goToPage(pageName) {
 
         const isEnabled = row.dataset.enabled === '1';
         const userId = Number(row.dataset.userId);
-        const citizenId = row.dataset.citizenId || 'this voter';
+        const citizenId = row.dataset.citizenId || 'ผู้มีสิทธิ์คนนี้';
 
         if (!Number.isFinite(userId)) {
-            Swal.fire('Error', 'ไม่พบ user_id ของผู้ใช้คนนี้', 'error');
+            Swal.fire('ข้อผิดพลาด', 'ไม่พบ user_id ของผู้ใช้คนนี้', 'error');
             return;
         }
 
         const nextStatus = isEnabled ? 0 : 1;
-        const actionText = nextStatus === 1 ? 'Enable' : 'Disable';
+        const actionText = nextStatus === 1 ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
 
         const confirmed = await Swal.fire({
-            title: `Confirm ${actionText}?`,
-            text: `Do you want to ${actionText.toLowerCase()} voter ${citizenId}?`,
+            title: `ยืนยันการ${actionText}?`,
+            text: `ต้องการ${actionText}ผู้มีสิทธิ์ ${citizenId} ใช่หรือไม่?`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes, proceed!',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: 'ยืนยัน',
+            cancelButtonText: 'ยกเลิก',
             buttonsStyling: false,
             scrollbarPadding: false,
             customClass: {
@@ -182,8 +182,8 @@ function goToPage(pageName) {
             }
 
             Swal.fire({
-                title: 'Success!',
-                text: json.message || `${actionText}d voter successfully.`,
+                title: 'สำเร็จ!',
+                text: json.message || `${actionText}ผู้มีสิทธิ์เรียบร้อยแล้ว`,
                 icon: 'success',
                 buttonsStyling: false,
                 scrollbarPadding: false,
@@ -195,15 +195,15 @@ function goToPage(pageName) {
             const accountCell = row.cells?.[3];
             if (accountCell) {
                 accountCell.innerHTML = nextStatus === 1
-                    ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Enabled</span>'
-                    : '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Disabled</span>';
+                    ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">เปิดใช้งาน</span>'
+                    : '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">ปิดใช้งาน</span>';
             }
 
-            btn.innerText = nextStatus === 1 ? 'Disable' : 'Enable';
-            btn.className = `btn btn-xs btn-outline ${nextStatus === 1 ? 'btn-error' : 'btn-success'} w-16`;
+            btn.innerText = nextStatus === 1 ? 'ปิดใช้งาน' : 'เปิดใช้งาน';
+            btn.className = `btn btn-xs btn-outline ${nextStatus === 1 ? 'btn-error' : 'btn-success'} w-20`;
         } catch (error) {
             Swal.fire({
-                title: 'Error',
+                title: 'ข้อผิดพลาด',
                 text: error.message || 'ไม่สามารถอัปเดตสถานะได้',
                 icon: 'error',
                 buttonsStyling: false,
@@ -217,17 +217,17 @@ function goToPage(pageName) {
 
     window.deleteVoter = async function deleteVoter(userId, citizenId) {
         if (!userId) {
-            Swal.fire('Error', 'ไม่พบ user_id ของผู้มีสิทธิ์คนนี้', 'error');
+            Swal.fire('ข้อผิดพลาด', 'ไม่พบ user_id ของผู้มีสิทธิ์คนนี้', 'error');
             return;
         }
 
         const confirm = await Swal.fire({
-            title: 'Confirm deletion?',
-            text: `Are you sure you want to delete voter ${citizenId}? This action cannot be undone.`,
+            title: 'ยืนยันการลบ?',
+            text: `ต้องการลบผู้มีสิทธิ์ ${citizenId} ออกจากระบบ? การกระทำนี้ไม่สามารถย้อนกลับได้`,
             icon: 'error',
             showCancelButton: true,
-            confirmButtonText: 'Delete now',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: 'ลบเลย',
+            cancelButtonText: 'ยกเลิก',
             buttonsStyling: false,
             scrollbarPadding: false,
             customClass: {
@@ -244,7 +244,7 @@ function goToPage(pageName) {
 
             if (result.status === 'success') {
                 await Swal.fire({
-                    title: 'Deleted successfully!',
+                    title: 'ลบสำเร็จ!',
                     text: result.message,
                     icon: 'success',
                     scrollbarPadding: false,
@@ -264,21 +264,22 @@ function goToPage(pageName) {
             }
         } catch (error) {
             console.error('Delete Voter Error:', error);
-            Swal.fire('Error', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้', 'error');
+            Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้', 'error');
         }
     };
 
     // Modal สำหรับเพิ่ม voter ใหม่ + validation
     window.addVoterPrompt = async function addVoterPrompt() {
         const result = await Swal.fire({
-            title: 'Add Voter',
+            title: 'เพิ่มผู้มีสิทธิ์เลือกตั้ง',
             html: `
-                <input id="swal-id" class="swal2-input" placeholder="Citizen ID">
-                <input id="swal-laserid" class="swal2-input" placeholder="Laser ID">
-                <input id="swal-name" class="swal2-input" placeholder="Full Name">
+                <input id="swal-id" class="swal2-input" placeholder="เลขบัตรประชาชน (13 หลัก)">
+                <input id="swal-laserid" class="swal2-input" placeholder="รหัสหลังบัตร (Laser ID)">
+                <input id="swal-name" class="swal2-input" placeholder="ชื่อ-นามสกุล">
             `,
             showCancelButton: true,
-            confirmButtonText: 'Add',
+            confirmButtonText: 'เพิ่ม',
+            cancelButtonText: 'ยกเลิก',
             focusConfirm: false,
             preConfirm: () => {
                 return {
@@ -296,14 +297,14 @@ function goToPage(pageName) {
         const fullName = String(result.value?.fullName || '').trim();
         const termId = new URLSearchParams(window.location.search).get('term_id');
         if (!termId) {
-            await Swal.fire('Error', 'term_id was not found in the URL.', 'error');
+            await Swal.fire('ข้อผิดพลาด', 'ไม่พบ term_id ใน URL', 'error');
             return;
         }
 
         const citizenId = normalizeCitizenId(citizenIdRaw);
         const validationError = validateVoterInput({ citizenId, laserId, fullName });
         if (validationError) {
-            await Swal.fire('Invalid input', validationError, 'error');
+            await Swal.fire('ข้อมูลไม่ถูกต้อง', validationError, 'error');
             return;
         }
 
@@ -317,22 +318,22 @@ function goToPage(pageName) {
             const json = await res.json().catch(() => ({}));
 
             if (!res.ok) {
-                await Swal.fire('Error', json?.message || 'Failed to add voter.', 'error');
+                await Swal.fire('ข้อผิดพลาด', json?.message || 'ไม่สามารถเพิ่มผู้มีสิทธิ์ได้', 'error');
                 return;
             }
 
             saveVoterName(citizenId, fullName);
-            await Swal.fire('Success', json?.message || 'Voter added successfully.', 'success');
+            await Swal.fire('สำเร็จ', json?.message || 'เพิ่มผู้มีสิทธิ์เรียบร้อยแล้ว', 'success');
             await refreshVoterTableFromServer();
         } catch (error) {
-            await Swal.fire('Error', 'Unable to connect to the server.', 'error');
+            await Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้', 'error');
         }
     };
 
     function validateVoterInput({ citizenId, laserId, fullName }) {
-        if (!fullName) return 'Please enter full name.';
-        if (!/^[0-9]{13}$/.test(citizenId)) return 'Citizen ID must contain exactly 13 digits.';
-        if (!/^[A-Za-z0-9]{12}$/.test(laserId)) return 'Laser ID must be exactly 12 alphanumeric characters.';
+        if (!fullName) return 'กรุณากรอกชื่อ-นามสกุล';
+        if (!/^[0-9]{13}$/.test(citizenId)) return 'เลขบัตรประชาชนต้องเป็นตัวเลข 13 หลัก';
+        if (!/^[A-Za-z0-9]{12}$/.test(laserId)) return 'รหัสหลังบัตร (Laser ID) ต้องมี 12 ตัวอักษรหรือตัวเลข';
         return null;
     }
 
