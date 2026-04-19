@@ -1,16 +1,11 @@
 
-// ฟังก์ชัน: ก๊อปปี้ term_id ปัจจุบัน แล้วส่งไปหน้าใหม่
 function goToPage(pageName) {
-    // 1. ก๊อปปี้ term_id จาก URL ด้านบนของหน้าปัจจุบัน
     const urlParams = new URLSearchParams(window.location.search);
     const currentTermId = urlParams.get('term_id');
 
-    // 2. เช็คว่าก๊อปปี้มาได้ไหม
     if (currentTermId) {
-        // ถ้ามี: สั่งวาร์ปไปหน้าใหม่ พร้อมแปะ ?term_id=... ห้อยท้ายไปด้วย!
         window.location.href = `/AdminNew/views/${pageName}?term_id=${currentTermId}`;
     } else {
-        // ถ้าไม่มี (แอดมินหลงทาง): เตะกลับหน้า Term
         window.location.href = '/AdminNew/views/Term.html';
     }
 }
@@ -30,7 +25,7 @@ function goToPage(pageName) {
 
     function initVoterManagementIfPresent() {
         const tbody = document.getElementById('voterTableBody');
-        if (!tbody) return; // ไม่ใช่หน้า Voting
+        if (!tbody) return;
 
         const toggle = document.getElementById('seeVotingToggle');
         const search = document.getElementById('searchVoter');
@@ -39,7 +34,7 @@ function goToPage(pageName) {
         if (search) search.addEventListener('input', applyVoterFilters);
 
         refreshVoterTableFromServer();
-        voterRefreshTimer = window.setInterval(refreshVoterTableFromServer, 10000); // auto refresh ทุก 10 วิ
+        voterRefreshTimer = window.setInterval(refreshVoterTableFromServer, 10000);
     }
 
     async function refreshVoterTableFromServer() {
@@ -50,7 +45,7 @@ function goToPage(pageName) {
             const termId = new URLSearchParams(window.location.search).get('term_id');
             const res = await fetch(termId ? `${API.listVoters}?term_id=${termId}` : API.listVoters, { headers: { 'Accept': 'application/json' } });
             if (!res.ok) return;
-            const json = await res.json(); // รูปแบบ { data: [...] }
+            const json = await res.json();
             const voters = Array.isArray(json?.data) ? json.data : [];
             renderVoterRows(tbody, voters);
             applyVoterFilters();
@@ -82,19 +77,19 @@ function goToPage(pageName) {
                 <td class="px-6 py-4">${escapeHtml(fullName || '-')}</td>
                 <td class="px-6 py-4 text-center">
                     ${isVoted
-                        ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">ใช้สิทธิ์แล้ว</span>'
-                        : '<span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">ยังไม่ได้ใช้สิทธิ์</span>'}
+                        ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Voted</span>'
+                        : '<span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">Not Voted</span>'}
                 </td>
                 <td class="px-6 py-4 text-center">
                     ${isEnabled
-                        ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">เปิดใช้งาน</span>'
-                        : '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">ปิดใช้งาน</span>'}
+                        ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Enabled</span>'
+                        : '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Disabled</span>'}
                 </td>
                 <td class="px-6 py-4 text-center">
-                    <button onclick="toggleVoterStatus(this)" class="btn btn-xs btn-outline ${isEnabled ? 'btn-error' : 'btn-success'} w-20">
-                        ${isEnabled ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}
+                    <button onclick="toggleVoterStatus(this)" class="btn btn-xs btn-outline ${isEnabled ? 'btn-error' : 'btn-success'} w-16">
+                        ${isEnabled ? 'Disable' : 'Enable'}
                     </button>
-                    <button onclick="deleteVoter('${userId}', '${escapeHtml(citizenId)}')" class="btn btn-xs btn-error text-white w-14">ลบ</button>
+                    <button onclick="deleteVoter('${userId}', '${escapeHtml(citizenId)}')" class="btn btn-xs btn-error text-white w-16">Delete</button>
                 </td>
             `;
 
@@ -110,7 +105,6 @@ function goToPage(pageName) {
         const search = document.getElementById('searchVoter');
         const query = (search?.value || '').trim().toLowerCase();
 
-        // toggle on = แสดงเฉพาะคนที่ยัง Not Voted, toggle off = แสดงทั้งหมด
         const showOnlyNotVoted = Boolean(toggle?.checked);
 
         Array.from(tbody.querySelectorAll('tr')).forEach(row => {
@@ -119,8 +113,8 @@ function goToPage(pageName) {
                 ? row.dataset.voted === '1'
                 : (() => {
                     const statusText = String(row.cells?.[2]?.textContent || '').toLowerCase();
-                    if (statusText.includes('ยังไม่ได้ใช้สิทธิ์')) return false;
-                    if (statusText.includes('ใช้สิทธิ์แล้ว')) return true;
+                    if (statusText.includes('not voted')) return false;
+                    if (statusText.includes('voted')) return true;
                     return false;
                 })();
 
@@ -139,23 +133,23 @@ function goToPage(pageName) {
 
         const isEnabled = row.dataset.enabled === '1';
         const userId = Number(row.dataset.userId);
-        const citizenId = row.dataset.citizenId || 'ผู้มีสิทธิ์คนนี้';
+        const citizenId = row.dataset.citizenId || 'this voter';
 
         if (!Number.isFinite(userId)) {
-            Swal.fire('ข้อผิดพลาด', 'ไม่พบ user_id ของผู้ใช้คนนี้', 'error');
+            Swal.fire('Error', 'Could not find user_id for this voter.', 'error');
             return;
         }
 
         const nextStatus = isEnabled ? 0 : 1;
-        const actionText = nextStatus === 1 ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+        const actionText = nextStatus === 1 ? 'Enable' : 'Disable';
 
         const confirmed = await Swal.fire({
-            title: `ยืนยันการ${actionText}?`,
-            text: `ต้องการ${actionText}ผู้มีสิทธิ์ ${citizenId} ใช่หรือไม่?`,
+            title: `Confirm ${actionText}?`,
+            text: `Do you want to ${actionText.toLowerCase()} voter ${citizenId}?`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'ยืนยัน',
-            cancelButtonText: 'ยกเลิก',
+            confirmButtonText: 'Yes, proceed!',
+            cancelButtonText: 'Cancel',
             buttonsStyling: false,
             scrollbarPadding: false,
             customClass: {
@@ -178,12 +172,12 @@ function goToPage(pageName) {
             const json = await res.json().catch(() => ({}));
 
             if (!res.ok) {
-                throw new Error(json?.message || 'ไม่สามารถอัปเดตสถานะได้');
+                throw new Error(json?.message || 'Unable to update status.');
             }
 
             Swal.fire({
-                title: 'สำเร็จ!',
-                text: json.message || `${actionText}ผู้มีสิทธิ์เรียบร้อยแล้ว`,
+                title: 'Success!',
+                text: json.message || `${actionText}d voter successfully.`,
                 icon: 'success',
                 buttonsStyling: false,
                 scrollbarPadding: false,
@@ -195,16 +189,16 @@ function goToPage(pageName) {
             const accountCell = row.cells?.[3];
             if (accountCell) {
                 accountCell.innerHTML = nextStatus === 1
-                    ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">เปิดใช้งาน</span>'
-                    : '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">ปิดใช้งาน</span>';
+                    ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Enabled</span>'
+                    : '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Disabled</span>';
             }
 
-            btn.innerText = nextStatus === 1 ? 'ปิดใช้งาน' : 'เปิดใช้งาน';
-            btn.className = `btn btn-xs btn-outline ${nextStatus === 1 ? 'btn-error' : 'btn-success'} w-20`;
+            btn.innerText = nextStatus === 1 ? 'Disable' : 'Enable';
+            btn.className = `btn btn-xs btn-outline ${nextStatus === 1 ? 'btn-error' : 'btn-success'} w-16`;
         } catch (error) {
             Swal.fire({
-                title: 'ข้อผิดพลาด',
-                text: error.message || 'ไม่สามารถอัปเดตสถานะได้',
+                title: 'Error',
+                text: error.message || 'Unable to update status.',
                 icon: 'error',
                 buttonsStyling: false,
                 scrollbarPadding: false,
@@ -217,17 +211,17 @@ function goToPage(pageName) {
 
     window.deleteVoter = async function deleteVoter(userId, citizenId) {
         if (!userId) {
-            Swal.fire('ข้อผิดพลาด', 'ไม่พบ user_id ของผู้มีสิทธิ์คนนี้', 'error');
+            Swal.fire('Error', 'Could not find user_id for this voter.', 'error');
             return;
         }
 
         const confirm = await Swal.fire({
-            title: 'ยืนยันการลบ?',
-            text: `ต้องการลบผู้มีสิทธิ์ ${citizenId} ออกจากระบบ? การกระทำนี้ไม่สามารถย้อนกลับได้`,
+            title: 'Confirm deletion?',
+            text: `Are you sure you want to delete voter ${citizenId}? This action cannot be undone.`,
             icon: 'error',
             showCancelButton: true,
-            confirmButtonText: 'ลบเลย',
-            cancelButtonText: 'ยกเลิก',
+            confirmButtonText: 'Delete now',
+            cancelButtonText: 'Cancel',
             buttonsStyling: false,
             scrollbarPadding: false,
             customClass: {
@@ -244,7 +238,7 @@ function goToPage(pageName) {
 
             if (result.status === 'success') {
                 await Swal.fire({
-                    title: 'ลบสำเร็จ!',
+                    title: 'Deleted successfully!',
                     text: result.message,
                     icon: 'success',
                     scrollbarPadding: false,
@@ -254,8 +248,8 @@ function goToPage(pageName) {
                 refreshVoterTableFromServer();
             } else {
                 Swal.fire({
-                    title: 'ไม่สามารถลบได้',
-                    text: result.message || 'เกิดข้อผิดพลาด',
+                    title: 'Unable to delete',
+                    text: result.message || 'An error occurred.',
                     icon: 'warning',
                     scrollbarPadding: false,
                     buttonsStyling: false,
@@ -264,22 +258,21 @@ function goToPage(pageName) {
             }
         } catch (error) {
             console.error('Delete Voter Error:', error);
-            Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้', 'error');
+            Swal.fire('Error', 'Unable to connect to the server.', 'error');
         }
     };
 
-    // Modal สำหรับเพิ่ม voter ใหม่ + validation
     window.addVoterPrompt = async function addVoterPrompt() {
         const result = await Swal.fire({
-            title: 'เพิ่มผู้มีสิทธิ์เลือกตั้ง',
+            title: 'Add Voter',
             html: `
-                <input id="swal-id" class="swal2-input" placeholder="เลขบัตรประชาชน (13 หลัก)">
-                <input id="swal-laserid" class="swal2-input" placeholder="รหัสหลังบัตร (Laser ID)">
-                <input id="swal-name" class="swal2-input" placeholder="ชื่อ-นามสกุล">
+                <input id="swal-id" class="swal2-input" placeholder="Citizen ID">
+                <input id="swal-laserid" class="swal2-input" placeholder="Laser ID">
+                <input id="swal-name" class="swal2-input" placeholder="Full Name">
             `,
             showCancelButton: true,
-            confirmButtonText: 'เพิ่ม',
-            cancelButtonText: 'ยกเลิก',
+            confirmButtonText: 'Add',
+            cancelButtonText: 'Cancel',
             focusConfirm: false,
             preConfirm: () => {
                 return {
@@ -297,14 +290,14 @@ function goToPage(pageName) {
         const fullName = String(result.value?.fullName || '').trim();
         const termId = new URLSearchParams(window.location.search).get('term_id');
         if (!termId) {
-            await Swal.fire('ข้อผิดพลาด', 'ไม่พบ term_id ใน URL', 'error');
+            await Swal.fire('Error', 'term_id was not found in the URL.', 'error');
             return;
         }
 
         const citizenId = normalizeCitizenId(citizenIdRaw);
         const validationError = validateVoterInput({ citizenId, laserId, fullName });
         if (validationError) {
-            await Swal.fire('ข้อมูลไม่ถูกต้อง', validationError, 'error');
+            await Swal.fire('Invalid input', validationError, 'error');
             return;
         }
 
@@ -318,22 +311,22 @@ function goToPage(pageName) {
             const json = await res.json().catch(() => ({}));
 
             if (!res.ok) {
-                await Swal.fire('ข้อผิดพลาด', json?.message || 'ไม่สามารถเพิ่มผู้มีสิทธิ์ได้', 'error');
+                await Swal.fire('Error', json?.message || 'Failed to add voter.', 'error');
                 return;
             }
 
             saveVoterName(citizenId, fullName);
-            await Swal.fire('สำเร็จ', json?.message || 'เพิ่มผู้มีสิทธิ์เรียบร้อยแล้ว', 'success');
+            await Swal.fire('Success', json?.message || 'Voter added successfully.', 'success');
             await refreshVoterTableFromServer();
         } catch (error) {
-            await Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้', 'error');
+            await Swal.fire('Error', 'Unable to connect to the server.', 'error');
         }
     };
 
     function validateVoterInput({ citizenId, laserId, fullName }) {
-        if (!fullName) return 'กรุณากรอกชื่อ-นามสกุล';
-        if (!/^[0-9]{13}$/.test(citizenId)) return 'เลขบัตรประชาชนต้องเป็นตัวเลข 13 หลัก';
-        if (!/^[A-Za-z0-9]{12}$/.test(laserId)) return 'รหัสหลังบัตร (Laser ID) ต้องมี 12 ตัวอักษรหรือตัวเลข';
+        if (!fullName) return 'Please enter full name.';
+        if (!/^[0-9]{13}$/.test(citizenId)) return 'Citizen ID must contain exactly 13 digits.';
+        if (!/^[A-Za-z0-9]{12}$/.test(laserId)) return 'Laser ID must be exactly 12 alphanumeric characters.';
         return null;
     }
 

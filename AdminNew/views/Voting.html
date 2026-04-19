@@ -60,33 +60,33 @@
             <div id="section-voter" class="voter-section">
                 <div class="card p-6 mb-8 border-t-4 border-blue-600">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-semibold text-gray-800">จัดการผู้มีสิทธิ์เลือกตั้ง</h2>
+                        <h2 class="text-2xl font-semibold text-gray-800">Voter Management</h2>
                         <div class="flex items-center space-x-6">
                             <div class="flex items-center space-x-4">
-                                <span class="font-medium text-gray-700">แสดงเฉพาะยังไม่โหวต:</span>
+                                <span class="font-medium text-gray-700">See voting:</span>
                                 <label class="switch flex items-center">
                                     <input type="checkbox" id="seeVotingToggle" checked>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
                             <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300"
-                                onclick="addVoterPrompt()">เพิ่มผู้มีสิทธิ์</button>
+                                onclick="addVoterPrompt()">Add Voter</button>
                         </div>
                     </div>
 
                     <div class="overflow-hidden border rounded-lg">
                         <div class="bg-gray-50 p-4 border-b">
-                            <input type="text" id="searchVoter" placeholder="ค้นหาเลขบัตรประชาชน หรือ ชื่อ..."
+                            <input type="text" id="searchVoter" placeholder="Search Citizen ID or Name..."
                                 class="input-field max-w-md py-1 text-sm">
                         </div>
                         <table class="w-full text-left" id="voterTable">
                             <thead class="bg-gray-100 text-gray-600 text-sm uppercase">
                                 <tr>
-                                    <th class="px-6 py-3">เลขบัตรประชาชน</th>
-                                    <th class="px-6 py-3">ชื่อ-นามสกุล</th>
-                                    <th class="px-6 py-3 text-center">สถานะการโหวต</th>
-                                    <th class="px-6 py-3 text-center">สถานะบัญชี</th>
-                                    <th class="px-6 py-3 text-center">จัดการ</th>
+                                    <th class="px-6 py-3">Citizen ID</th>
+                                    <th class="px-6 py-3">Full Name</th>
+                                    <th class="px-6 py-3 text-center">Voting Status</th>
+                                    <th class="px-6 py-3 text-center">Account Status</th>
+                                    <th class="px-6 py-3 text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y" id="voterTableBody">
