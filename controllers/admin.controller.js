@@ -523,6 +523,53 @@ const listVoters = async (req, res) => {
     }
 };
 
+// API: ลบ voter (Delete Voter)
+const deleteVoter = async (req, res) => {
+    const { id } = req.params; // รับ user_id จาก URL
+
+    if (!id) {
+        return res.status(400).json({ message: "กรุณาระบุรหัสผู้มีสิทธิ์ที่ต้องการลบ" });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        // ตรวจสอบว่ามี voter นี้ในระบบไหม
+        const [voters] = await connection.query(
+            "SELECT voter_id FROM voters WHERE user_id = ?", [id]
+        );
+
+        if (voters.length === 0) {
+            return res.status(404).json({ message: "ไม่พบข้อมูลผู้มีสิทธิ์นี้ในระบบ" });
+        }
+
+        await connection.beginTransaction();
+
+        // ลบข้อมูลจากตาราง voters ก่อน (cascade จะลบ votes ที่เกี่ยวข้องด้วย)
+        await connection.query("DELETE FROM voters WHERE user_id = ?", [id]);
+
+        // ลบข้อมูลจากตาราง users
+        const [result] = await connection.query("DELETE FROM users WHERE user_id = ?", [id]);
+
+        await connection.commit();
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "ไม่พบข้อมูลผู้ใช้นี้ในระบบ" });
+        }
+
+        res.status(200).json({
+            status: "success",
+            message: `ลบผู้มีสิทธิ์ออกจากระบบเรียบร้อยแล้ว`
+        });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error("Delete Voter Error:", error);
+        res.status(500).json({ message: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์" });
+    } finally {
+        connection.release();
+    }
+};
+
 const getTermById = async (req, res) => {
     const { id } = req.params; // /api/admin/term/:id
 
@@ -553,5 +600,6 @@ module.exports = {
     toggleUser,
     listVoters,
     toggleTermStatus,
-    getTermById
+    getTermById,
+    deleteVoter
 };

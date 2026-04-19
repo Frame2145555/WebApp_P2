@@ -91,9 +91,10 @@ function goToPage(pageName) {
                         : '<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Disabled</span>'}
                 </td>
                 <td class="px-6 py-4 text-center">
-                    <button onclick="toggleVoterStatus(this)" class="${isEnabled
-                        ? 'text-red-600'
-                        : 'text-green-600'} text-sm font-medium hover:underline">${isEnabled ? 'Disable' : 'Enable'}</button>
+                    <button onclick="toggleVoterStatus(this)" class="btn btn-xs btn-outline ${isEnabled ? 'btn-error' : 'btn-success'} w-16">
+                        ${isEnabled ? 'Disable' : 'Enable'}
+                    </button>
+                    <button onclick="deleteVoter('${userId}', '${escapeHtml(citizenId)}')" class="btn btn-xs btn-error text-white w-16">Delete</button>
                 </td>
             `;
 
@@ -138,6 +139,7 @@ function goToPage(pageName) {
 
         const isEnabled = row.dataset.enabled === '1';
         const userId = Number(row.dataset.userId);
+        const citizenId = row.dataset.citizenId || 'this voter';
 
         if (!Number.isFinite(userId)) {
             Swal.fire('Error', 'ไม่พบ user_id ของผู้ใช้คนนี้', 'error');
@@ -145,6 +147,25 @@ function goToPage(pageName) {
         }
 
         const nextStatus = isEnabled ? 0 : 1;
+        const actionText = nextStatus === 1 ? 'Enable' : 'Disable';
+
+        const confirmed = await Swal.fire({
+            title: `Confirm ${actionText}?`,
+            text: `Do you want to ${actionText.toLowerCase()} voter ${citizenId}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, proceed!',
+            cancelButtonText: 'Cancel',
+            buttonsStyling: false,
+            scrollbarPadding: false,
+            customClass: {
+                confirmButton: `btn ${nextStatus === 1 ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} text-white mx-2 border-none`,
+                cancelButton: 'btn btn-outline mx-2'
+            }
+        });
+
+        if (!confirmed.isConfirmed) return;
+
         btn.disabled = true;
 
         try {
@@ -160,6 +181,15 @@ function goToPage(pageName) {
                 throw new Error(json?.message || 'ไม่สามารถอัปเดตสถานะได้');
             }
 
+            Swal.fire({
+                title: 'Success!',
+                text: json.message || `${actionText}d voter successfully.`,
+                icon: 'success',
+                buttonsStyling: false,
+                scrollbarPadding: false,
+                customClass: { confirmButton: 'btn bg-mfu-red text-white hover:bg-red-900 border-none' }
+            });
+
             row.dataset.enabled = String(nextStatus);
 
             const accountCell = row.cells?.[3];
@@ -170,11 +200,71 @@ function goToPage(pageName) {
             }
 
             btn.innerText = nextStatus === 1 ? 'Disable' : 'Enable';
-            btn.className = `${nextStatus === 1 ? 'text-red-600' : 'text-green-600'} text-sm font-medium hover:underline`;
+            btn.className = `btn btn-xs btn-outline ${nextStatus === 1 ? 'btn-error' : 'btn-success'} w-16`;
         } catch (error) {
-            Swal.fire('Error', error.message || 'ไม่สามารถอัปเดตสถานะได้', 'error');
+            Swal.fire({
+                title: 'Error',
+                text: error.message || 'ไม่สามารถอัปเดตสถานะได้',
+                icon: 'error',
+                buttonsStyling: false,
+                scrollbarPadding: false,
+                customClass: { confirmButton: 'btn btn-error text-white border-none' }
+            });
         } finally {
             btn.disabled = false;
+        }
+    };
+
+    window.deleteVoter = async function deleteVoter(userId, citizenId) {
+        if (!userId) {
+            Swal.fire('Error', 'ไม่พบ user_id ของผู้มีสิทธิ์คนนี้', 'error');
+            return;
+        }
+
+        const confirm = await Swal.fire({
+            title: 'Confirm deletion?',
+            text: `Are you sure you want to delete voter ${citizenId}? This action cannot be undone.`,
+            icon: 'error',
+            showCancelButton: true,
+            confirmButtonText: 'Delete now',
+            cancelButtonText: 'Cancel',
+            buttonsStyling: false,
+            scrollbarPadding: false,
+            customClass: {
+                confirmButton: 'btn bg-red-600 hover:bg-red-700 text-white mx-2 border-none',
+                cancelButton: 'btn btn-outline mx-2'
+            }
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        try {
+            const response = await fetch(`/api/admin/voter/${userId}`, { method: 'DELETE' });
+            const result = await response.json().catch(() => ({}));
+
+            if (result.status === 'success') {
+                await Swal.fire({
+                    title: 'Deleted successfully!',
+                    text: result.message,
+                    icon: 'success',
+                    scrollbarPadding: false,
+                    buttonsStyling: false,
+                    customClass: { confirmButton: 'btn bg-mfu-red text-white hover:bg-red-900 border-none' }
+                });
+                refreshVoterTableFromServer();
+            } else {
+                Swal.fire({
+                    title: 'ไม่สามารถลบได้',
+                    text: result.message || 'เกิดข้อผิดพลาด',
+                    icon: 'warning',
+                    scrollbarPadding: false,
+                    buttonsStyling: false,
+                    customClass: { confirmButton: 'btn btn-warning mx-2' }
+                });
+            }
+        } catch (error) {
+            console.error('Delete Voter Error:', error);
+            Swal.fire('Error', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้', 'error');
         }
     };
 

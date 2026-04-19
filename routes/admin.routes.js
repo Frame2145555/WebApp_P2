@@ -16,7 +16,8 @@ const {
     toggleUser,
     listVoters,
     toggleTermStatus,
-    getTermById
+    getTermById,
+    deleteVoter
 } = require('../controllers/admin.controller');
 
 // ============================== admin ========================================
@@ -41,6 +42,7 @@ router.delete('/candidate/:id', deleteCandidate);
 router.post('/create-voter', createVoter);
 router.get('/voters', listVoters);
 router.post('/toggle-user', toggleUser);
+router.delete('/voter/:id', deleteVoter);
 
 // ================================ User ===========================================
 
