@@ -44,6 +44,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentDisplayName = user.display_name || user.username || 'Candidate';
   const defaultProfilePicture = '../image/mfu-logo.png';
 
+  // 🚨 ฟังก์ชันสำหรับสั่งให้กล่องข้อความทำงาน (เด้งกลางจอ)
+  function showMessageBox(title, message) {
+    const titleEl = document.getElementById('messageBoxTitle');
+    titleEl.textContent = title;
+    
+    // เปลี่ยนสีหัวข้อตามประเภท
+    if(title === 'Success') {
+        titleEl.className = "font-black text-2xl text-green-600 mb-2";
+    } else if(title === 'Error' || title === 'Notice') {
+        titleEl.className = "font-black text-2xl text-mfuRed mb-2";
+    }
+
+    document.getElementById('messageBoxText').textContent = message;
+    document.getElementById('messageBoxModal').showModal();
+  }
+
   // แสดงข้อมูลผู้ใช้เบื้องต้นตอนโหลดหน้า
   elements.displayName.textContent = currentDisplayName;
   elements.summaryName.textContent = currentDisplayName;
@@ -182,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
   }
 
+  // โค้ดกราฟใช้ของเดิมของคุณ 100% เลยครับ ไม่พังแน่นอน
   function renderChart() {
     const chartResults = sortResults(state.results).slice(0, 5); 
     const labels = chartResults.length ? chartResults.map((candidate) => getCandidateLabel(candidate)) : ['No Data'];
@@ -208,7 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
       options: {
         responsive: true,
         plugins: {
-          // เพิ่ม Legend อธิบายสีตรงนี้
           legend: { 
             display: true,
             position: 'top',
@@ -235,32 +251,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // เปิด modal สำหรับแก้ manifesto
   function openBioModal() {
     elements.bioModal.classList.remove('hidden');
   }
 
-  // ปิด modal แก้ manifesto
   function closeBioModal() {
     elements.bioModal.classList.add('hidden');
   }
 
-  // คัดลอกลิงก์โปรไฟล์ปัจจุบันไปยัง clipboard
+  // 🚨 เรียกใช้ showMessageBox ตอนแชร์ลิงก์
   async function copyProfileLink() {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      alert('Profile link copied!');
+      showMessageBox('Success', 'Profile link copied successfully!');
     } catch (error) {
-      alert('Unable to copy link on this browser.');
+      showMessageBox('Error', 'Unable to copy link on this browser.');
     }
   }
 
-  // บันทึก manifesto ใหม่ไป backend
+  // 🚨 เรียกใช้ showMessageBox ตอนอัปเดตนโยบาย
   async function saveBio() {
     const bioContent = elements.bioInput.value.trim();
 
     if (!bioContent) {
-      alert('Please enter your manifesto first.');
+      showMessageBox('Notice', 'Please enter your manifesto first.');
       return;
     }
 
@@ -280,13 +294,13 @@ document.addEventListener('DOMContentLoaded', () => {
       VotingApp.setUser(user);
       elements.displayBio.textContent = `"${user.bio}"`;
       closeBioModal();
-      alert('Manifesto updated!');
+      
+      showMessageBox('Success', 'Manifesto updated successfully!');
     } catch (error) {
-      alert(error.message);
+      showMessageBox('Error', error.message);
     }
   }
 
-  // เปลี่ยนข้อความสถานะของรูปโปรไฟล์ตามระดับความสำคัญ
   function setProfilePhotoStatus(text, tone = 'default') {
     elements.profilePhotoStatus.textContent = text;
     elements.profilePhotoStatus.className = `text-xs font-semibold uppercase tracking-[0.2em] ${
@@ -298,7 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }`;
   }
 
-  // ตรวจสอบไฟล์ที่ผู้ใช้เลือกและเตรียมรูปก่อนอัปโหลด
   function handleProfileImageSelection(event) {
     const file = event.target.files?.[0];
 
@@ -335,7 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsDataURL(file);
   }
 
-  // ส่งรูปโปรไฟล์ไป backend
   async function saveProfilePicture() {
     if (!state.pendingProfileFile) {
       setProfilePhotoStatus('Choose a photo first', 'error');
@@ -346,18 +358,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setProfilePhotoStatus('Uploading photo...', 'default');
 
     try {
-      // ปั้นก้อนข้อมูลแบบ FormData (สำหรับส่งไฟล์ผ่าน HTTP)
       const formData = new FormData();
       formData.append('user_id', user.user_id);
-      formData.append('profile_image', state.pendingProfileFile); // แนบไฟล์ของจริงไป
+      formData.append('profile_image', state.pendingProfileFile);
 
-      // เรียกใช้ API (ตัว VotingApp.api ฉลาดพอที่จะรู้ว่านี่คือไฟล์ และจะจัดการให้อัตโนมัติ)
       const response = await VotingApp.api('/api/update-profile-picture', {
         method: 'POST',
         body: formData
       });
 
-      // อัปเดตข้อมูล LocalStorage
       user.profile_picture = response.user?.profile_picture ?? user.profile_picture ?? null;
       VotingApp.setUser(user);
 

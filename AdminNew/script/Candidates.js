@@ -64,11 +64,17 @@ function renderLiveResults(candidates) {
     const container = document.querySelector('.flex-col.gap-5');
     container.innerHTML = ''; // ล้างของเก่า
 
-    // หาคนที่คะแนนเยอะสุด เพื่อเทียบสัดส่วน 100% ของความยาวกราฟ
-    const maxScore = candidates.length > 0 ? Math.max(...candidates.map(c => c.score)) : 1;
+    // นำผู้สมัครมาเรียงคะแนนจากมากไปน้อย แล้วตัดเอาแค่ 5 อันดับแรก
+    const top5Candidates = [...candidates]
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+
+    // หาคนที่คะแนนเยอะสุด (ใน 5 คนนี้) เพื่อเทียบสัดส่วน 100% ของความยาวกราฟ
+    const maxScore = top5Candidates.length > 0 ? Math.max(...top5Candidates.map(c => c.score)) : 1;
     const safeMaxScore = maxScore === 0 ? 1 : maxScore;
 
-    candidates.forEach(cand => {
+    // ใช้ข้อมูล 5 อันดับแรกในการวนลูปวาดกราฟ
+    top5Candidates.forEach(cand => {
         const widthPercent = (cand.score / safeMaxScore) * 100;
         const barHtml = `
         <div class="flex items-center gap-4">
@@ -99,6 +105,7 @@ function renderTable(candidates) {
             <tr class="hover:bg-gray-50">
                 <td class="font-bold text-gray-700">${cand.display_id}</td>
                 <td>${cand.name}</td>
+                <td class="text-center font-bold" style="color: #5c0f0f;">${cand.score || 0}</td>
                 <td class="text-center">
                     <button class="btn btn-xs btn-outline border-gray-300 text-gray-600" onclick="showPolicies('${cand.policies}')">Read</button>
                 </td>
@@ -207,7 +214,6 @@ const candidateInputs = document.querySelectorAll('#addCandidateForm input');
 
 if (addCandidateBtn) {
     addCandidateBtn.addEventListener('click', async () => {
-        // 🚨 ดึงข้อมูลแค่ "ช่องชื่อ" ช่องเดียว (เพราะเราลบช่อง ID ทิ้งไปแล้ว)
         // ใช้ querySelector จับ input ตัวแรกและตัวเดียวในฟอร์มได้เลย
         const nameInput = document.querySelector('#addCandidateForm input');
         const name = nameInput.value.trim();
@@ -278,9 +284,7 @@ if (addCandidateBtn) {
     });
 }
 
-// ==========================================
 // ฟังก์ชัน ลบผู้สมัคร (Delete Candidate)
-// ==========================================
 async function deleteCandidate(internalId, displayId) {
     // ใช้ internalId ในการตรวจสอบความถูกต้องเบื้องต้น
     if (!internalId) {
@@ -339,5 +343,3 @@ async function deleteCandidate(internalId, displayId) {
         }
     }
 }
-
-
