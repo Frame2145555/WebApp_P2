@@ -196,8 +196,7 @@ function renderPolicies() {
                 ${c.profile_picture ? `<img src="${c.profile_picture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : '👤'}
             </div>
             <div class="candidate-name">${c.name}</div>
-            <div class="candidate-party">Election Candidate</div>
-            <button class="policy-btn" onclick="viewPolicy(${c.candidate_id})">Read Policy</button>
+            <div class="candidate-party">Candidate</div> <button class="policy-btn" onclick="viewPolicy(${c.candidate_id})">Read Policy</button>
         </div>
     `).join('');
     document.getElementById('candidatesGridPolicies').innerHTML = html || '<p>No candidates available yet.</p>';

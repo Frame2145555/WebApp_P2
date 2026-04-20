@@ -178,6 +178,18 @@
         </div>
     </div>
 
+    <dialog id="messageBoxModal" class="modal">
+        <div class="modal-box text-center p-8 rounded-[2rem] bg-white">
+            <h3 id="messageBoxTitle" class="font-black text-2xl text-mfuRed mb-2">Notification</h3>
+            <p id="messageBoxText" class="py-4 text-gray-600 text-lg">Message goes here</p>
+            <div class="modal-action justify-center mt-6">
+                <form method="dialog">
+                    <button class="px-8 py-3 bg-mfuRed text-white font-bold rounded-2xl shadow-lg border-none hover:bg-red-800 transition">OK</button>
+                </form>
+            </div>
+        </div>
+    </dialog>
+
     <script src="/public/js/voting-app.js"></script>
     <script src="../script/candidate-dashboard.js"></script>
 </body>
