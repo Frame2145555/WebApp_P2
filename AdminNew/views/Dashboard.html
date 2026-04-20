@@ -49,9 +49,12 @@
                     <h2 class="text-2xl font-semibold text-gray-800">Overview Dashboard</h2>
                     <p class="text-gray-500" id="statusText">now is voting</p>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span class="font-medium text-gray-700">Voting Status:</span>
-                    <input type="checkbox" id="toggle-voting-status" class="toggle toggle-success" />
+                <div class="voting-switch-wrap">
+                    <span class="voting-switch-label">Voting Status:</span>
+                    <label class="switch" for="toggle-voting-status" aria-label="Toggle voting status">
+                        <input type="checkbox" id="toggle-voting-status" />
+                        <span class="slider"></span>
+                    </label>
                 </div>
             </div>
             <!-- Statistics Cards -->
@@ -82,6 +85,21 @@
                         <canvas id="scoreChart" aria-label="Live Results Chart"></canvas>
                     </div>
                 </div>
+            </section>
+
+            <section class="results-board card mt-8">
+                <div class="results-head">
+                    <h3 class="results-title">Voting Results</h3>
+                    <p class="results-subtitle">Candidates ranked by total votes</p>
+                </div>
+
+                <div class="results-columns" aria-hidden="true">
+                    <span>Rank</span>
+                    <span>Candidate</span>
+                    <span class="text-right">Votes</span>
+                </div>
+
+                <div id="results-list" class="results-list" role="list" aria-label="Voting results list"></div>
             </section>
 
         </main>

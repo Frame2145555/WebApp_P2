@@ -43,7 +43,10 @@
                 <button class="menu-item" onclick="switchTab('search', this)"><span class="menu-icon">🔍</span>
                     <span>Search Results</span></button>
             </div>
-            <button class="logout-btn" onclick="logout()">Log Out</button>
+            <button class="logout-btn" type="button" onclick="logout()" aria-label="Log out">
+                <span class="logout-dot" aria-hidden="true"></span>
+                <span class="logout-text">Log Out</span>
+            </button>
         </aside>
 
         <main class="main-content">

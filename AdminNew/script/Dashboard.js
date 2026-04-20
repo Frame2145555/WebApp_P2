@@ -123,6 +123,7 @@ if (toggleVotingStatus) {
 
     async function loadDashboardSummary() {
         const canvas = document.getElementById('scoreChart');
+        const resultsList = document.getElementById('results-list');
         if (!canvas) return;
         try {
             const res = await fetch(`/api/admin/dashboard?term_id=${currentTermId}`);
@@ -132,8 +133,10 @@ if (toggleVotingStatus) {
             const data = json.data || {};
             updateStatsCards(data);
             renderChart(canvas, data.candidates || []);
+            if (resultsList) renderVotingResults(data.candidates || []);
         } catch (err) {
             console.error('dashboard summary error', err);
+            if (resultsList) renderVotingResults([]);
         }
     }
 
@@ -150,8 +153,8 @@ if (toggleVotingStatus) {
     }
 
     function renderChart(canvas, candidates) {
-        const labels = candidates.map(c => c.name || c.candidate_id);
-        const votes = candidates.map(c => Number(c.score || 0));
+        const labels = candidates.map(c => c.name || c.candidate_name || c.full_name || c.candidate_id || c.id || '-');
+        const votes = candidates.map(c => Number(c.score ?? c.votes ?? c.vote_count ?? 0));
         const ctx = canvas.getContext('2d');
 
         if (scoreChartInstance) scoreChartInstance.destroy();
@@ -173,6 +176,86 @@ if (toggleVotingStatus) {
                 indexAxis: 'y'
             }
         });
+    }
+
+    function renderVotingResults(candidates) {
+        const resultsList = document.getElementById('results-list');
+        if (!resultsList) return;
+
+        resultsList.innerHTML = '';
+
+        if (!Array.isArray(candidates) || candidates.length === 0) {
+            const emptyState = document.createElement('p');
+            emptyState.className = 'results-empty';
+            emptyState.textContent = 'No voting results available for this term.';
+            resultsList.appendChild(emptyState);
+            return;
+        }
+
+        const rankedCandidates = [...candidates]
+            .map((candidate, index) => ({
+                ...candidate,
+                __originalIndex: index,
+                __votes: Number(candidate.score ?? candidate.votes ?? candidate.vote_count ?? 0)
+            }))
+            .sort((a, b) => {
+                if (b.__votes !== a.__votes) return b.__votes - a.__votes;
+                return a.__originalIndex - b.__originalIndex;
+            });
+
+        rankedCandidates.forEach((candidate, index) => {
+            const rank = index + 1;
+            const row = document.createElement('article');
+            row.className = 'result-row';
+
+            const rankBadge = document.createElement('span');
+            rankBadge.className = 'result-rank-badge';
+            if (rank === 1) rankBadge.classList.add('rank-first');
+            if (rank === 2) rankBadge.classList.add('rank-second');
+            if (rank === 3) rankBadge.classList.add('rank-third');
+            rankBadge.textContent = String(rank);
+
+            const candidateBlock = document.createElement('div');
+
+            const candidateName = document.createElement('p');
+            candidateName.className = 'result-candidate-name';
+            candidateName.textContent = candidate.name || candidate.candidate_name || candidate.full_name || `Candidate ${rank}`;
+
+            const candidateCode = document.createElement('p');
+            candidateCode.className = 'result-candidate-code';
+            candidateCode.textContent = formatCandidateCode(candidate);
+
+            candidateBlock.appendChild(candidateName);
+            candidateBlock.appendChild(candidateCode);
+
+            const voteCount = document.createElement('p');
+            voteCount.className = 'result-votes';
+            voteCount.textContent = String(candidate.__votes);
+
+            row.appendChild(rankBadge);
+            row.appendChild(candidateBlock);
+            row.appendChild(voteCount);
+
+            resultsList.appendChild(row);
+        });
+    }
+
+    function formatCandidateCode(candidate) {
+        const rawCode = candidate.candidate_code || candidate.code || candidate.candidate_id || candidate.id;
+        if (rawCode == null) return '-';
+
+        const codeText = String(rawCode).trim();
+        if (!codeText) return '-';
+
+        const numericMatch = codeText.match(/\d+/);
+        if (numericMatch) {
+            const numericValue = Number(numericMatch[0]);
+            if (Number.isFinite(numericValue)) {
+                return `CAND-${String(numericValue).padStart(3, '0')}`;
+            }
+        }
+
+        return codeText.toUpperCase();
     }
 
     // Toggle เปิด/ปิดระบบโหวตบน Dashboard
