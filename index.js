@@ -6,6 +6,8 @@ const argon2 = require('argon2');
 
 const { pool, query, verifyDatabaseConnection, closePool } = require('./db');
 const { getActiveTermId, getCandidateLoginData, registerCandidateDashboardRoutes } = require('./candidate-api');
+const registerAdminRoutes = require('./admin-api');
+const { initializeDatabase } = require('./schema-policies');
 
 dotenv.config({ quiet: true });
 
@@ -276,6 +278,12 @@ registerCandidateDashboardRoutes(app, {
   uploadRoot: path.join(__dirname, 'uploads', 'profile-pictures')
 });
 
+registerAdminRoutes(app, {
+  query,
+  asyncHandler,
+  pool
+});
+
 app.get('/api/voters/:voterId/vote-status', asyncHandler(async (req, res) => {
   const activeTermId = await getActiveTermId(query);
   res.json(await getVoteStatusForVoter(req.params.voterId, activeTermId));
@@ -463,6 +471,14 @@ app.use((error, req, res, next) => {
 
 async function startServer() {
   await verifyDatabaseConnection();
+  
+  // Initialize the candidate_policies table
+  try {
+    await initializeDatabase(pool);
+    console.log('✅ Database schema initialized');
+  } catch (error) {
+    console.error('⚠️ Warning: Could not initialize database schema:', error.message);
+  }
 
   return app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
