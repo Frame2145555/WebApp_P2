@@ -273,6 +273,12 @@ function goToPage(pageName) {
             showCancelButton: true,
             confirmButtonText: 'Add',
             cancelButtonText: 'Cancel',
+            buttonsStyling: false,
+            scrollbarPadding: false,
+            customClass: {
+                confirmButton: 'btn bg-mfu-red text-white hover:bg-red-900 border-none mx-2 w-24',
+                cancelButton: 'btn btn-outline mx-2 w-24'
+            },
             focusConfirm: false,
             preConfirm: () => {
                 return {

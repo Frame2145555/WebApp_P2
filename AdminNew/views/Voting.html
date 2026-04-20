@@ -61,23 +61,28 @@
                 <div class="card p-6 mb-8 border-t-4 border-blue-600">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-semibold text-gray-800">Voter Management</h2>
-                        <div class="flex items-center space-x-6">
-                            <div class="flex items-center space-x-4">
-                                <span class="font-medium text-gray-700">See voting:</span>
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-medium text-gray-700 text-sm">See voting:</span>
                                 <label class="switch flex items-center">
                                     <input type="checkbox" id="seeVotingToggle" checked>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
-                            <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300"
-                                onclick="addVoterPrompt()">Add Voter</button>
+                            <button class="btn btn-sm text-white border-none"
+                                style="background-color: #5c0f0f;"
+                                onmouseover="this.style.backgroundColor='#3d0a0a'"
+                                onmouseout="this.style.backgroundColor='#5c0f0f'"
+                                onclick="addVoterPrompt()">+ Add Voter</button>
                         </div>
                     </div>
 
                     <div class="overflow-hidden border rounded-lg">
                         <div class="bg-gray-50 p-4 border-b">
-                            <input type="text" id="searchVoter" placeholder="Search Citizen ID or Name..."
-                                class="input-field max-w-md py-1 text-sm">
+                            <div class="relative w-64">
+                                <input type="text" id="searchVoter" placeholder="Search Citizen ID or Name..."
+                                    class="input input-bordered input-sm w-full bg-gray-50 focus:bg-white" />
+                            </div>
                         </div>
                         <table class="w-full text-left" id="voterTable">
                             <thead class="bg-gray-100 text-gray-600 text-sm uppercase">

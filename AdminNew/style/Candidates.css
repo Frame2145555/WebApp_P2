@@ -18,7 +18,8 @@
     --mfu-gold:      var(--gold);
 }
 
-body { font-family: 'Kanit', sans-serif; }
+html { scrollbar-gutter: stable; }
+body { font-family: 'Kanit', sans-serif; overflow: hidden; }
 
 .sidebar { background-color: var(--crimson); }
 .mfu-gold { color: var(--gold); }
