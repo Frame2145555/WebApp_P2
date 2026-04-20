@@ -90,7 +90,7 @@ function renderCandidatesTable(candidates) {
   if (candidates.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" class="text-center py-8 text-gray-500">
+        <td colspan="6" class="text-center py-8 text-gray-500">
           No candidates yet. <button onclick="document.getElementById('addCandidateBtn').click()" class="text-mfuRed font-bold">Add one now</button>
         </td>
       </tr>
@@ -103,10 +103,15 @@ function renderCandidatesTable(candidates) {
       ? '<span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">Registered</span>'
       : '<span class="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">Pending</span>';
 
+    const bioPreview = candidate.personal_info 
+      ? candidate.personal_info.substring(0, 40) + (candidate.personal_info.length > 40 ? '...' : '')
+      : '<span class="text-gray-400 italic">No bio</span>';
+
     const row = document.createElement('tr');
     row.innerHTML = `
       <td class="pb-2 pr-4 font-bold text-mfuRed">${candidate.candidate_id}</td>
       <td class="pb-2 pr-4 font-semibold">${candidate.name}</td>
+      <td class="pb-2 pr-4 text-sm text-gray-600">${bioPreview}</td>
       <td class="pb-2 pr-4">${statusBadge}</td>
       <td class="pb-2 pr-4">
         <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
@@ -151,13 +156,27 @@ function filterCandidates() {
 // TH: เปิดโมดัลเพิ่ม/แก้ไขผู้สมัคร
 function openCandidateModal() {
   document.getElementById('candidateModal').classList.remove('hidden');
-  document.getElementById('candidateForm').reset();
+  const form = document.getElementById('candidateForm');
+  
+  // Check if this is edit or add mode
+  if (form.dataset.candidateId) {
+    // Edit mode - change title and button
+    document.querySelector('#candidateModal h3').textContent = 'Edit Candidate';
+    document.querySelector('#candidateModal button[type="submit"]').textContent = 'Update Candidate';
+  } else {
+    // Add mode - reset
+    document.querySelector('#candidateModal h3').textContent = 'Add Candidate';
+    document.querySelector('#candidateModal button[type="submit"]').textContent = 'Save Candidate';
+    form.reset();
+  }
 }
 
 // EN: Close candidate modal
 // TH: ปิดโมดัลผู้สมัคร
 function closeCandidateModal() {
   document.getElementById('candidateModal').classList.add('hidden');
+  document.getElementById('candidateForm').dataset.candidateId = ''; // Clear edit mode
+  document.getElementById('candidateForm').reset();
 }
 
 // EN: Handle add candidate form submission
@@ -166,31 +185,61 @@ async function handleAddCandidate(e) {
   e.preventDefault();
 
   const name = document.getElementById('candidateName').value;
+  const bio = document.getElementById('candidateBio').value;
   const personalInfo = document.getElementById('candidateInfo').value;
+  const form = document.getElementById('candidateForm');
+  const candidateId = form.dataset.candidateId;
 
   try {
-    const response = await fetch(`${API_URL}/api/admin/candidates`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        personal_info: personalInfo,
-        term_id: 1
-      })
-    });
+    let response;
+    let result;
 
-    const result = await response.json();
+    if (candidateId) {
+      // Edit mode - update existing candidate
+      response = await fetch(`${API_URL}/api/admin/candidates/${candidateId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          bio,
+          personal_info: personalInfo
+        })
+      });
+      result = await response.json();
 
-    if (result.status === 'success') {
-      showNotification(`✅ ${result.message}`, 'success');
-      closeCandidateModal();
-      loadCandidates();
+      if (result.status === 'success') {
+        showNotification(`✅ Candidate updated successfully`, 'success');
+        closeCandidateModal();
+        form.dataset.candidateId = ''; // Clear edit mode
+        loadCandidates();
+      } else {
+        showNotification(`❌ ${result.message}`, 'error');
+      }
     } else {
-      showNotification(`❌ ${result.message}`, 'error');
+      // Add mode - create new candidate
+      response = await fetch(`${API_URL}/api/admin/candidates`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          bio,
+          personal_info: personalInfo,
+          term_id: 1
+        })
+      });
+      result = await response.json();
+
+      if (result.status === 'success') {
+        showNotification(`✅ ${result.message}`, 'success');
+        closeCandidateModal();
+        loadCandidates();
+      } else {
+        showNotification(`❌ ${result.message}`, 'error');
+      }
     }
   } catch (error) {
-    console.error('❌ Error adding candidate:', error);
-    showNotification('Error adding candidate', 'error');
+    console.error('❌ Error:', error);
+    showNotification('Error saving candidate', 'error');
   }
 }
 
@@ -378,7 +427,13 @@ function editCandidate(candidateId) {
   if (!candidate) return;
 
   document.getElementById('candidateName').value = candidate.name;
+  document.getElementById('candidateBio').value = candidate.personal_info || '';
   document.getElementById('candidateInfo').value = candidate.personal_info || '';
+  
+  // Change modal title and form action for edit
+  const form = document.getElementById('candidateForm');
+  form.dataset.candidateId = candidateId;
+  
   openCandidateModal();
 }
 

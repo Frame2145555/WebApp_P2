@@ -124,11 +124,11 @@ module.exports = function registerAdminRoutes(app, { query, asyncHandler, pool }
   // TH: อัปเดตข้อมูลผู้สมัคร
   app.put('/api/admin/candidates/:candidateId', asyncHandler(async (req, res) => {
     const { candidateId } = req.params;
-    const { name, personal_info } = req.body;
+    const { name, bio, personal_info } = req.body;
 
     const [result] = await query(
       "UPDATE candidates SET name = ?, personal_info = ? WHERE candidate_id = ?",
-      [name, personal_info, candidateId]
+      [name, bio || personal_info || '', candidateId]
     );
 
     if (result.affectedRows === 0) {
