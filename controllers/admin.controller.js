@@ -170,6 +170,8 @@ const deleteCandidate = async (req, res) => {
 
 // Add Voter
 const argon2 = require('argon2');
+const crypto = require('crypto');
+const sha256 = (value) => crypto.createHash('sha256').update(value.toUpperCase()).digest('hex');
 
 const createVoter = async (req, res) => {
     // รับค่าที่ Admin ส่งมาจากหน้าเว็บ (ตาม API Spec)
@@ -199,25 +201,30 @@ const createVoter = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // 1. เข้ารหัส Laser ID ก่อนบันทึกลง Database (เพื่อความปลอดภัย)
-        const hashedPassword = await argon2.hash(laser_id);
+        const hashedLaserId = sha256(laser_id);
 
-        // 2. บันทึกลงตาราง Users (citizen_id เป็น username, laser_id เป็น password, ให้ role = 'voter')
+        // เช็ค Laser ID ซ้ำก่อน insert โดยเปรียบเทียบ SHA-256 hash
+        const [existing] = await connection.query(
+            "SELECT user_id FROM users WHERE password = ? AND role = 'voter'",
+            [hashedLaserId]
+        );
+        if (existing.length > 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: "Laser ID นี้มีอยู่ในระบบแล้ว!" });
+        }
+
         const [userResult] = await connection.query(
             "INSERT INTO users (username, password, role, is_enable) VALUES (?, ?, 'voter', 1)",
-            [citizen_id, hashedPassword]
+            [citizen_id, hashedLaserId]
         );
 
-        // ดึง user_id ของคนที่เพิ่งถูกสร้างขึ้นมา
         const newUserId = userResult.insertId;
 
-        // 3. บันทึกลงตาราง Voters (เชื่อม user_id เข้ากับ term_id และเซ็ต is_voted = 0)
         await connection.query(
             "INSERT INTO voters (user_id, term_id, is_voted) VALUES (?, ?, 0)",
             [newUserId, term_id]
         );
 
-        // ถ้าผ่านทั้ง 2 ตาราง ให้ยืนยันการบันทึก (Commit)
         await connection.commit();
 
         res.json({
@@ -226,18 +233,15 @@ const createVoter = async (req, res) => {
         });
 
     } catch (error) {
-        // ถ้าเกิด Error บรรทัดไหนก็ตาม ให้ยกเลิกการบันทึกข้อมูลทั้งหมด (Rollback)
         await connection.rollback();
         console.error("Admin Create Voter Error:", error);
 
-        // เช็คกรณี Admin เผลอแอด Citizen ID ซ้ำ
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ message: "Citizen ID นี้มีอยู่ในระบบแล้ว!" });
         }
         res.status(500).json({ message: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์" });
 
     } finally {
-        // คืน connection กลับสู่ระบบ
         connection.release();
     }
 };

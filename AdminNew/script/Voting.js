@@ -136,7 +136,7 @@ function goToPage(pageName) {
         const citizenId = row.dataset.citizenId || 'this voter';
 
         if (!Number.isFinite(userId)) {
-            Swal.fire('Error', 'Could not find user_id for this voter.', 'error');
+            Swal.fire({ title: 'Error', text: 'Could not find user_id for this voter.', icon: 'error', buttonsStyling: false, scrollbarPadding: false, customClass: { confirmButton: 'btn btn-error text-white border-none' } });
             return;
         }
 
@@ -211,7 +211,7 @@ function goToPage(pageName) {
 
     window.deleteVoter = async function deleteVoter(userId, citizenId) {
         if (!userId) {
-            Swal.fire('Error', 'Could not find user_id for this voter.', 'error');
+            Swal.fire({ title: 'Error', text: 'Could not find user_id for this voter.', icon: 'error', buttonsStyling: false, scrollbarPadding: false, customClass: { confirmButton: 'btn btn-error text-white border-none' } });
             return;
         }
 
@@ -258,7 +258,7 @@ function goToPage(pageName) {
             }
         } catch (error) {
             console.error('Delete Voter Error:', error);
-            Swal.fire('Error', 'Unable to connect to the server.', 'error');
+            Swal.fire({ title: 'Error', text: 'Unable to connect to the server.', icon: 'error', buttonsStyling: false, scrollbarPadding: false, customClass: { confirmButton: 'btn btn-error text-white border-none' } });
         }
     };
 
@@ -296,14 +296,14 @@ function goToPage(pageName) {
         const fullName = String(result.value?.fullName || '').trim();
         const termId = new URLSearchParams(window.location.search).get('term_id');
         if (!termId) {
-            await Swal.fire('Error', 'term_id was not found in the URL.', 'error');
+            await Swal.fire({ title: 'Error', text: 'term_id was not found in the URL.', icon: 'error', buttonsStyling: false, scrollbarPadding: false, customClass: { confirmButton: 'btn btn-error text-white border-none' } });
             return;
         }
 
         const citizenId = normalizeCitizenId(citizenIdRaw);
         const validationError = validateVoterInput({ citizenId, laserId, fullName });
         if (validationError) {
-            await Swal.fire('Invalid input', validationError, 'error');
+            await Swal.fire({ title: 'Invalid input', text: validationError, icon: 'error', buttonsStyling: false, scrollbarPadding: false, customClass: { confirmButton: 'btn btn-error text-white border-none' } });
             return;
         }
 
@@ -317,15 +317,22 @@ function goToPage(pageName) {
             const json = await res.json().catch(() => ({}));
 
             if (!res.ok) {
-                await Swal.fire('Error', json?.message || 'Failed to add voter.', 'error');
+                await Swal.fire({ title: 'Error', text: json?.message || 'Failed to add voter.', icon: 'error', buttonsStyling: false, scrollbarPadding: false, customClass: { confirmButton: 'btn btn-error text-white border-none' } });
                 return;
             }
 
             saveVoterName(citizenId, fullName);
-            await Swal.fire('Success', json?.message || 'Voter added successfully.', 'success');
+            await Swal.fire({
+                title: 'Success',
+                text: json?.message || 'Voter added successfully.',
+                icon: 'success',
+                buttonsStyling: false,
+                scrollbarPadding: false,
+                customClass: { confirmButton: 'btn bg-mfu-red text-white hover:bg-red-900 border-none' }
+            });
             await refreshVoterTableFromServer();
         } catch (error) {
-            await Swal.fire('Error', 'Unable to connect to the server.', 'error');
+            await Swal.fire({ title: 'Error', text: 'Unable to connect to the server.', icon: 'error', buttonsStyling: false, scrollbarPadding: false, customClass: { confirmButton: 'btn btn-error text-white border-none' } });
         }
     };
 

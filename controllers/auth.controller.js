@@ -1,5 +1,8 @@
 const argon2 = require('@node-rs/argon2');
+const crypto = require('crypto');
 const pool = require('../db');
+
+const sha256 = (value) => crypto.createHash('sha256').update(value.toUpperCase()).digest('hex');
 
 // ฟังก์ชัน Login
 const login = async (req, res) => {
@@ -36,14 +39,16 @@ const login = async (req, res) => {
 
         let same = false;
         try {
-            // 1. พยายามตรวจแบบ Hash ก้อนยาวๆ (ตามมาตรฐานความปลอดภัย)
+            // 1. ลอง argon2 ก่อน (admin / candidate ที่ลงทะเบียนแล้ว)
             same = await argon2.verify(results[0].password, password);
         } catch (hashError) {
-            // 2. ถ้า Error แปลว่ารหัสใน DB เป็นข้อความธรรมดา (เช่น password123)
-            // ให้เอามาเทียบตรงๆ แบบเป๊ะๆ แทน (ใช้สำหรับช่วงพัฒนาระบบเท่านั้น!)
-            if (results[0].password === password) {
+            // 2. ลอง SHA-256 (voter ที่ถูกสร้างโดย admin)
+            if (results[0].password === sha256(password)) {
                 same = true;
-                console.warn(`คำเตือน: รหัสผ่านของ '${username}' ใน Database ยังไม่ได้ถูกเข้ารหัส (Hash)!`);
+            // 3. fallback plaintext (dev accounts เช่น admin01)
+            } else if (results[0].password === password) {
+                same = true;
+                console.warn(`Warning: password of '${username}' is not hashed!`);
             }
         }
 
