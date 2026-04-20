@@ -1,268 +1,321 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Candidate Management | MFU Admin Dashboard</title>
+    <title>Candidate Management - MFU E-VOTING</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.1/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="assets/js/theme.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Color configuration matching team theme
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'mfu-red': '#5c0f0f',   // Crimson
+                        'mfu-yellow': '#c9973a' // Gold
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { font-family: 'Kanit', sans-serif; }
+        
+        .sidebar { background-color: #5c0f0f; }
+        .mfu-gold { color: #c9973a; }
+        
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border-top-width: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .stat-label { 
+            font-size: 0.875rem; 
+            color: #6b7280; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+        }
+        
+        .stat-value { 
+            font-size: 1.875rem; 
+            font-weight: 700; 
+            margin-top: 0.5rem; 
+        }
+    </style>
 </head>
-<body class="bg-bgLight min-h-screen text-gray-900">
-    <div class="lg:flex">
-        <!-- EN: Admin Sidebar Navigation -->
-        <!-- TH: เมนูด้านข้างสำหรับแอดมิน -->
-        <aside class="w-full bg-mfuRed text-white shadow-2xl lg:w-72 lg:min-h-screen">
-            <div class="p-8 text-center border-b border-white/10">
-                <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white text-2xl font-black text-mfuRed shadow-lg">
-                    MFU
+
+<body class="bg-gray-50 font-Kanit">
+    <div class="flex h-screen w-full">
+
+        <aside class="w-64 bg-mfu-red text-white flex flex-col justify-between h-full z-20 shadow-xl">
+            <div>
+                <div class="p-6 text-center">
+                    <h1 class="text-2xl font-black text-mfu-yellow mb-1">MFU E-VOTING</h1>
+                    <p class="text-xs font-Kanit opacity-80">Admin Control Panel</p>
                 </div>
-                <h2 class="font-black text-2xl">MFU Admin</h2>
-                <p class="text-sm text-white/70 mt-2">Control Panel</p>
+
+                <ul class="flex flex-col gap-1 px-4 text-sm font-medium">
+                    <li>
+                        <a href="/AdminNew/views/Term.html" 
+                           class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Terms</a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="goToPage('Dashboard.html')"
+                           class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="goToPage('Voting.html')"
+                           class="block px-4 py-3 hover:bg-red-900 rounded transition-colors">Voter Management</a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="goToPage('Candidates.html')"
+                           class="block px-4 py-3 bg-red-900 rounded transition-colors">Candidate Management</a>
+                    </li>
+                </ul>
             </div>
-            <nav class="flex-grow">
-                <a href="#dashboard" class="flex items-center px-8 py-4 bg-white/10 border-r-4 border-mfuGold font-bold">Dashboard</a>
-                <a href="#candidates" class="flex items-center px-8 py-4 opacity-80 hover:opacity-100 transition">Candidates</a>
-                <a href="#policies" class="flex items-center px-8 py-4 opacity-80 hover:opacity-100 transition">Policies</a>
-                <a href="#voters" class="flex items-center px-8 py-4 opacity-80 hover:opacity-100 transition">Voters</a>
-                <a href="#terms" class="flex items-center px-8 py-4 opacity-80 hover:opacity-100 transition">Terms</a>
-            </nav>
-            <div class="p-8">
-                <button id="logoutButton" class="w-full py-3 bg-mfuGold text-white rounded-xl font-bold shadow-lg hover:bg-mfuGold/90 transition">Logout</button>
+
+            <div class="p-6">
+                <button id="logout-Btn" type="button"
+                    onclick="window.location.href='/public/index.html'"
+                    class="w-full font-bold rounded"
+                    style="display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:8px 22px; background: transparent; color: #e8b84b; border-radius:10px; font-size:0.95rem; font-weight:600; letter-spacing:0.02em; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); border:1.5px solid rgba(201,151,58,0.6);"
+                    onmouseover="this.style.background='rgba(201,151,58,0.12)'; this.style.borderColor='rgba(201,151,58,0.9)'; this.style.boxShadow='0 0 20px rgba(201,151,58,0.2)'"
+                    onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(201,151,58,0.6)'; this.style.boxShadow='none'">
+                    logout
+                </button>
             </div>
         </aside>
 
-        <main class="flex-grow p-6 md:p-10">
-            <!-- EN: Page header for candidate management section. -->
-            <!-- TH: ส่วนหัวของหน้าสำหรับการจัดการผู้สมัคร -->
-            <header id="dashboard" class="mb-8">
-                <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <main class="flex-1 flex flex-col h-full overflow-hidden p-8 gap-6 bg-gray-50">
+            <!-- Page Header -->
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Candidate Management</h2>
+                <p class="text-gray-500 text-sm mt-1">Manage candidate records, add policies, and edit candidate information.</p>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="stat-card border-red-700">
+                    <p class="stat-label">Total Candidates</p>
+                    <h3 class="stat-value" id="totalCandidatesValue">0</h3>
+                </div>
+                <div class="stat-card border-blue-600">
+                    <p class="stat-label">With Policies</p>
+                    <h3 class="stat-value" id="withPoliciesValue">0</h3>
+                </div>
+                <div class="stat-card border-green-500">
+                    <p class="stat-label">Registered</p>
+                    <h3 class="stat-value" id="registeredValue">0</h3>
+                </div>
+                <div class="stat-card border-yellow-500">
+                    <p class="stat-label">Active Term</p>
+                    <h3 class="stat-value" id="activeTermValue">--</h3>
+                </div>
+            </div>
+
+            <!-- Live Results Section -->
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-700 mb-6">Live Results</h3>
+                <div class="flex flex-col gap-5" id="liveResultsContainer">
+                    <p class="text-gray-500 text-center py-6">Loading results...</p>
+                </div>
+            </div>
+
+            <!-- Candidates Management Section -->
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex-1 flex flex-col overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="relative w-64">
+                        <input type="text" id="searchCandidates" placeholder="Search ID or Name"
+                            class="input input-bordered input-sm w-full bg-gray-50 focus:bg-white" />
+                    </div>
+                    <button class="btn btn-sm text-white border-none" style="background-color: #5c0f0f;" 
+                            onmouseover="this.style.backgroundColor='#3d0a0a'" 
+                            onmouseout="this.style.backgroundColor='#5c0f0f'"
+                            onclick="openAddCandidateModal()">
+                        + Add Candidate
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto flex-1">
+                    <table class="table table-sm w-full">
+                        <thead class="bg-gray-50 text-gray-600">
+                            <tr>
+                                <th>CANDIDATE ID</th>
+                                <th>Name</th>
+                                <th>BIO</th>
+                                <th class="text-center">VOTES</th>
+                                <th class="text-center">POLICIES</th>
+                                <th class="text-center">STATUS</th>
+                                <th class="text-center">ACTION</th>
+                            </tr>
+                        </thead>
+                        <tbody id="candidateTableBody">
+                            <tr><td colspan="7" class="text-center py-8 text-gray-500">Loading candidates...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Policies Section -->
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex-1 flex flex-col overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
                     <div>
-                        <p class="text-sm font-semibold uppercase tracking-[0.3em] text-mfuRed/70">Admin Control</p>
-                        <h1 class="text-3xl md:text-4xl font-black mt-2">Candidate Management</h1>
-                        <p class="text-gray-600 mt-2">Add new candidates, manage their policies, and oversee voting registrations.</p>
+                        <h3 class="text-lg font-bold text-gray-700">Candidate Policies</h3>
+                        <p class="text-gray-500 text-sm mt-1">View and manage policies for <span id="selectedCandidateName" class="font-bold text-mfu-red">selected candidate</span></p>
                     </div>
-                </div>
-            </header>
-
-            <!-- EN: Top admin summary cards. -->
-            <!-- TH: การ์ดสรุปข้อมูลแอดมินด้านบน -->
-            <section class="bg-mfuRed text-white p-8 rounded-[2rem] shadow-xl mb-8 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div>
-                    <h2 class="text-3xl font-black uppercase">Admin Summary</h2>
-                    <p id="heroStatusText" class="opacity-90 mt-2">System status and quick actions available.</p>
-                </div>
-                <div class="flex flex-wrap gap-4">
-                    <div class="bg-white/10 rounded-2xl px-5 py-4 min-w-40">
-                        <p class="text-xs uppercase tracking-[0.3em] text-white/70">Total Candidates</p>
-                        <p id="totalCandidatesValue" class="text-4xl font-black mt-2">0</p>
-                    </div>
-                    <div class="bg-white/10 rounded-2xl px-5 py-4 min-w-40">
-                        <p class="text-xs uppercase tracking-[0.3em] text-white/70">Active Term</p>
-                        <p id="activeTermValue" class="text-2xl font-black mt-3">--</p>
-                    </div>
-                    <div class="bg-white/10 rounded-2xl px-5 py-4 min-w-40">
-                        <p class="text-xs uppercase tracking-[0.3em] text-white/70">With Policies</p>
-                        <p id="withPoliciesValue" class="text-2xl font-black mt-3">0</p>
-                    </div>
-                </div>
-            </section>
-
-            <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
-                <!-- EN: Candidate list and management section -->
-                <!-- TH: ส่วนรายชื่อผู้สมัครและการจัดการ -->
-                <div class="xl:col-span-3 space-y-6">
-                    <!-- EN: Candidate Management Card -->
-                    <!-- TH: การ์ดการจัดการผู้สมัคร -->
-                    <section id="candidates" class="bg-white p-8 md:p-10 rounded-[2rem] shadow-sm border border-gray-100">
-                        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-                            <div>
-                                <h3 class="text-xl font-bold mb-2">Manage Candidates</h3>
-                                <p class="text-sm text-gray-500">Add new candidates or edit existing candidate information and policies.</p>
-                            </div>
-                            <button id="addCandidateBtn" class="px-6 py-3 bg-mfuRed text-white rounded-xl font-bold shadow-lg hover:bg-mfuRed/90 transition">
-                                + Add Candidate
-                            </button>
-                        </div>
-
-                        <!-- Search and Filter -->
-                        <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center">
-                            <input type="text" id="searchCandidates" placeholder="Search by name or ID..." class="flex-grow px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-mfuRed">
-                            <select id="filterStatus" class="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-mfuRed">
-                                <option value="">All Statuses</option>
-                                <option value="registered">Registered</option>
-                                <option value="not-registered">Not Registered</option>
-                            </select>
-                        </div>
-
-                        <!-- Candidates Table -->
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm border-separate border-spacing-y-3">
-                                <thead>
-                                    <tr class="text-xs uppercase tracking-[0.25em] text-gray-400">
-                                        <th class="pb-2 pr-4">ID</th>
-                                        <th class="pb-2 pr-4">Name</th>
-                                        <th class="pb-2 pr-4">Bio</th>
-                                        <th class="pb-2 pr-4">Status</th>
-                                        <th class="pb-2 pr-4">Policies</th>
-                                        <th class="pb-2">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="candidatesTable" class="space-y-2"></tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <!-- EN: Policies Management Section -->
-                    <!-- TH: ส่วนการจัดการนโยบาย -->
-                    <section id="policies" class="bg-white p-8 md:p-10 rounded-[2rem] shadow-sm border border-gray-100">
-                        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-                            <div>
-                                <h3 class="text-xl font-bold mb-2">Candidate Policies</h3>
-                                <p class="text-sm text-gray-500">View and manage all candidate policies for the current term.</p>
-                            </div>
-                            <button id="addPolicyBtn" class="px-6 py-3 bg-mfuGold text-white rounded-xl font-bold shadow-lg hover:bg-mfuGold/90 transition">
-                                + New Policy
-                            </button>
-                        </div>
-
-                        <!-- Policies List -->
-                        <div id="policiesList" class="grid grid-cols-1 gap-4">
-                            <div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center text-gray-500">
-                                <p class="font-medium">No policies added yet. Select a candidate and add their policies.</p>
-                            </div>
-                        </div>
-                    </section>
+                    <button class="btn btn-sm text-white border-none" style="background-color: #c9973a;" 
+                            onmouseover="this.style.backgroundColor='#b8833d'" 
+                            onmouseout="this.style.backgroundColor='#c9973a'"
+                            onclick="openAddPolicyModal()">
+                        + Add Policy
+                    </button>
                 </div>
 
-                <!-- EN: Sidebar controls and quick stats -->
-                <!-- TH: ส่วนควบคุมด้านข้างและสถิติด่วน -->
-                <div class="space-y-6">
-                    <!-- EN: Quick Actions Card -->
-                    <!-- TH: การ์ดการกระทำด่วน -->
-                    <section class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 h-fit">
-                        <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Quick Actions</h4>
-                        <div class="space-y-3">
-                            <button class="w-full px-4 py-3 bg-mfuRed text-white rounded-xl font-bold hover:bg-mfuRed/90 transition text-sm">
-                                Add Candidate
-                            </button>
-                            <button class="w-full px-4 py-3 bg-mfuGold text-white rounded-xl font-bold hover:bg-mfuGold/90 transition text-sm">
-                                View Policies
-                            </button>
-                            <button class="w-full px-4 py-3 bg-gray-600 text-white rounded-xl font-bold hover:bg-gray-700 transition text-sm">
-                                Export Report
-                            </button>
-                        </div>
-                    </section>
-
-                    <!-- EN: System Status Card -->
-                    <!-- TH: การ์ดสถานะระบบ -->
-                    <section class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 h-fit">
-                        <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">System Status</h4>
-                        <div class="space-y-4">
-                            <div class="rounded-2xl bg-gray-50 px-4 py-4">
-                                <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Voting Enabled</p>
-                                <p id="votingEnabled" class="mt-2 text-lg font-black text-green-600">YES</p>
-                            </div>
-                            <div class="rounded-2xl bg-gray-50 px-4 py-4">
-                                <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Registration Open</p>
-                                <p id="registrationOpen" class="mt-2 text-lg font-black text-green-600">YES</p>
-                            </div>
-                            <div class="rounded-2xl bg-gray-50 px-4 py-4">
-                                <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Current Term</p>
-                                <p id="currentTerm" class="mt-2 text-lg font-black text-gray-900">Term 2025</p>
-                            </div>
-                        </div>
-                    </section>
+                <div class="overflow-y-auto flex-1" id="policiesContainer">
+                    <p class="text-gray-500 text-center py-8">Select a candidate to view/manage their policies</p>
                 </div>
             </div>
+
         </main>
+
     </div>
 
-    <!-- EN: Add/Edit Candidate Modal -->
-    <!-- TH: โมดัลสำหรับเพิ่ม/แก้ไขผู้สมัคร -->
-    <div id="candidateModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-[2rem] shadow-xl p-8 max-w-lg w-full mx-4">
-            <h3 class="text-2xl font-black text-mfuRed mb-6">Add Candidate</h3>
-            <form id="candidateForm" class="space-y-6">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Full Name</label>
-                    <input type="text" id="candidateName" class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-mfuRed" placeholder="Enter candidate name" required>
+    <!-- Add/Edit Candidate Modal -->
+    <dialog id="add_candidate_modal" class="modal">
+        <div class="modal-box bg-white">
+            <h3 class="font-bold text-xl mb-6 border-b pb-2" style="color: #5c0f0f;">
+                <span id="modalTitle">Add Candidate</span>
+            </h3>
+            <form id="addCandidateForm" class="space-y-4">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-bold text-gray-600">Full Name</span>
+                    </label>
+                    <input type="text" id="candidateName" placeholder="Enter candidate name"
+                        class="input input-bordered w-full bg-gray-50 focus:bg-white" required />
                 </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Bio</label>
-                    <textarea id="candidateBio" class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-mfuRed" placeholder="Candidate biography and background" rows="3"></textarea>
+
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-bold text-gray-600">Bio</span>
+                    </label>
+                    <textarea id="candidateBio" placeholder="Candidate biography and background"
+                        class="textarea textarea-bordered w-full bg-gray-50 focus:bg-white" rows="3"></textarea>
                 </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Personal Info</label>
-                    <textarea id="candidateInfo" class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-mfuRed" placeholder="Additional personal information" rows="3"></textarea>
+
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-bold text-gray-600">Personal Info</span>
+                    </label>
+                    <textarea id="candidateInfo" placeholder="Additional personal information"
+                        class="textarea textarea-bordered w-full bg-gray-50 focus:bg-white" rows="3"></textarea>
                 </div>
-                <div class="flex gap-3">
-                    <button type="button" id="closeModalBtn" class="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-400 transition">Cancel</button>
-                    <button type="submit" class="flex-1 px-4 py-3 bg-mfuRed text-white rounded-xl font-bold hover:bg-mfuRed/90 transition">Save Candidate</button>
+
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost text-gray-500" onclick="closeAddCandidateModal()">Cancel</button>
+                    <button type="submit" class="btn text-white border-none px-8" style="background-color: #5c0f0f;"
+                            onmouseover="this.style.backgroundColor='#3d0a0a'"
+                            onmouseout="this.style.backgroundColor='#5c0f0f'">
+                        <span id="submitBtnText">Save Candidate</span>
+                    </button>
                 </div>
             </form>
         </div>
-    </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
 
-    <!-- EN: Add/Edit Policy Modal -->
-    <!-- TH: โมดัลสำหรับเพิ่ม/แก้ไขนโยบาย -->
-    <div id="policyModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-[2rem] shadow-xl p-8 max-w-lg w-full mx-4">
-            <h3 class="text-2xl font-black text-mfuRed mb-6">Add Policy</h3>
-            <form id="policyForm" class="space-y-6">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Select Candidate</label>
-                    <select id="policyCandidateSelect" class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-mfuGold" required>
-                        <option value="">-- Choose a candidate --</option>
-                    </select>
+    <!-- Add/Edit Policy Modal -->
+    <dialog id="add_policy_modal" class="modal">
+        <div class="modal-box bg-white">
+            <h3 class="font-bold text-xl mb-6 border-b pb-2" style="color: #5c0f0f;">Add Policy</h3>
+            <form id="addPolicyForm" class="space-y-4">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-bold text-gray-600">Policy Title</span>
+                    </label>
+                    <input type="text" id="policyTitle" placeholder="e.g., Education Reform"
+                        class="input input-bordered w-full bg-gray-50 focus:bg-white" required />
                 </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Policy Title</label>
-                    <input type="text" id="policyTitle" class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-mfuGold" placeholder="e.g., Education Reform" required>
+
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-bold text-gray-600">Policy Description</span>
+                    </label>
+                    <textarea id="policyDescription" placeholder="Detailed policy description..."
+                        class="textarea textarea-bordered w-full bg-gray-50 focus:bg-white" rows="4" required></textarea>
                 </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Policy Description</label>
-                    <textarea id="policyDescription" class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-mfuGold" placeholder="Detailed policy description..." rows="4" required></textarea>
-                </div>
-                <div class="flex gap-3">
-                    <button type="button" id="closePolicyModalBtn" class="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-400 transition">Cancel</button>
-                    <button type="submit" class="flex-1 px-4 py-3 bg-mfuGold text-white rounded-xl font-bold hover:bg-mfuGold/90 transition">Save Policy</button>
+
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost text-gray-500" onclick="closeAddPolicyModal()">Cancel</button>
+                    <button type="submit" class="btn text-white border-none px-8" style="background-color: #c9973a;"
+                            onmouseover="this.style.backgroundColor='#b8833d'"
+                            onmouseout="this.style.backgroundColor='#c9973a'">
+                        <span id="policySubmitText">Save Policy</span>
+                    </button>
                 </div>
             </form>
         </div>
-    </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
 
-    <!-- EN: View Policy Detail Modal -->
-    <!-- TH: โมดัลสำหรับดูรายละเอียดนโยบาย -->
-    <div id="viewPolicyModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-[2rem] shadow-xl p-8 max-w-lg w-full mx-4">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-2xl font-black text-mfuRed">Policy Details</h3>
-                <button type="button" id="closeViewPolicyModalBtn" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="policyDetail" class="space-y-4">
-                <div>
-                    <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Candidate</p>
-                    <p id="viewPolicyCandidateName" class="mt-2 text-lg font-black text-gray-900">--</p>
-                </div>
-                <div>
-                    <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Policy Title</p>
-                    <p id="viewPolicyTitle" class="mt-2 text-lg font-bold text-gray-900">--</p>
-                </div>
-                <div>
-                    <p class="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Description</p>
-                    <p id="viewPolicyDescription" class="mt-2 text-gray-700 leading-relaxed">--</p>
-                </div>
-            </div>
-            <div class="mt-6 flex gap-3">
-                <button type="button" id="deleteViewPolicyBtn" class="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition">Delete</button>
-                <button type="button" id="editViewPolicyBtn" class="flex-1 px-4 py-3 bg-mfuGold text-white rounded-xl font-bold hover:bg-mfuGold/90 transition">Edit</button>
-                <button type="button" id="closeViewPolicyBtn" class="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-400 transition">Close</button>
-            </div>
-        </div>
-    </div>
-
+    <script src="/AdminNew/script/common.js"></script>
     <script src="assets/js/admin-candidates.js"></script>
+    
+    <script>
+        // Navigation helper matching group's pattern
+        function goToPage(pageName) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentTermId = urlParams.get('term_id');
+            if (currentTermId) {
+                window.location.href = `/AdminNew/views/${pageName}?term_id=${currentTermId}`;
+            } else {
+                window.location.href = `/AdminNew/views/${pageName}`;
+            }
+        }
+
+        // Modal functions for candidate
+        function openAddCandidateModal() {
+            document.getElementById('add_candidate_modal').showModal();
+            document.getElementById('modalTitle').textContent = 'Add Candidate';
+            document.getElementById('submitBtnText').textContent = 'Save Candidate';
+            document.getElementById('addCandidateForm').reset();
+        }
+
+        function closeAddCandidateModal() {
+            document.getElementById('add_candidate_modal').close();
+        }
+
+        // Modal functions for policy
+        function openAddPolicyModal() {
+            if (!selectedCandidateId) {
+                Swal.fire('Warning', 'Please select a candidate first', 'warning');
+                return;
+            }
+            document.getElementById('add_policy_modal').showModal();
+        }
+
+        function closeAddPolicyModal() {
+            document.getElementById('add_policy_modal').close();
+        }
+    </script>
+
+</body>
+
+</html>
 </body>
 </html>
