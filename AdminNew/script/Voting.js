@@ -266,9 +266,9 @@ function goToPage(pageName) {
         const result = await Swal.fire({
             title: 'Add Voter',
             html: `
+                <input id="swal-name" class="swal2-input" placeholder="Full Name">
                 <input id="swal-id" class="swal2-input" placeholder="Citizen ID">
                 <input id="swal-laserid" class="swal2-input" placeholder="Laser ID">
-                <input id="swal-name" class="swal2-input" placeholder="Full Name">
             `,
             showCancelButton: true,
             confirmButtonText: 'Add',
