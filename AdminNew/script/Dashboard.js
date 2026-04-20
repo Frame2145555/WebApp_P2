@@ -113,13 +113,16 @@ if (toggleVotingStatus) {
 }
 
 (() => {
+    let scoreChartInstance = null;
+    let allCandidatesForResults = [];
+    let resultSearchKeyword = '';
+
     document.addEventListener('DOMContentLoaded', () => {
         loadDashboardSummary();
         initVotingToggle();
         loadTermStatus();
+        initResultsSearch();
     });
-
-    let scoreChartInstance = null;
 
     async function loadDashboardSummary() {
         const canvas = document.getElementById('scoreChart');
@@ -133,11 +136,23 @@ if (toggleVotingStatus) {
             const data = json.data || {};
             updateStatsCards(data);
             renderChart(canvas, data.candidates || []);
-            if (resultsList) renderVotingResults(data.candidates || []);
+            allCandidatesForResults = Array.isArray(data.candidates) ? data.candidates : [];
+            if (resultsList) renderVotingResults(allCandidatesForResults, resultSearchKeyword);
         } catch (err) {
             console.error('dashboard summary error', err);
-            if (resultsList) renderVotingResults([]);
+            allCandidatesForResults = [];
+            if (resultsList) renderVotingResults([], resultSearchKeyword);
         }
+    }
+
+    function initResultsSearch() {
+        const searchInput = document.getElementById('results-search');
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', () => {
+            resultSearchKeyword = searchInput.value || '';
+            renderVotingResults(allCandidatesForResults, resultSearchKeyword);
+        });
     }
 
     function updateStatsCards(data) {
@@ -178,21 +193,33 @@ if (toggleVotingStatus) {
         });
     }
 
-    function renderVotingResults(candidates) {
+    function renderVotingResults(candidates, searchKeyword = '') {
         const resultsList = document.getElementById('results-list');
         if (!resultsList) return;
 
         resultsList.innerHTML = '';
 
-        if (!Array.isArray(candidates) || candidates.length === 0) {
+        const normalizedKeyword = String(searchKeyword || '').trim().toLowerCase();
+
+        const sourceCandidates = Array.isArray(candidates) ? candidates : [];
+        const filteredCandidates = sourceCandidates.filter((candidate) => {
+            if (!normalizedKeyword) return true;
+            const name = String(candidate.name || candidate.candidate_name || candidate.full_name || '').toLowerCase();
+            const code = String(candidate.candidate_code || candidate.code || candidate.candidate_id || candidate.id || '').toLowerCase();
+            return name.includes(normalizedKeyword) || code.includes(normalizedKeyword);
+        });
+
+        if (filteredCandidates.length === 0) {
             const emptyState = document.createElement('p');
             emptyState.className = 'results-empty';
-            emptyState.textContent = 'No voting results available for this term.';
+            emptyState.textContent = normalizedKeyword
+                ? 'No candidates match your search.'
+                : 'No voting results available for this term.';
             resultsList.appendChild(emptyState);
             return;
         }
 
-        const rankedCandidates = [...candidates]
+        const rankedCandidates = [...filteredCandidates]
             .map((candidate, index) => ({
                 ...candidate,
                 __originalIndex: index,
