@@ -54,7 +54,7 @@
 
             <div class="p-6">
                 <button id="logout-Btn" type="button"
-                    onclick="window.location.href='/public/index.html'"
+                    onclick="window.location.href=window.location.protocol + '//' + window.location.hostname + ':3000/Login'"
                     class="w-full font-bold rounded"
                     style="display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:8px 22px; background: transparent; color: #e8b84b; border-radius:10px; font-size:0.95rem; font-weight:600; letter-spacing:0.02em; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); border:1.5px solid rgba(201,151,58,0.6);"
                     onmouseover="this.style.background='rgba(201,151,58,0.12)'; this.style.borderColor='rgba(201,151,58,0.9)'; this.style.boxShadow='0 0 20px rgba(201,151,58,0.2)'"
@@ -132,8 +132,26 @@
         <form method="dialog" class="modal-backdrop"><button>close</button></form>
     </dialog>
 
+    <!-- Read Policies Modal -->
+    <dialog id="read_policies_modal" class="modal">
+        <div class="modal-box bg-white">
+            <h3 class="font-bold text-xl mb-6 border-b pb-2" style="color: #5c0f0f;">Candidate Policies</h3>
+            <div id="policiesContent" class="mb-6 text-gray-700 whitespace-pre-line"></div>
+            <div class="modal-action">
+                <button type="button" class="btn btn-ghost text-gray-500" onclick="read_policies_modal.close()">Close</button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
     <script src="/AdminNew/script/common.js"></script>
     <script src="/AdminNew/script/Candidates.js"></script>
+    <script>
+    // Show candidate policies in modal
+    function showPolicies(policies) {
+        document.getElementById('policiesContent').textContent = policies;
+        document.getElementById('read_policies_modal').showModal();
+    }
+    </script>
 </body>
-
 </html>

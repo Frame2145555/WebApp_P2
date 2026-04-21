@@ -1,4 +1,6 @@
 // เมื่อโหลดหน้าเว็บเสร็จ ให้ดึงข้อมูลมาแสดงทันที
+const API_ORIGIN = window.location.port === '3000' ? '' : `${window.location.protocol}//${window.location.hostname}:3000`;
+
 document.addEventListener('DOMContentLoaded', () => {
     loadTerms();
 });
@@ -6,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ฟังก์ชัน: ดึงข้อมูล Term จาก API และวาดการ์ด
 async function loadTerms() {
     try {
-        const response = await fetch('http://localhost:3000/api/admin/terms');
+        const response = await fetch(`${API_ORIGIN}/api/admin/terms`);
         const result = await response.json();
 
         if (result.status === 'success') {
@@ -80,7 +82,7 @@ if (btnSubmitTerm) {
 
         // 2. ถ้ายิง API สำเร็จ
         try {
-            const response = await fetch('http://localhost:3000/api/admin/create-term', {
+            const response = await fetch(`${API_ORIGIN}/api/admin/create-term`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: name, description: description })

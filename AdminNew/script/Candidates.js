@@ -1,4 +1,5 @@
 let currentTermId = null; // สร้างตัวแปรไว้ให้ฟังก์ชันอื่นดึงไปใช้ได้
+const API_ORIGIN = window.location.port === '3000' ? '' : `${window.location.protocol}//${window.location.hostname}:3000`;
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -46,7 +47,7 @@ function goToPage(pageName) {
 async function loadCandidates(searchQuery = '') {
     try {
         // ยิงไปที่ API หลังบ้านของเรา พร้อมส่ง term_id และ search keyword ไปด้วย
-        const response = await fetch(`http://localhost:3000/api/admin/candidates?term_id=${currentTermId}`);
+        const response = await fetch(`${API_ORIGIN}/api/admin/candidates?term_id=${currentTermId}`);
         const result = await response.json();
 
         if (result.status === 'success') {
@@ -101,13 +102,15 @@ function renderTable(candidates) {
 
         const nextStatus = cand.status_enable === 1 ? 0 : 1;
 
+        const encodedPolicies = encodeURIComponent(cand.policies || 'ยังไม่มีนโยบาย');
+
         const rowHtml = `
             <tr class="hover:bg-gray-50">
                 <td class="font-bold text-gray-700">${cand.display_id}</td>
                 <td>${cand.name}</td>
                 <td class="text-center font-bold" style="color: #5c0f0f;">${cand.score || 0}</td>
                 <td class="text-center">
-                    <button class="btn btn-xs btn-outline border-gray-300 text-gray-600" onclick="showPolicies('${cand.policies}')">Read</button>
+                    <button class="btn btn-xs btn-outline border-gray-300 text-gray-600" onclick="showPolicies(decodeURIComponent('${encodedPolicies}'))">Read</button>
                 </td>
                 <td class="text-center">${statusBadge}</td>
                 <td class="text-center">
@@ -169,7 +172,7 @@ async function toggleStatus(internalId, displayId, newStatus) {
 
     if (confirm.isConfirmed) {
         try {
-            const response = await fetch('http://localhost:3000/api/admin/toggle-candidate', {
+            const response = await fetch(`${API_ORIGIN}/api/admin/toggle-candidate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -232,7 +235,7 @@ if (addCandidateBtn) {
 
         try {
             // ยิง API ส่งข้อมูลไปให้หลังบ้าน (ไม่ส่ง candidate_id แล้ว)
-            const response = await fetch('http://localhost:3000/api/admin/create-candidate', {
+            const response = await fetch(`${API_ORIGIN}/api/admin/create-candidate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -311,7 +314,7 @@ async function deleteCandidate(internalId, displayId) {
     if (confirm.isConfirmed) {
         try {
             // ใช้ internalId (ตัวเลข) ต่อท้าย URL เพื่อสั่งลบที่หลังบ้าน
-            const response = await fetch(`http://localhost:3000/api/admin/candidate/${internalId}`, {
+            const response = await fetch(`${API_ORIGIN}/api/admin/candidate/${internalId}`, {
                 method: 'DELETE'
             });
 
