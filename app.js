@@ -1,12 +1,24 @@
 const path = require('path');
 const express = require('express');
-const pool = require('./db'); 
+const session = require('express-session');
+const pool = require('./db');
 const app = express();
 const multer = require('multer');
 const fs = require('fs');
+const { isLoggedIn } = require('./middleware/auth');
 
 // 1. ตั้งค่าพื้นฐาน & Static Files
 app.use(express.json());
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'change_this_secret_in_production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: false,
+        maxAge: 24 * 60 * 60 * 1000
+    }
+}));
 
 if (!fs.existsSync('./uploads')) {
     fs.mkdirSync('./uploads');
@@ -90,7 +102,7 @@ app.get('/api/results', async (req, res) => {
 // 🚨 API เพิ่มเติมสำหรับ Candidate Dashboard
 
 // 1. อัปเดต Manifesto (Bio)
-app.post('/api/update-bio', async (req, res) => {
+app.post('/api/update-bio', isLoggedIn, async (req, res) => {
     const { user_id, bio } = req.body;
     try {
         // ใน Database คุณใช้คอลัมน์ 'policies' เก็บข้อมูล Bio
@@ -203,7 +215,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // API สำหรับรับและบันทึกไฟล์รูปภาพ
-app.post('/api/update-profile-picture', upload.single('profile_image'), async (req, res) => {
+app.post('/api/update-profile-picture', isLoggedIn, upload.single('profile_image'), async (req, res) => {
     try {
         const { user_id } = req.body;
         

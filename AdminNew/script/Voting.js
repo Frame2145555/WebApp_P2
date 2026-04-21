@@ -349,7 +349,7 @@ function goToPage(pageName) {
 
     function loadVoterNameMap() {
         try {
-            const raw = localStorage.getItem(VOTER_NAMES_STORAGE_KEY);
+            const raw = sessionStorage.getItem(VOTER_NAMES_STORAGE_KEY);
             const parsed = raw ? JSON.parse(raw) : {};
             return (parsed && typeof parsed === 'object') ? parsed : {};
         } catch {
@@ -360,7 +360,7 @@ function goToPage(pageName) {
     function saveVoterName(citizenId, fullName) {
         const map = loadVoterNameMap();
         map[citizenId] = fullName;
-        localStorage.setItem(VOTER_NAMES_STORAGE_KEY, JSON.stringify(map));
+        sessionStorage.setItem(VOTER_NAMES_STORAGE_KEY, JSON.stringify(map));
     }
 
     function escapeHtml(value) {

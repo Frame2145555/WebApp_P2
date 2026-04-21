@@ -38,6 +38,8 @@ const login = async (req, res) => {
         }
 
         let same = false;
+        let needsRehash = false;
+
         try {
             // 1. ลอง argon2 ก่อน (admin / candidate ที่ลงทะเบียนแล้ว)
             same = await argon2.verify(results[0].password, password);
@@ -45,15 +47,21 @@ const login = async (req, res) => {
             // 2. ลอง SHA-256 (voter ที่ถูกสร้างโดย admin)
             if (results[0].password === sha256(password)) {
                 same = true;
-            // 3. fallback plaintext (dev accounts เช่น admin01)
+                needsRehash = true;
+            // 3. plaintext — ตรวจแล้ว rehash ทันที
             } else if (results[0].password === password) {
                 same = true;
-                console.warn(`Warning: password of '${username}' is not hashed!`);
+                needsRehash = true;
             }
         }
 
         if (!same) {
             return res.status(401).send('Wrong password');
+        }
+
+        if (needsRehash) {
+            const hashed = await argon2.hash(password);
+            await pool.query('UPDATE users SET password = ? WHERE user_id = ?', [hashed, results[0].user_id]);
         }
 
         const { user_id } = results[0];
@@ -70,7 +78,6 @@ const login = async (req, res) => {
             return res.status(403).send('Unknown role');
         }
 
-        // ห่อข้อมูลผู้ใช้เป็นก้อนเดียวกัน เพื่อให้หน้าเว็บเอาไปเซฟลง LocalStorage ได้ง่ายๆ
         const userData = {
             user_id: results[0].user_id,
             username: results[0].username,
@@ -81,7 +88,8 @@ const login = async (req, res) => {
             profile_picture: results[0].profile_picture
         };
 
-        // ส่งกลับไปให้หน้าเว็บ 
+        req.session.user = userData;
+
         return res.status(200).json({ redirect: redirect, user: userData });
     } catch (err) {
         console.error("Login Error:", err);
@@ -224,9 +232,16 @@ const updateBio = async (req, res) => {
     }
 };
 
-module.exports = { 
-    login, 
-    verifyCandidate, 
+const logout = (req, res) => {
+    req.session.destroy(() => {
+        res.status(200).json({ message: 'Logged out' });
+    });
+};
+
+module.exports = {
+    login,
+    logout,
+    verifyCandidate,
     register,
     updateBio
 };

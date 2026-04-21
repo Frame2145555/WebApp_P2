@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { isAdmin } = require('../middleware/auth');
 
-const { 
+router.use(isAdmin);
+
+const {
     createCandidate,
     createVoter,
     setActiveTerm,
