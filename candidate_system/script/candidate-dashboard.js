@@ -11,8 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     results: [],
     filteredResults: [],
     chart: null,
-    pendingProfileImage: null,
-    searchTimer: null
+    pendingProfileImage: null
   };
 
   // รวม element ที่ต้องใช้บ่อยไว้ที่เดียว จะได้อ่านและดูแลง่าย
@@ -76,10 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
   elements.choosePhotoButton.addEventListener('click', () => elements.profileImageInput.click());
   elements.savePhotoButton.addEventListener('click', saveProfilePicture);
   elements.profileImageInput.addEventListener('change', handleProfileImageSelection);
-  elements.searchInput.addEventListener('input', () => {
-    clearTimeout(state.searchTimer);
-    state.searchTimer = setTimeout(applySearch, 180);
-  });
+  elements.searchInput.addEventListener('input', applySearch);
 
   loadDashboard();
 
@@ -147,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     state.filteredResults = query
       ? sortedResults.filter((candidate) => {
-        const searchValue = `${candidate.display_name || ''} ${candidate.username || ''} ${candidate.bio || ''} ${candidate.candidate_id || ''}`.toLowerCase();
+        const searchValue = `${candidate.display_name || ''} ${candidate.username || ''}`.toLowerCase();
         return searchValue.includes(query);
       })
       : sortedResults;
@@ -170,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!state.filteredResults.length) {
       elements.resultsTable.innerHTML = `
         <tr>
-          <td colspan="6" class="rounded-2xl bg-gray-50 px-4 py-8 text-center text-gray-500">
+          <td colspan="4" class="rounded-2xl bg-gray-50 px-4 py-8 text-center text-gray-500">
             No candidate results match this search yet.
           </td>
         </tr>
@@ -180,25 +176,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const sortedResults = sortResults(state.results);
-    const query = elements.searchInput.value.trim();
-    elements.tableStatus.textContent = query
-      ? `Showing ${state.filteredResults.length} result${state.filteredResults.length === 1 ? '' : 's'} for "${query}".`
-      : `Showing ${state.filteredResults.length} candidate${state.filteredResults.length === 1 ? '' : 's'}.`;
+    elements.tableStatus.textContent = `Showing ${state.filteredResults.length} candidate${state.filteredResults.length === 1 ? '' : 's'}.`;
 
     elements.resultsTable.innerHTML = state.filteredResults.map((candidate) => {
       const rank = sortedResults.findIndex((item) => Number(item.candidate_id) === Number(candidate.candidate_id)) + 1;
       const isOwner = isCurrentCandidate(candidate);
       const candidateName = VotingApp.escapeHtml(getCandidateLabel(candidate));
-      const displayId = VotingApp.escapeHtml(candidate.username || `#${candidate.candidate_id}`);
-      const bio = VotingApp.escapeHtml(candidate.bio || '-');
-      const shortBio = bio.length > 120 ? `${bio.slice(0, 120)}...` : bio;
 
       return `
         <tr class="${isOwner ? 'bg-mfuRed text-white shadow-lg' : 'bg-gray-50 text-gray-800'}">
           <td class="rounded-l-2xl px-4 py-4 font-black">${rank}</td>
           <td class="px-4 py-4 font-semibold">${candidateName}</td>
-          <td class="px-4 py-4 text-sm font-semibold">${displayId}</td>
-          <td class="px-4 py-4 text-sm max-w-[360px] truncate" title="${bio}">${shortBio}</td>
           <td class="px-4 py-4 font-bold">${normalizeVoteCount(candidate.vote_count)}</td>
           <td class="rounded-r-2xl px-4 py-4">
             <span class="${isOwner ? 'bg-white/15 text-white' : 'bg-mfuRed/10 text-mfuRed'} inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em]">
@@ -306,7 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
       VotingApp.setUser(user);
       elements.displayBio.textContent = `"${user.bio}"`;
       closeBioModal();
-      await loadDashboard();
       
       showMessageBox('Success', 'Manifesto updated successfully!');
     } catch (error) {

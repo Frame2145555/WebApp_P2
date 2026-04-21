@@ -8,19 +8,6 @@ const fs = require('fs');
 // 1. ตั้งค่าพื้นฐาน & Static Files
 app.use(express.json());
 
-// รองรับการเรียก API จากพอร์ตอื่น (เช่น VS Code Live Server :5501)
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(204);
-    }
-
-    next();
-});
-
 if (!fs.existsSync('./uploads')) {
     fs.mkdirSync('./uploads');
 }
@@ -33,7 +20,6 @@ app.use('/img', express.static(path.join(__dirname, 'index-Login-register(tua)/i
 app.use('/AdminNew', express.static(path.join(__dirname, 'AdminNew')));
 app.use('/candidate_system', express.static(path.join(__dirname, 'candidate_system')));
 app.use('/dashbordVoter/WebAppProject', express.static(path.join(__dirname, 'dashbordVoter/WebAppProject')));
-app.use('/VoterDashboard', express.static(path.join(__dirname, 'VoterDashboard')));
 
 // 2. Routes สำหรับเปิดหน้า HTML (tua)
 app.get('/index', (req, res) => {
@@ -45,19 +31,6 @@ app.get('/Login', (req, res) => {
 });
 
 app.get('/Candidate-Register', (req, res) => {
-    res.status(200).sendFile(path.join(__dirname, 'index-Login-register(tua)/public/Candidate-register.html'));
-});
-
-// Legacy compatibility routes (รองรับลิงก์เดิม)
-app.get('/public/index.html', (req, res) => {
-    res.status(200).sendFile(path.join(__dirname, 'index-Login-register(tua)/public/index.html'));
-});
-
-app.get('/public/Login.html', (req, res) => {
-    res.status(200).sendFile(path.join(__dirname, 'index-Login-register(tua)/public/Login.html'));
-});
-
-app.get('/public/Candidate-register.html', (req, res) => {
     res.status(200).sendFile(path.join(__dirname, 'index-Login-register(tua)/public/Candidate-register.html'));
 });
 
@@ -119,38 +92,13 @@ app.get('/api/results', async (req, res) => {
 // 1. อัปเดต Manifesto (Bio)
 app.post('/api/update-bio', async (req, res) => {
     const { user_id, bio } = req.body;
-
-    if (!user_id) {
-        return res.status(400).json({ status: 'error', message: 'user_id is required' });
-    }
-
     try {
-        // ใน Database ใช้คอลัมน์ policies เก็บ Manifesto
-        await pool.query("UPDATE candidates SET policies = ? WHERE user_id = ?", [bio || '', user_id]);
-
-        const [rows] = await pool.query(
-            `SELECT candidate_id, name, policies AS bio, profile_picture
-             FROM candidates
-             WHERE user_id = ?
-             LIMIT 1`,
-            [user_id]
-        );
-
-        const candidate = rows[0] || {};
-
-        res.json({
-            status: 'success',
-            message: 'Manifesto updated successfully',
-            user: {
-                candidate_id: candidate.candidate_id || null,
-                display_name: candidate.name || null,
-                profile_picture: candidate.profile_picture || null,
-                bio: candidate.bio || bio || ''
-            }
-        });
+        // ใน Database คุณใช้คอลัมน์ 'policies' เก็บข้อมูล Bio
+        await pool.query("UPDATE candidates SET policies = ? WHERE user_id = ?", [bio, user_id]);
+        res.json({ user: { bio: bio } }); // ตอบกลับรูปแบบที่ Frontend ต้องการ
     } catch (error) {
         console.error('Update Bio Error:', error);
-        res.status(500).json({ status: 'error', message: 'ไม่สามารถอัปเดตข้อมูลได้' });
+        res.status(500).json({ message: 'ไม่สามารถอัปเดตข้อมูลได้' });
     }
 });
 
@@ -215,16 +163,17 @@ app.get('/api/test-db', async (req, res) => {
     }
 });
 
-
 // 4. นำเข้า API Routes (ประกาศแค่รอบเดียว!)
 const authRoutes = require('./routes/auth.routes');
-const adminRoutes = require('./routes/admin.routes');
-const votingRoutes = require('./routes/voting.routes');
-const voterDashboardRoutes = require('./routes/voter-dashboard.routes');
-
 app.use('/api', authRoutes);
+
+const adminRoutes = require('./routes/admin.routes');
 app.use('/api/admin', adminRoutes);
+
+const votingRoutes = require('./routes/voting.routes');
 app.use('/api/voting', votingRoutes);
+
+const voterDashboardRoutes = require('./routes/voter-dashboard.routes');
 app.use('/api/voter-dashboard', voterDashboardRoutes);
 
 // 5. Error Handler & Start Server
