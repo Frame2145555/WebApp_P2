@@ -38,6 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
     choosePhotoButton: document.getElementById('choosePhotoButton'),
     savePhotoButton: document.getElementById('savePhotoButton'),
     profilePhotoStatus: document.getElementById('profilePhotoStatus'),
+    personalInfoMiniStatus: document.getElementById('personalInfoMiniStatus'),
+    personalInfoMiniName: document.getElementById('personalInfoMiniName'),
+    personalInfoMiniStudentId: document.getElementById('personalInfoMiniStudentId'),
+    personalInfoMiniProgram: document.getElementById('personalInfoMiniProgram'),
+    personalInfoMiniContact: document.getElementById('personalInfoMiniContact'),
     chartContext: document.getElementById('leaderboardChart').getContext('2d')
   };
 
@@ -78,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
   elements.searchInput.addEventListener('input', applySearch);
 
   loadDashboard();
+  loadPersonalInfoSnapshot();
 
   // ดึง manifesto จากข้อมูลผู้ใช้ที่เก็บไว้ในเครื่อง
   function syncBioFromUser() {
@@ -257,6 +263,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function closeBioModal() {
     elements.bioModal.classList.add('hidden');
+  }
+
+  function getCompactValue(value) {
+    const normalized = String(value || '').trim();
+    return normalized || '-';
+  }
+
+  function renderPersonalInfoSnapshot(info = {}) {
+    const fullName = getCompactValue(info.full_name);
+    const studentId = getCompactValue(info.student_id);
+    const faculty = String(info.faculty || '').trim();
+    const major = String(info.major || '').trim();
+    const email = String(info.email || '').trim();
+    const phone = String(info.phone || '').trim();
+
+    let facultyMajor = '-';
+    if (faculty && major) {
+      facultyMajor = `${faculty} / ${major}`;
+    } else if (faculty || major) {
+      facultyMajor = faculty || major;
+    }
+
+    let contact = '-';
+    if (email && phone) {
+      contact = `${email} | ${phone}`;
+    } else if (email || phone) {
+      contact = email || phone;
+    }
+
+    elements.personalInfoMiniName.textContent = fullName;
+    elements.personalInfoMiniStudentId.textContent = studentId;
+    elements.personalInfoMiniProgram.textContent = facultyMajor;
+    elements.personalInfoMiniContact.textContent = contact;
+  }
+
+  async function loadPersonalInfoSnapshot() {
+    if (!elements.personalInfoMiniStatus) {
+      return;
+    }
+
+    elements.personalInfoMiniStatus.textContent = 'Loading personal info...';
+    elements.personalInfoMiniStatus.className = 'text-xs font-semibold text-gray-400 mb-4';
+
+    try {
+      const result = await VotingApp.api(`/api/candidate/personal-info/${encodeURIComponent(user.user_id)}`);
+      renderPersonalInfoSnapshot(result?.data || {});
+      elements.personalInfoMiniStatus.textContent = 'Personal info synced';
+      elements.personalInfoMiniStatus.className = 'text-xs font-semibold text-green-700 mb-4';
+    } catch (error) {
+      renderPersonalInfoSnapshot({});
+      elements.personalInfoMiniStatus.textContent = 'No personal info yet';
+      elements.personalInfoMiniStatus.className = 'text-xs font-semibold text-mfuRed mb-4';
+    }
   }
 
   // 🚨 เรียกใช้ showMessageBox ตอนแชร์ลิงก์

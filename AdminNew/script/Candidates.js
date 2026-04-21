@@ -1,4 +1,5 @@
 let currentTermId = null; // สร้างตัวแปรไว้ให้ฟังก์ชันอื่นดึงไปใช้ได้
+let lastRenderedCandidates = []; // เก็บข้อมูลล่าสุดไว้ให้ปุ่ม Read ดึงนโยบายได้
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -93,8 +94,9 @@ function renderLiveResults(candidates) {
 function renderTable(candidates) {
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = ''; 
+    lastRenderedCandidates = candidates;
 
-    candidates.forEach(cand => {
+    candidates.forEach((cand, index) => {
         const statusBadge = cand.status_enable === 1 
             ? `<span class="badge badge-success badge-sm text-white font-bold">enabled</span>` 
             : `<span class="badge badge-error badge-sm text-white font-bold">disabled</span>`;
@@ -107,7 +109,7 @@ function renderTable(candidates) {
                 <td>${cand.name}</td>
                 <td class="text-center font-bold" style="color: #5c0f0f;">${cand.score || 0}</td>
                 <td class="text-center">
-                    <button class="btn btn-xs btn-outline border-gray-300 text-gray-600" onclick="showPolicies('${cand.policies}')">Read</button>
+                    <button class="btn btn-xs btn-outline border-gray-300 text-gray-600" onclick="showPolicies(${index})">Read</button>
                 </td>
                 <td class="text-center">${statusBadge}</td>
                 <td class="text-center">
@@ -127,6 +129,28 @@ function renderTable(candidates) {
         tbody.innerHTML += rowHtml;
     });
 }
+
+// แสดงนโยบายผู้สมัครผ่านปุ่ม Read ในตาราง
+function showPolicies(index) {
+    const candidate = lastRenderedCandidates[index];
+    const candidateName = candidate?.name || candidate?.display_id || 'Candidate';
+    const policies = (candidate?.policies || '').trim();
+
+    Swal.fire({
+        title: `Policies: ${candidateName}`,
+        text: policies || 'No policies available',
+        icon: 'info',
+        confirmButtonText: 'Close',
+        scrollbarPadding: false,
+        buttonsStyling: false,
+        customClass: {
+            confirmButton: 'btn bg-mfu-red text-white hover:bg-red-900 border-none'
+        }
+    });
+}
+
+// ทำให้ inline onclick เรียกใช้ได้แน่นอน
+window.showPolicies = showPolicies;
 
 // ทำให้ช่อง Search
 const searchInput = document.querySelector('input[placeholder="Search ID or Name"]');

@@ -176,21 +176,24 @@ const sha256 = (value) => crypto.createHash('sha256').update(value.toUpperCase()
 const createVoter = async (req, res) => {
     // รับค่าที่ Admin ส่งมาจากหน้าเว็บ (ตาม API Spec)
     const { citizen_id, laser_id, term_id } = req.body;
+    const normalizedCitizenId = String(citizen_id || '').trim();
+    const normalizedLaserId = String(laser_id || '').trim().toUpperCase();
+    const normalizedTermId = Number(term_id);
 
     // 1. เช็คว่าส่งค่ามาครบไหม
-    if (!citizen_id || !laser_id || !term_id) {
+    if (!normalizedCitizenId || !normalizedLaserId || !normalizedTermId) {
         return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบ (citizen_id, laser_id, term_id)" });
     }
 
     // 2. อุดช่องโหว่: ดักความยาวและรูปแบบของ Citizen ID (เลข 13 หลัก)
     const citizenRegex = /^\d{13}$/;
-    if (!citizenRegex.test(citizen_id)) {
+    if (!citizenRegex.test(normalizedCitizenId)) {
         return res.status(400).json({ message: "รหัสบัตรประชาชนต้องเป็นตัวเลข 13 หลักเท่านั้น!" });
     }
 
     // 3. อุดช่องโหว่: ดักรูปแบบของ Laser ID (อักษร 2 ตัว + เลข 10 ตัว)
     const laserRegex = /^[A-Za-z]{2}\d{10}$/;
-    if (!laserRegex.test(laser_id)) {
+    if (!laserRegex.test(normalizedLaserId)) {
         return res.status(400).json({ message: "รหัสหลังบัตร (Laser ID) ไม่ถูกต้อง (ต้องเป็นภาษาอังกฤษ 2 ตัว ตามด้วยตัวเลข 10 ตัว)" });
     }
 
@@ -201,35 +204,67 @@ const createVoter = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const hashedLaserId = sha256(laser_id);
+        const hashedLaserId = sha256(normalizedLaserId);
 
-        // เช็ค Laser ID ซ้ำก่อน insert โดยเปรียบเทียบ SHA-256 hash
-        const [existing] = await connection.query(
-            "SELECT user_id FROM users WHERE password = ? AND role = 'voter'",
-            [hashedLaserId]
+        // เช็คก่อนว่ามี user voter ของ citizen_id นี้อยู่หรือยัง
+        const [existingUserRows] = await connection.query(
+            "SELECT user_id, username, password FROM users WHERE username = ? AND role = 'voter' LIMIT 1",
+            [normalizedCitizenId]
         );
-        if (existing.length > 0) {
-            await connection.rollback();
-            return res.status(400).json({ message: "Laser ID นี้มีอยู่ในระบบแล้ว!" });
+
+        let userIdForVoter = null;
+
+        if (existingUserRows.length > 0) {
+            const existingUser = existingUserRows[0];
+
+            // ถ้า citizen_id เดิม แต่ laser_id ไม่ตรง ให้บล็อกไว้ก่อน
+            if (existingUser.password !== hashedLaserId) {
+                await connection.rollback();
+                return res.status(400).json({ message: "Citizen ID นี้มีอยู่แล้ว แต่ Laser ID ไม่ตรงกับข้อมูลเดิม" });
+            }
+
+            userIdForVoter = existingUser.user_id;
+        } else {
+            // ถ้า citizen_id ยังไม่เคยมี แต่ laser_id นี้ถูกใช้โดย voter คนอื่นแล้ว ให้บล็อก
+            const [laserDuplicateRows] = await connection.query(
+                "SELECT user_id, username FROM users WHERE password = ? AND role = 'voter' LIMIT 1",
+                [hashedLaserId]
+            );
+
+            if (laserDuplicateRows.length > 0) {
+                await connection.rollback();
+                return res.status(400).json({ message: "Laser ID นี้ถูกผูกกับ Citizen ID อื่นในระบบแล้ว" });
+            }
+
+            const [userResult] = await connection.query(
+                "INSERT INTO users (username, password, role, is_enable) VALUES (?, ?, 'voter', 1)",
+                [normalizedCitizenId, hashedLaserId]
+            );
+
+            userIdForVoter = userResult.insertId;
         }
 
-        const [userResult] = await connection.query(
-            "INSERT INTO users (username, password, role, is_enable) VALUES (?, ?, 'voter', 1)",
-            [citizen_id, hashedLaserId]
+        // กันซ้ำเฉพาะในเทอมเดียวกันเท่านั้น
+        const [existingInSameTerm] = await connection.query(
+            "SELECT voter_id FROM voters WHERE user_id = ? AND term_id = ? LIMIT 1",
+            [userIdForVoter, normalizedTermId]
         );
 
-        const newUserId = userResult.insertId;
+        if (existingInSameTerm.length > 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: "Citizen ID และ Laser ID นี้มีอยู่ในเทอมนี้แล้ว" });
+        }
 
         await connection.query(
             "INSERT INTO voters (user_id, term_id, is_voted) VALUES (?, ?, 0)",
-            [newUserId, term_id]
+            [userIdForVoter, normalizedTermId]
         );
 
         await connection.commit();
 
         res.json({
             status: "success",
-            message: `เพิ่มรายชื่อ Voter (Citizen ID: ${citizen_id}) สำเร็จ!`
+            message: `เพิ่มรายชื่อ Voter (Citizen ID: ${normalizedCitizenId}) สำเร็จ!`
         });
 
     } catch (error) {
@@ -237,7 +272,7 @@ const createVoter = async (req, res) => {
         console.error("Admin Create Voter Error:", error);
 
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ message: "Citizen ID นี้มีอยู่ในระบบแล้ว!" });
+            return res.status(400).json({ message: "ข้อมูลนี้มีอยู่ในเทอมนี้แล้ว" });
         }
         res.status(500).json({ message: "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์" });
 

@@ -204,9 +204,15 @@ if (toggleVotingStatus) {
         const sourceCandidates = Array.isArray(candidates) ? candidates : [];
         const filteredCandidates = sourceCandidates.filter((candidate) => {
             if (!normalizedKeyword) return true;
+
             const name = String(candidate.name || candidate.candidate_name || candidate.full_name || '').toLowerCase();
             const code = String(candidate.candidate_code || candidate.code || candidate.candidate_id || candidate.id || '').toLowerCase();
-            return name.includes(normalizedKeyword) || code.includes(normalizedKeyword);
+            const voteCount = Number(candidate.score ?? candidate.votes ?? candidate.vote_count ?? 0);
+            const voteText = String(voteCount);
+
+            return name.includes(normalizedKeyword)
+                || code.includes(normalizedKeyword)
+                || voteText.includes(normalizedKeyword);
         });
 
         if (filteredCandidates.length === 0) {

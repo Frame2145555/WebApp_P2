@@ -28,8 +28,7 @@
             </div>
             <nav class="flex-grow">
                 <a href="#overview" class="flex items-center px-8 py-4 bg-white/10 border-r-4 border-mfuGold font-bold">Dashboard</a>
-                <a href="#results" class="flex items-center px-8 py-4 opacity-80 hover:opacity-100 transition">Results Board</a>
-                <a href="#manifesto" class="flex items-center px-8 py-4 opacity-80 hover:opacity-100 transition">Manifesto</a>
+                <a href="./personal_info.html" class="flex items-center px-8 py-4 text-white/80 hover:bg-white/10 font-semibold transition">Personal Info</a>
             </nav>
             <div class="p-8">
                 <button id="logoutButton" class="w-full py-3 bg-mfuGold text-white rounded-xl font-bold shadow-lg">Logout</button>
@@ -133,9 +132,8 @@
                         </div>
                     </div>
                 </div>
-            </section>
 
-            <section id="results" class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 mt-6">
+                <section id="results" class="xl:col-span-3 bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
                 <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2">
                     <div>
                         <h2 class="text-xl font-bold text-mfuRed">Voting Results</h2>
@@ -162,6 +160,40 @@
                         </thead>
                         <tbody id="resultsTable"></tbody>
                     </table>
+                </div>
+                </section>
+
+                <div class="h-fit">
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 h-fit">
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Personal Info Snapshot</h4>
+                            <a href="./personal_info.html" class="text-xs font-bold text-mfuRed hover:underline">Edit</a>
+                        </div>
+
+                        <p id="personalInfoMiniStatus" class="text-xs font-semibold text-gray-400 mb-4">Loading personal info...</p>
+
+                        <div class="space-y-3 text-sm">
+                            <div class="rounded-2xl bg-gray-50 px-4 py-3">
+                                <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400">Full Name</p>
+                                <p id="personalInfoMiniName" class="mt-1 font-semibold text-gray-700">-</p>
+                            </div>
+
+                            <div class="rounded-2xl bg-gray-50 px-4 py-3">
+                                <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400">Student ID</p>
+                                <p id="personalInfoMiniStudentId" class="mt-1 font-semibold text-gray-700">-</p>
+                            </div>
+
+                            <div class="rounded-2xl bg-gray-50 px-4 py-3">
+                                <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400">Faculty / Major</p>
+                                <p id="personalInfoMiniProgram" class="mt-1 font-semibold text-gray-700">-</p>
+                            </div>
+
+                            <div class="rounded-2xl bg-gray-50 px-4 py-3">
+                                <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400">Contact</p>
+                                <p id="personalInfoMiniContact" class="mt-1 font-semibold text-gray-700">-</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>

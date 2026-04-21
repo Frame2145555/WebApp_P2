@@ -102,6 +102,91 @@ app.post('/api/update-bio', async (req, res) => {
     }
 });
 
+// 2. อ่านข้อมูลส่วนตัว Candidate
+app.get('/api/candidate/personal-info/:user_id', async (req, res) => {
+    const { user_id } = req.params;
+
+    if (!user_id) {
+        return res.status(400).json({ message: 'user_id is required' });
+    }
+
+    try {
+        const [rows] = await pool.query(
+            `SELECT user_id, personal_info
+             FROM candidates
+             WHERE user_id = ?
+             LIMIT 1`,
+            [user_id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Candidate not found' });
+        }
+
+        const raw = rows[0].personal_info;
+        let personalInfo = {};
+
+        // รองรับข้อมูลเก่าที่อาจเป็น text ธรรมดา ไม่ใช่ JSON
+        if (raw) {
+            try {
+                personalInfo = JSON.parse(raw);
+            } catch (error) {
+                personalInfo = { about: String(raw) };
+            }
+        }
+
+        return res.json({ status: 'success', data: personalInfo });
+    } catch (error) {
+        console.error('Get Personal Info Error:', error);
+        return res.status(500).json({ message: 'Failed to load personal information' });
+    }
+});
+
+// 3. บันทึกข้อมูลส่วนตัว Candidate
+app.post('/api/candidate/personal-info', async (req, res) => {
+    const {
+        user_id,
+        full_name,
+        student_id,
+        faculty,
+        major,
+        phone,
+        email,
+        about
+    } = req.body || {};
+
+    if (!user_id) {
+        return res.status(400).json({ message: 'user_id is required' });
+    }
+
+    const payload = {
+        full_name: String(full_name || '').trim(),
+        student_id: String(student_id || '').trim(),
+        faculty: String(faculty || '').trim(),
+        major: String(major || '').trim(),
+        phone: String(phone || '').trim(),
+        email: String(email || '').trim(),
+        about: String(about || '').trim(),
+        updated_at: new Date().toISOString()
+    };
+
+    try {
+        const [result] = await pool.query(
+            'UPDATE candidates SET personal_info = ? WHERE user_id = ?',
+            [JSON.stringify(payload), user_id]
+        );
+
+        if (!result.affectedRows) {
+            return res.status(404).json({ message: 'Candidate not found' });
+        }
+
+        return res.json({ status: 'success', data: payload, message: 'Personal information saved successfully' });
+    } catch (error) {
+        console.error('Save Personal Info Error:', error);
+        return res.status(500).json({ message: 'Failed to save personal information' });
+    }
+});
+
 
 // ตั้งค่าระบบรับไฟล์ (Multer)
 const storage = multer.diskStorage({
