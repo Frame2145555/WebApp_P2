@@ -197,17 +197,35 @@ function renderResults(container, query, candidates, term, totalVoters) {
 
 function openPolicyModal(candidate) {
     const modal = document.getElementById('policyModal');
+    if (!modal) return;
+
+    const candidateName = candidate?.name || `Candidate ${candidate?.candidate_id || '-'}`;
+    const candidateId = candidate?.display_id || String(candidate?.candidate_id || '-');
+    const candidatePolicy = candidate?.policies || 'No policy data available.';
+
+    // Search page modal structure
     const nameEl = document.getElementById('policyCandidateName');
     const idEl = document.getElementById('policyCandidateId');
     const contentEl = document.getElementById('policyModalContent');
 
-    if (!modal || !nameEl || !idEl || !contentEl) return;
+    if (nameEl) nameEl.textContent = candidateName;
+    if (idEl) idEl.textContent = candidateId;
+    if (contentEl) contentEl.textContent = candidatePolicy;
 
-    nameEl.textContent = candidate?.name || `Candidate ${candidate?.candidate_id || '-'}`;
-    idEl.textContent = candidate?.display_id || String(candidate?.candidate_id || '-');
-    contentEl.textContent = candidate?.policies || 'No policy data available.';
+    // Embedded VoterDash modal structure
+    const titleEl = document.getElementById('policyTitle');
+    const legacyContentEl = document.getElementById('policyContent');
 
+    if (titleEl && !nameEl) {
+        titleEl.textContent = `${candidateName} (${candidateId})`;
+    }
+    if (legacyContentEl && !contentEl) {
+        legacyContentEl.textContent = candidatePolicy;
+    }
+
+    // Support both modal CSS variants (.show for search page, .active for VoterDash)
     modal.classList.add('show');
+    modal.classList.add('active');
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 }
@@ -216,6 +234,7 @@ function closePolicyModal() {
     const modal = document.getElementById('policyModal');
     if (!modal) return;
     modal.classList.remove('show');
+    modal.classList.remove('active');
     modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
 }
@@ -283,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (policyModal) {
         policyModal.addEventListener('click', (event) => {
             const shouldClose = event.target.closest('[data-close-policy-modal="true"]');
-            if (shouldClose) {
+            if (shouldClose || event.target === policyModal) {
                 closePolicyModal();
             }
         });
