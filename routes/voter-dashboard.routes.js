@@ -6,9 +6,17 @@ const pool = require('../db');
 router.get('/terms', async (req, res) => {
     try {
         const [terms] = await pool.query(
-            "SELECT term_id, name, description, is_active FROM terms ORDER BY term_id DESC"
+            "SELECT term_id, year, description, is_active FROM terms ORDER BY term_id DESC"
         );
-        res.json({ status: "success", data: terms });
+        const normalizedTerms = terms.map((term) => ({
+            term_id: term.term_id,
+            year: term.year,
+            name: term.year ? `Term ${term.year}` : `Term ${term.term_id}`,
+            description: term.description,
+            is_active: term.is_active
+        }));
+
+        res.json({ status: "success", data: normalizedTerms });
     } catch (error) {
         console.error("Get Terms Error:", error);
         res.status(500).json({ status: "error", message: "Failed to load terms" });
@@ -32,7 +40,7 @@ router.get('/candidates', async (req, res) => {
 
         // Get term details
         const [termRows] = await pool.query(
-            "SELECT term_id, name, description, is_active FROM terms WHERE term_id = ? LIMIT 1",
+            "SELECT term_id, year, description, is_active FROM terms WHERE term_id = ? LIMIT 1",
             [term_id]
         );
 
@@ -72,7 +80,13 @@ router.get('/candidates', async (req, res) => {
         res.json({
             status: "success",
             data: candidates,
-            term: termRows[0],
+            term: {
+                term_id: termRows[0].term_id,
+                year: termRows[0].year,
+                name: termRows[0].year ? `Term ${termRows[0].year}` : `Term ${termRows[0].term_id}`,
+                description: termRows[0].description,
+                is_active: termRows[0].is_active
+            },
             total_voters: total_voters,
             user_has_voted: user_has_voted
         });
@@ -184,7 +198,7 @@ router.get('/history/:user_id', async (req, res) => {
                 v.voted_at,
                 c.name AS candidate_name,
                 c.policies,
-                t.name AS term_name,
+                     t.year AS term_year,
                 t.description AS term_description
              FROM votes v
              JOIN candidates c ON v.candidate_id = c.candidate_id
@@ -199,7 +213,7 @@ router.get('/history/:user_id', async (req, res) => {
             status: "success",
             data: history.map(item => ({
                 candidate: item.candidate_name || `Candidate #${item.candidate_id}`,
-                party: item.term_description || `Term ${item.term_name}`,
+                party: item.term_description || `Term ${item.term_year}`,
                 time: new Date(item.voted_at).toLocaleString('th-TH'),
                 policies: item.policies || 'No policies available'
             }))
@@ -220,7 +234,7 @@ router.get('/profile/:user_id', async (req, res) => {
                 u.username,
                 u.role,
                 v.is_voted,
-                t.name AS current_term,
+                     t.year AS current_term_year,
                 t.description AS term_description
              FROM users u
              LEFT JOIN voters v ON u.user_id = v.user_id
@@ -242,7 +256,7 @@ router.get('/profile/:user_id', async (req, res) => {
                 id: user_id,
                 role: user.role,
                 hasVoted: user.is_voted === 1,
-                currentTerm: user.term_description || 'No active term',
+                currentTerm: user.term_description || (user.current_term_year ? `Term ${user.current_term_year}` : 'No active term'),
                 faculty: 'Computer Science' // You can add faculty field to users table if needed
             }
         });

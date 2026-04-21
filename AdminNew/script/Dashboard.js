@@ -3,6 +3,7 @@
 // ==========================================
 const urlParams = new URLSearchParams(window.location.search);
 const currentTermId = urlParams.get('term_id');
+const API_ORIGIN = window.location.port === '3000' ? '' : `${window.location.protocol}//${window.location.hostname}:3000`;
 
 // ถ้าเกิดไม่มี term_id ให้เตะกลับไปหน้า Term
 if (!currentTermId) {
@@ -39,7 +40,7 @@ function goToPage(pageName) {
 // 1. ฟังก์ชันดึงสถานะเทอมปัจจุบันมาแสดงตอนโหลดหน้าเว็บ
 async function loadTermStatus() {
     try {
-        const response = await fetch(`http://localhost:3000/api/admin/term/${currentTermId}`);
+        const response = await fetch(`${API_ORIGIN}/api/admin/term/${currentTermId}`);
         const result = await response.json();
 
         if (result.status === 'success') {
@@ -85,7 +86,7 @@ if (toggleVotingStatus) {
 
         // ถ้ากดยืนยัน ยิง API ไปอัปเดต Database
         try {
-            const response = await fetch(`http://localhost:3000/api/admin/term/${currentTermId}/status`, {
+            const response = await fetch(`${API_ORIGIN}/api/admin/term/${currentTermId}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })

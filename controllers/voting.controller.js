@@ -4,9 +4,16 @@ const pool = require('../db');
 const getTerms = async (req, res) => {
     try {
         const [terms] = await pool.query(
-            "SELECT term_id, name, description, is_active FROM terms ORDER BY term_id DESC"
+            "SELECT term_id, year, description, is_active FROM terms ORDER BY term_id DESC"
         );
-        res.json({ status: "success", data: terms });
+        const normalizedTerms = terms.map((term) => ({
+            term_id: term.term_id,
+            year: term.year,
+            name: term.year ? `Term ${term.year}` : `Term ${term.term_id}`,
+            description: term.description,
+            is_active: term.is_active
+        }));
+        res.json({ status: "success", data: normalizedTerms });
     } catch (error) {
         console.error("Get Terms Error:", error);
         res.status(500).json({ status: "error", message: "ดึงข้อมูลเทอมล้มเหลว" });
@@ -28,7 +35,7 @@ const getCandidates = async (req, res) => {
         }
 
         const [termRows] = await pool.query(
-            "SELECT term_id, name, description, is_active FROM terms WHERE term_id = ? LIMIT 1",
+            "SELECT term_id, year, description, is_active FROM terms WHERE term_id = ? LIMIT 1",
             [term_id]
         );
 
@@ -63,7 +70,13 @@ const getCandidates = async (req, res) => {
         res.json({
             status: "success",
             data: candidates,
-            term: termRows[0],
+            term: {
+                term_id: termRows[0].term_id,
+                year: termRows[0].year,
+                name: termRows[0].year ? `Term ${termRows[0].year}` : `Term ${termRows[0].term_id}`,
+                description: termRows[0].description,
+                is_active: termRows[0].is_active
+            },
             total_voters: total_voters,
             user_has_voted: user_has_voted
         });
