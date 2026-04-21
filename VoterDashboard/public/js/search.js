@@ -1,11 +1,82 @@
 // search.js
+let cachedCandidates = [];
+let searchTimer = null;
+
+function normalizeSearchValue(value) {
+    return String(value || '').toLowerCase().trim();
+}
+
+function getCandidateName(candidate) {
+    return candidate.name || `Candidate ${candidate.candidate_id}`;
+}
+
+function getCandidateParty(candidate) {
+    // รองรับหลายชื่อฟิลด์เพื่อให้ค้นหา "party" ได้แม้ backend ใช้ชื่อไม่เหมือนกัน
+    return candidate.party ||
+        candidate.party_name ||
+        candidate.partyName ||
+        candidate.group_name ||
+        candidate.display_id ||
+        '';
+}
+
+function renderSearchResults(results, queryText) {
+    const container = document.getElementById('searchResultsContainer');
+    if (!container) return;
+
+    if (results.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🔍</div>
+                <p>No results found for "${VotingApp.escapeHtml(queryText)}"</p>
+            </div>`;
+        return;
+    }
+
+    const html = results.map(c => {
+        const name = getCandidateName(c);
+        const party = getCandidateParty(c);
+        const policyText = c.policies ? `${c.policies.substring(0, 100)}${c.policies.length > 100 ? '...' : ''}` : '';
+
+        return `
+            <div class="search-result-item">
+                <div>
+                    <strong>${VotingApp.escapeHtml(name)}</strong>
+                    <span style="color:var(--text-muted); font-size:13px; margin-left:8px;">(${VotingApp.escapeHtml(c.display_id || c.candidate_id)})</span>
+                    ${party ? `<br><span style="color:var(--text-muted); font-size:12px;">Party: ${VotingApp.escapeHtml(party)}</span>` : ''}
+                    ${policyText ? `<br><span style="color:var(--text-muted); font-size:12px;">${VotingApp.escapeHtml(policyText)}</span>` : ''}
+                </div>
+                <div class="result-score">${c.score || 0} Votes</div>
+            </div>`;
+    }).join('');
+
+    container.innerHTML = html;
+}
+
 function performSearch() {
     const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+
+    const query = normalizeSearchValue(searchInput.value);
+
+    const filtered = cachedCandidates.filter(c => {
+        const name = normalizeSearchValue(getCandidateName(c));
+        const party = normalizeSearchValue(getCandidateParty(c));
+
+        return name.includes(query) || party.includes(query);
+    });
+
+    renderSearchResults(filtered, searchInput.value.trim());
+}
+
+function performSearchDebounced() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(performSearch, 200);
+}
+
+function loadSearchCandidates() {
     const container = document.getElementById('searchResultsContainer');
-
-    if (!searchInput || !container) return;
-
-    let q = searchInput.value.toLowerCase().trim();
+    if (!container) return;
 
     // Show loading state
     container.innerHTML = `
@@ -19,53 +90,25 @@ function performSearch() {
     fetch('/api/voter-dashboard/terms')
         .then(response => response.json())
         .then(result => {
-            if (result.status === 'success') {
-                const activeTerm = result.data.find(term => term.is_active === 1) || result.data[0];
-                if (activeTerm) {
-                    return fetch(`/api/voter-dashboard/candidates?term_id=${activeTerm.term_id}`);
-                } else {
-                    throw new Error('No active terms available');
-                }
-            } else {
+            if (result.status !== 'success') {
                 throw new Error(result.message || 'Failed to load terms');
             }
+
+            const activeTerm = result.data.find(term => term.is_active === 1) || result.data[0];
+            if (!activeTerm) {
+                throw new Error('No active terms available');
+            }
+
+            return fetch(`/api/voter-dashboard/candidates?term_id=${activeTerm.term_id}`);
         })
         .then(response => response.json())
         .then(result => {
-            if (result.status === 'success') {
-                const candidates = result.data;
-
-                // Filter candidates based on search query
-                let res = candidates.filter(c =>
-                    (c.name && c.name.toLowerCase().includes(q)) ||
-                    (c.display_id && c.display_id.toLowerCase().includes(q)) ||
-                    (c.policies && c.policies.toLowerCase().includes(q))
-                );
-
-                if (res.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon">🔍</div>
-                            <p>No results found for "${q}"</p>
-                        </div>`;
-                    return;
-                }
-
-                let html = res.map(c => `
-                    <div class="search-result-item">
-                        <div>
-                            <strong>${c.name || `Candidate ${c.candidate_id}`}</strong>
-                            <span style="color:var(--text-muted); font-size:13px; margin-left:8px;">(${c.display_id || c.candidate_id})</span>
-                            ${c.policies ? `<br><span style="color:var(--text-muted); font-size:12px;">${c.policies.substring(0, 100)}${c.policies.length > 100 ? '...' : ''}</span>` : ''}
-                        </div>
-                        <div class="result-score">${c.score || 0} Votes</div>
-                    </div>
-                `).join('');
-
-                container.innerHTML = html;
-            } else {
+            if (result.status !== 'success') {
                 throw new Error(result.message || 'Failed to load candidates');
             }
+
+            cachedCandidates = result.data || [];
+            performSearch();
         })
         .catch(error => {
             console.error('Search error:', error);
@@ -99,8 +142,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up search input listener
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
-        searchInput.addEventListener('input', performSearch);
+        searchInput.addEventListener('input', performSearchDebounced);
+        searchInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        });
         // Initial load
-        performSearch();
+        loadSearchCandidates();
     }
 });

@@ -234,6 +234,63 @@ function renderVotingSection() {
         </div>`;
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function getCandidateParty(candidate) {
+    return candidate.party ||
+        candidate.party_name ||
+        candidate.partyName ||
+        candidate.group_name ||
+        candidate.display_id ||
+        '';
+}
+
+function performSearch() {
+    const input = document.getElementById('searchInput');
+    const container = document.getElementById('searchResultsContainer');
+    if (!input || !container) return;
+
+    const query = String(input.value || '').toLowerCase().trim();
+
+    const filtered = state.candidates.filter(candidate => {
+        const name = String(candidate.name || '').toLowerCase();
+        const party = String(getCandidateParty(candidate) || '').toLowerCase();
+        return name.includes(query) || party.includes(query);
+    });
+
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🔍</div>
+                <p>No results found for "${escapeHtml(input.value.trim())}"</p>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.map(candidate => {
+        const name = candidate.name || `Candidate #${candidate.candidate_id}`;
+        const party = getCandidateParty(candidate);
+        return `
+            <div class="search-result-item">
+                <div>
+                    <strong>${escapeHtml(name)}</strong>
+                    <span style="color:var(--text-muted); font-size:13px; margin-left:8px;">(${escapeHtml(candidate.display_id || candidate.candidate_id)})</span>
+                    ${party ? `<br><span style="color:var(--text-muted); font-size:12px;">Party: ${escapeHtml(party)}</span>` : ''}
+                </div>
+                <div class="result-score">${Number(candidate.score) || 0} Votes</div>
+            </div>`;
+    }).join('');
+}
+
+window.performSearch = performSearch;
+
 // 🚀 ระบบจัดการการโหวต (Voting Process)
 let selectedCandidate = null;
 
