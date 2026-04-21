@@ -211,6 +211,7 @@ async function processVote() {
 
 function finishVotingFlow() {
     closeModal('successModal');
+    window.location.href = '/VoterDashboard/views/history.html';
 }
 
 function openModal(id) {

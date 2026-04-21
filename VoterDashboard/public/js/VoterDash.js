@@ -351,7 +351,11 @@ async function processVote() {
 }
 
 // ฟังก์ชันอื่นๆ (Tabs, Close Modal)
-function finishVotingFlow() { closeModal('successModal'); switchTab('dashboard', document.querySelectorAll('.menu-item')[1]); }
+function finishVotingFlow() {
+    closeModal('successModal');
+    const historyMenuItem = document.querySelector('.menu-item[onclick*="\'history\'"]') || document.querySelectorAll('.menu-item')[4];
+    switchTab('history', historyMenuItem || null);
+}
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 function logout() {
     sessionStorage.removeItem('user'); // ลบออกจาก sessionStorage
