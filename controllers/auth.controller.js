@@ -1,4 +1,10 @@
-const argon2 = require('@node-rs/argon2');
+let argon2;
+try {
+    argon2 = require('@node-rs/argon2');
+} catch (error) {
+    console.warn('[@node-rs/argon2] native module unavailable, fallback to argon2 package');
+    argon2 = require('argon2');
+}
 const crypto = require('crypto');
 const pool = require('../db');
 
